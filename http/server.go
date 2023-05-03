@@ -16,6 +16,9 @@ func SetupServer(cfg config.Config) *mux.Router {
 
 	router.Handle("/ui/playground", playground.Handler("GraphQL playground", "/graphql")).Methods("GET")
 	router.Handle("/graphql", handlers.BuildRootHandler(cfg)).Methods("POST")
+	router.Handle("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}).Methods("GET")
 
 	return router
 }
