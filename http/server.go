@@ -1,6 +1,7 @@
 package http
 
 import (
+	"fmt"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/gorilla/mux"
 	"github.com/weeb-vip/anime-api/config"
@@ -25,5 +26,5 @@ func StartServer() error {
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", cfg.AppConfig.Port)
 
-	return http.ListenAndServe(":"+cfg.AppConfig.Port, router)
+	return http.ListenAndServe(fmt.Sprintf(":%d", cfg.AppConfig.Port), router)
 }

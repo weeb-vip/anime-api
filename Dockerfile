@@ -1,5 +1,5 @@
 # golang dockerfile
-FROM golang:1.20-alpine3.17 AS builder
+FROM golang:1.20 AS builder
 
 # Set the Current Working Directory inside the container
 WORKDIR /app
@@ -20,6 +20,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main ./cmd/main.g
 # golang dockerfile
 FROM gcr.io/distroless/static-debian10
 
+EXPOSE 3000
 # Set the Current Working Directory inside the container
 WORKDIR /app
 
