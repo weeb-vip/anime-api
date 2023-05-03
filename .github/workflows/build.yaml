@@ -19,7 +19,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
       - name: Build the Docker image
-        run: >
+        run: |
           docker build --build-arg VERSION=${{ github.sha }} -t ${{ env.REPO_NAME }} .
           docker tag ${{ env.REPO_NAME }} ${{ secrets.REGISTRY }}/weeb-vip/${{ env.REPO_NAME }}:${{ github.sha }}
       - name: Set env
