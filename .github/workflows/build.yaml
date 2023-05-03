@@ -11,10 +11,11 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-    env:
-      PROJECT_VERSION: 1.0.0-alpha
 
     steps:
+      - name: Set repo name environment variable
+        run: |
+          echo "REPO_NAME=${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
       - uses: actions/checkout@v3
         env:
           GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
