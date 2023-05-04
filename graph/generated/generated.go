@@ -37,17 +37,23 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	ApiInfo() ApiInfoResolver
 	Mutation() MutationResolver
 	Query() QueryResolver
 }
 
 type DirectiveRoot struct {
+	Scoped func(ctx context.Context, obj interface{}, next graphql.Resolver, scope string) (res interface{}, err error)
 }
 
 type ComplexityRoot struct {
-	ApiInfo struct {
-		Name    func(childComplexity int) int
+	AnimeApi struct {
 		Version func(childComplexity int) int
+	}
+
+	ApiInfo struct {
+		AnimeAPI func(childComplexity int) int
+		Name     func(childComplexity int) int
 	}
 
 	Mutation struct {
@@ -77,6 +83,9 @@ type ComplexityRoot struct {
 	}
 }
 
+type ApiInfoResolver interface {
+	AnimeAPI(ctx context.Context, obj *model.APIInfo) (*model.AnimeAPI, error)
+}
 type MutationResolver interface {
 	CreateTodo(ctx context.Context, input model.NewTodo) (*model.Todo, error)
 }
@@ -100,19 +109,26 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
+	case "AnimeApi.version":
+		if e.complexity.AnimeApi.Version == nil {
+			break
+		}
+
+		return e.complexity.AnimeApi.Version(childComplexity), true
+
+	case "ApiInfo.animeApi":
+		if e.complexity.ApiInfo.AnimeAPI == nil {
+			break
+		}
+
+		return e.complexity.ApiInfo.AnimeAPI(childComplexity), true
+
 	case "ApiInfo.name":
 		if e.complexity.ApiInfo.Name == nil {
 			break
 		}
 
 		return e.complexity.ApiInfo.Name(childComplexity), true
-
-	case "ApiInfo.version":
-		if e.complexity.ApiInfo.Version == nil {
-			break
-		}
-
-		return e.complexity.ApiInfo.Version(childComplexity), true
 
 	case "Mutation.createTodo":
 		if e.complexity.Mutation.CreateTodo == nil {
@@ -265,6 +281,12 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
+	{Name: "../directives.graphqls", Input: `directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITION
+    | FIELD_DEFINITION
+"""
+ensures a user is logged in to access a particular field
+"""
+directive @scoped(scope: String!) on FIELD_DEFINITION | ENUM_VALUE`, BuiltIn: false},
 	{Name: "../schema.graphqls", Input: `# GraphQL schema example
 #
 # https://gqlgen.com/getting-started/
@@ -281,9 +303,14 @@ type User {
   name: String!
 }
 
-type ApiInfo {
-  name: String!
+type AnimeApi {
+  "Version of event publish service"
   version: String!
+}
+
+type ApiInfo {
+  animeApi: AnimeApi! @goField(forceResolver: true)
+  name: String!
 }
 
 type Query {
@@ -326,6 +353,21 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) dir_scoped_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["scope"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("scope"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["scope"] = arg0
+	return args, nil
+}
 
 func (ec *executionContext) field_Mutation_createTodo_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -395,6 +437,98 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
+func (ec *executionContext) _AnimeApi_version(ctx context.Context, field graphql.CollectedField, obj *model.AnimeAPI) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeApi_version(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Version, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeApi_version(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeApi",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ApiInfo_animeApi(ctx context.Context, field graphql.CollectedField, obj *model.APIInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ApiInfo_animeApi(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.ApiInfo().AnimeAPI(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.AnimeAPI)
+	fc.Result = res
+	return ec.marshalNAnimeApi2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnimeAPI(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ApiInfo_animeApi(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ApiInfo",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "version":
+				return ec.fieldContext_AnimeApi_version(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AnimeApi", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ApiInfo_name(ctx context.Context, field graphql.CollectedField, obj *model.APIInfo) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ApiInfo_name(ctx, field)
 	if err != nil {
@@ -427,50 +561,6 @@ func (ec *executionContext) _ApiInfo_name(ctx context.Context, field graphql.Col
 }
 
 func (ec *executionContext) fieldContext_ApiInfo_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ApiInfo",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ApiInfo_version(ctx context.Context, field graphql.CollectedField, obj *model.APIInfo) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ApiInfo_version(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Version, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ApiInfo_version(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ApiInfo",
 		Field:      field,
@@ -641,10 +731,10 @@ func (ec *executionContext) fieldContext_Query_apiInfo(ctx context.Context, fiel
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
+			case "animeApi":
+				return ec.fieldContext_ApiInfo_animeApi(ctx, field)
 			case "name":
 				return ec.fieldContext_ApiInfo_name(ctx, field)
-			case "version":
-				return ec.fieldContext_ApiInfo_version(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ApiInfo", field.Name)
 		},
@@ -2957,6 +3047,34 @@ func (ec *executionContext) unmarshalInputNewTodo(ctx context.Context, obj inter
 
 // region    **************************** object.gotpl ****************************
 
+var animeApiImplementors = []string{"AnimeApi"}
+
+func (ec *executionContext) _AnimeApi(ctx context.Context, sel ast.SelectionSet, obj *model.AnimeAPI) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, animeApiImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AnimeApi")
+		case "version":
+
+			out.Values[i] = ec._AnimeApi_version(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var apiInfoImplementors = []string{"ApiInfo"}
 
 func (ec *executionContext) _ApiInfo(ctx context.Context, sel ast.SelectionSet, obj *model.APIInfo) graphql.Marshaler {
@@ -2967,19 +3085,32 @@ func (ec *executionContext) _ApiInfo(ctx context.Context, sel ast.SelectionSet, 
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("ApiInfo")
+		case "animeApi":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._ApiInfo_animeApi(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "name":
 
 			out.Values[i] = ec._ApiInfo_name(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "version":
-
-			out.Values[i] = ec._ApiInfo_version(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -3568,6 +3699,20 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 // endregion **************************** object.gotpl ****************************
 
 // region    ***************************** type.gotpl *****************************
+
+func (ec *executionContext) marshalNAnimeApi2githubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnimeAPI(ctx context.Context, sel ast.SelectionSet, v model.AnimeAPI) graphql.Marshaler {
+	return ec._AnimeApi(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNAnimeApi2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnimeAPI(ctx context.Context, sel ast.SelectionSet, v *model.AnimeAPI) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._AnimeApi(ctx, sel, v)
+}
 
 func (ec *executionContext) marshalNApiInfo2githubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAPIInfo(ctx context.Context, sel ast.SelectionSet, v model.APIInfo) graphql.Marshaler {
 	return ec._ApiInfo(ctx, sel, &v)

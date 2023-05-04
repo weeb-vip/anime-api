@@ -13,6 +13,11 @@ import (
 	"github.com/weeb-vip/anime-api/internal/resolvers"
 )
 
+// AnimeAPI is the resolver for the animeApi field.
+func (r *apiInfoResolver) AnimeAPI(ctx context.Context, obj *model.APIInfo) (*model.AnimeAPI, error) {
+	return resolvers.AnimeAPI(r.Config)
+}
+
 // CreateTodo is the resolver for the createTodo field.
 func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) (*model.Todo, error) {
 	panic(fmt.Errorf("not implemented: CreateTodo - createTodo"))
@@ -28,11 +33,15 @@ func (r *queryResolver) APIInfo(ctx context.Context) (*model.APIInfo, error) {
 	return resolvers.APIInfo(r.Config)
 }
 
+// ApiInfo returns generated.ApiInfoResolver implementation.
+func (r *Resolver) ApiInfo() generated.ApiInfoResolver { return &apiInfoResolver{r} }
+
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
+type apiInfoResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }

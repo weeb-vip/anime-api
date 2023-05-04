@@ -14,9 +14,14 @@ type User {
   name: String!
 }
 
-type ApiInfo {
-  name: String!
+type AnimeApi {
+  "Version of event publish service"
   version: String!
+}
+
+type ApiInfo {
+  animeApi: AnimeApi! @goField(forceResolver: true)
+  name: String!
 }
 
 type Query {

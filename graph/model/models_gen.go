@@ -2,9 +2,14 @@
 
 package model
 
-type APIInfo struct {
-	Name    string `json:"name"`
+type AnimeAPI struct {
+	// Version of event publish service
 	Version string `json:"version"`
+}
+
+type APIInfo struct {
+	AnimeAPI *AnimeAPI `json:"animeApi"`
+	Name     string    `json:"name"`
 }
 
 type NewTodo struct {
