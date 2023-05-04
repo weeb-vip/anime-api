@@ -1,8 +1,6 @@
 package config
 
-import (
-	"github.com/jinzhu/configor"
-)
+import "github.com/jinzhu/configor"
 
 type Config struct {
 	AppConfig AppConfig
@@ -16,11 +14,11 @@ type AppConfig struct {
 }
 
 type DBConfig struct {
-	Host     string `default:"localhost"`
-	DataBase string `default:"weeb"`
-	User     string `default:"weeb"`
+	Host     string `default:"localhost" env:"DBHOST"`
+	DataBase string `default:"weeb" env:"DBNAME"`
+	User     string `default:"weeb" env:"DBUser"`
 	Password string `required:"true" env:"DBPassword" default:"mysecretpassword"`
-	Port     uint   `default:"3306"`
+	Port     uint   `default:"3306" env:"DBPort"`
 }
 
 func LoadConfigOrPanic() Config {
