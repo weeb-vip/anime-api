@@ -16,9 +16,10 @@ type AppConfig struct {
 }
 
 type DBConfig struct {
-	Name     string
-	User     string `default:"root"`
-	Password string `required:"true" env:"DBPassword" default:"password"`
+	Host     string `default:"localhost"`
+	DataBase string `default:"weeb"`
+	User     string `default:"weeb"`
+	Password string `required:"true" env:"DBPassword" default:"mysecretpassword"`
 	Port     uint   `default:"3306"`
 }
 

@@ -2,29 +2,46 @@
 
 package model
 
+type Anime struct {
+	ID          string   `json:"id"`
+	Title       string   `json:"title"`
+	Description string   `json:"description"`
+	ImageURL    string   `json:"imageUrl"`
+	Tags        []string `json:"tags"`
+	Studios     []string `json:"studios"`
+	AnimeStatus string   `json:"animeStatus"`
+	Episodes    int      `json:"episodes"`
+	Duration    int      `json:"duration"`
+	Rating      float64  `json:"rating"`
+	CreatedAt   string   `json:"createdAt"`
+	UpdatedAt   string   `json:"updatedAt"`
+}
+
 type AnimeAPI struct {
 	// Version of event publish service
 	Version string `json:"version"`
 }
 
+type AnimeSearchInput struct {
+	// Search query
+	Query string `json:"query"`
+	// Page number
+	Page int `json:"page"`
+	// Items per page
+	PerPage int `json:"perPage"`
+	// Sort by
+	SortBy *string `json:"sortBy,omitempty"`
+	// Sort direction
+	SortDirection *string `json:"sortDirection,omitempty"`
+	// Tags
+	Tags []string `json:"tags,omitempty"`
+	// Studios
+	Studios []string `json:"studios,omitempty"`
+	// Anime statuses
+	AnimeStatuses []string `json:"animeStatuses,omitempty"`
+}
+
 type APIInfo struct {
 	AnimeAPI *AnimeAPI `json:"animeApi"`
 	Name     string    `json:"name"`
-}
-
-type NewTodo struct {
-	Text   string `json:"text"`
-	UserID string `json:"userId"`
-}
-
-type Todo struct {
-	ID   string `json:"id"`
-	Text string `json:"text"`
-	Done bool   `json:"done"`
-	User *User  `json:"user"`
-}
-
-type User struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
 }
