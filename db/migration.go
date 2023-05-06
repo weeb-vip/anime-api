@@ -58,7 +58,12 @@ func MigrateUp() error {
 		return err
 	}
 
-	return m.Up()
+	err = m.Up()
+	if err != nil && err != migrate.ErrNoChange {
+		return err
+	}
+
+	return nil
 }
 
 func MigrateDown() error {
