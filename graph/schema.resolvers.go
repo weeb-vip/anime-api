@@ -33,6 +33,16 @@ func (r *queryResolver) Anime(ctx context.Context, id string) (*model.Anime, err
 	return resolvers.AnimeByID(ctx, r.AnimeService, id)
 }
 
+// NewestAnime is the resolver for the newestAnime field.
+func (r *queryResolver) NewestAnime(ctx context.Context) ([]*model.Anime, error) {
+	panic(fmt.Errorf("not implemented: NewestAnime - newestAnime"))
+}
+
+// TopAnime is the resolver for the topAnime field.
+func (r *queryResolver) TopAnime(ctx context.Context, limit *int) ([]*model.Anime, error) {
+	return resolvers.TopAnime(ctx, r.AnimeService, limit)
+}
+
 // ApiInfo returns generated.ApiInfoResolver implementation.
 func (r *Resolver) ApiInfo() generated.ApiInfoResolver { return &apiInfoResolver{r} }
 
