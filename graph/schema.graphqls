@@ -1,0 +1,58 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+type AnimeApi {
+    "Version of event publish service"
+    version: String!
+}
+
+type ApiInfo {
+    animeApi: AnimeApi! @goField(forceResolver: true)
+    name: String!
+}
+
+type Anime @key(fields: "id") {
+    id: ID!
+    titleEn: String
+    titleJp: String
+    titleRomaji: String
+    titleKanji: String
+    titleSynonyms: [String!]
+    description: String
+    imageUrl: String
+    tags: [String!]
+    studios: [String!]
+    animeStatus: String
+    episodes: Int
+    duration: String
+    rating: String
+    createdAt: String!
+    updatedAt: String!
+}
+
+type Query {
+    dbSearch(searchQuery: AnimeSearchInput!): [Anime!]
+    apiInfo:  ApiInfo!
+    anime(id: ID!): Anime!
+}
+
+input AnimeSearchInput {
+    "Search query"
+    query: String!
+    "Page number"
+    page: Int!
+    "Items per page"
+    perPage: Int!
+    "Sort by"
+    sortBy: String
+    "Sort direction"
+    sortDirection: String
+    "Tags"
+    tags: [String!]
+    "Studios"
+    studios: [String!]
+    "Anime statuses"
+    animeStatuses: [String!]
+}
+
