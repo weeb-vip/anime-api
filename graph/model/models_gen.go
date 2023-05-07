@@ -3,19 +3,25 @@
 package model
 
 type Anime struct {
-	ID          string   `json:"id"`
-	Title       string   `json:"title"`
-	Description string   `json:"description"`
-	ImageURL    string   `json:"imageUrl"`
-	Tags        []string `json:"tags"`
-	Studios     []string `json:"studios"`
-	AnimeStatus string   `json:"animeStatus"`
-	Episodes    int      `json:"episodes"`
-	Duration    int      `json:"duration"`
-	Rating      float64  `json:"rating"`
-	CreatedAt   string   `json:"createdAt"`
-	UpdatedAt   string   `json:"updatedAt"`
+	ID            string   `json:"id"`
+	TitleEn       *string  `json:"titleEn,omitempty"`
+	TitleJp       *string  `json:"titleJp,omitempty"`
+	TitleRomaji   *string  `json:"titleRomaji,omitempty"`
+	TitleKanji    *string  `json:"titleKanji,omitempty"`
+	TitleSynonyms []string `json:"titleSynonyms,omitempty"`
+	Description   *string  `json:"description,omitempty"`
+	ImageURL      *string  `json:"imageUrl,omitempty"`
+	Tags          []string `json:"tags,omitempty"`
+	Studios       []string `json:"studios,omitempty"`
+	AnimeStatus   *string  `json:"animeStatus,omitempty"`
+	Episodes      *int     `json:"episodes,omitempty"`
+	Duration      *string  `json:"duration,omitempty"`
+	Rating        *string  `json:"rating,omitempty"`
+	CreatedAt     string   `json:"createdAt"`
+	UpdatedAt     string   `json:"updatedAt"`
 }
+
+func (Anime) IsEntity() {}
 
 type AnimeAPI struct {
 	// Version of event publish service

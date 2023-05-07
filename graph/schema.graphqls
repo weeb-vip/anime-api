@@ -12,17 +12,21 @@ type ApiInfo {
     name: String!
 }
 
-type Anime {
+type Anime @key(fields: "id") {
     id: ID!
-    title: String!
-    description: String!
-    imageUrl: String!
-    tags: [String!]!
-    studios: [String!]!
-    animeStatus: String!
-    episodes: Int!
-    duration: Int!
-    rating: Float!
+    titleEn: String
+    titleJp: String
+    titleRomaji: String
+    titleKanji: String
+    titleSynonyms: [String!]
+    description: String
+    imageUrl: String
+    tags: [String!]
+    studios: [String!]
+    animeStatus: String
+    episodes: Int
+    duration: String
+    rating: String
     createdAt: String!
     updatedAt: String!
 }
@@ -30,6 +34,7 @@ type Anime {
 type Query {
     dbSearch(searchQuery: AnimeSearchInput!): [Anime!]
     apiInfo:  ApiInfo!
+    anime(id: ID!): Anime!
 }
 
 input AnimeSearchInput {

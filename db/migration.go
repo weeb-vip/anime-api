@@ -32,7 +32,7 @@ func (d *driver) Open(rawURL string) (source.Driver, error) {
 }
 func getMigration() (*migrate.Migrate, error) {
 	cfg := config.LoadConfigOrPanic()
-	database := db.Connect(cfg.DBConfig)
+	database := db.NewDatabase(cfg.DBConfig)
 	sqldb, err := database.DB.DB()
 	if err != nil {
 		return nil, err

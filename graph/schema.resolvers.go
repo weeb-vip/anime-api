@@ -28,6 +28,11 @@ func (r *queryResolver) APIInfo(ctx context.Context) (*model.APIInfo, error) {
 	return resolvers.APIInfo(r.Config)
 }
 
+// Anime is the resolver for the anime field.
+func (r *queryResolver) Anime(ctx context.Context, id string) (*model.Anime, error) {
+	return resolvers.AnimeByID(ctx, r.AnimeService, id)
+}
+
 // ApiInfo returns generated.ApiInfoResolver implementation.
 func (r *Resolver) ApiInfo() generated.ApiInfoResolver { return &apiInfoResolver{r} }
 
