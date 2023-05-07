@@ -18,7 +18,7 @@ type DBConfig struct {
 	DataBase string `default:"weeb" env:"DBNAME"`
 	User     string `default:"weeb" env:"DBUSERNAME"`
 	Password string `required:"true" env:"DBPASSWORD" default:"mysecretpassword"`
-	Port     uint   `default:"3306" env:"DBPort"`
+	Port     uint   `default:"3306" env:"DBPORT"`
 }
 
 func LoadConfigOrPanic() Config {
