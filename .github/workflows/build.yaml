@@ -29,7 +29,7 @@ jobs:
           registry: ${{ secrets.REGISTRY }}
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
-      - name: Push to Google Container Registry (test)
+      - name: Push to Harbor Container Registry (test)
         run: |
           docker push ${{ secrets.REGISTRY }}/weeb-vip/${{ env.REPO_NAME }}:${{ github.sha }}
           docker save ${{ env.REPO_NAME }} >> ${{ env.REPO_NAME }}.tar
@@ -41,6 +41,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
           DOCKER_REPO_TEST: ${{ secrets.REGISTRY }}/weeb-vip/${{ env.REPO_NAME }}
+          DOCKER_REPO_PROD: ${{ secrets.REGISTRY }}/weeb-vip/${{ env.REPO_NAME }}
         with:
           semantic_version: 18
           extra_plugins: |
