@@ -42,12 +42,12 @@ func transformAnimeToGraphQL(animeEntity anime2.Anime) (*model.Anime, error) {
 	}
 
 	var startDate *time.Time
-	if !animeEntity.StartDate.Valid {
+	if animeEntity.StartDate.Valid {
 		startDate = &animeEntity.StartDate.Time
 	}
 
 	var endDate *time.Time
-	if !animeEntity.EndDate.Valid {
+	if animeEntity.EndDate.Valid {
 		endDate = &animeEntity.EndDate.Time
 	}
 
