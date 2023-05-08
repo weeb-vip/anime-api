@@ -34,6 +34,7 @@ func transformAnimeToGraphQL(animeEntity anime2.Anime) (*model.Anime, error) {
 
 	return &model.Anime{
 		ID:            animeEntity.ID,
+		Anidbid:       animeEntity.AnidbID,
 		TitleEn:       animeEntity.TitleEn,
 		TitleJp:       animeEntity.TitleJp,
 		TitleKanji:    animeEntity.TitleKanji,

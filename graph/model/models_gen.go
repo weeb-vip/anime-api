@@ -4,6 +4,7 @@ package model
 
 type Anime struct {
 	ID            string   `json:"id"`
+	Anidbid       *string  `json:"anidbid,omitempty"`
 	TitleEn       *string  `json:"titleEn,omitempty"`
 	TitleJp       *string  `json:"titleJp,omitempty"`
 	TitleRomaji   *string  `json:"titleRomaji,omitempty"`
