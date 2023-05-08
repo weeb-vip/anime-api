@@ -48,6 +48,7 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Anime struct {
+		Anidbid       func(childComplexity int) int
 		AnimeStatus   func(childComplexity int) int
 		CreatedAt     func(childComplexity int) int
 		Description   func(childComplexity int) int
@@ -122,6 +123,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "Anime.anidbid":
+		if e.complexity.Anime.Anidbid == nil {
+			break
+		}
+
+		return e.complexity.Anime.Anidbid(childComplexity), true
 
 	case "Anime.animeStatus":
 		if e.complexity.Anime.AnimeStatus == nil {
@@ -420,6 +428,7 @@ type ApiInfo {
 
 type Anime @key(fields: "id") {
     id: ID!
+    anidbid: String
     titleEn: String
     titleJp: String
     titleRomaji: String
@@ -683,6 +692,47 @@ func (ec *executionContext) fieldContext_Anime_id(ctx context.Context, field gra
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Anime_anidbid(ctx context.Context, field graphql.CollectedField, obj *model.Anime) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Anime_anidbid(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Anidbid, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Anime_anidbid(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Anime",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -1486,6 +1536,8 @@ func (ec *executionContext) fieldContext_Entity_findAnimeByID(ctx context.Contex
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Anime_id(ctx, field)
+			case "anidbid":
+				return ec.fieldContext_Anime_anidbid(ctx, field)
 			case "titleEn":
 				return ec.fieldContext_Anime_titleEn(ctx, field)
 			case "titleJp":
@@ -1572,6 +1624,8 @@ func (ec *executionContext) fieldContext_Query_dbSearch(ctx context.Context, fie
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Anime_id(ctx, field)
+			case "anidbid":
+				return ec.fieldContext_Anime_anidbid(ctx, field)
 			case "titleEn":
 				return ec.fieldContext_Anime_titleEn(ctx, field)
 			case "titleJp":
@@ -1711,6 +1765,8 @@ func (ec *executionContext) fieldContext_Query_anime(ctx context.Context, field 
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Anime_id(ctx, field)
+			case "anidbid":
+				return ec.fieldContext_Anime_anidbid(ctx, field)
 			case "titleEn":
 				return ec.fieldContext_Anime_titleEn(ctx, field)
 			case "titleJp":
@@ -1797,6 +1853,8 @@ func (ec *executionContext) fieldContext_Query_newestAnime(ctx context.Context, 
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Anime_id(ctx, field)
+			case "anidbid":
+				return ec.fieldContext_Anime_anidbid(ctx, field)
 			case "titleEn":
 				return ec.fieldContext_Anime_titleEn(ctx, field)
 			case "titleJp":
@@ -1872,6 +1930,8 @@ func (ec *executionContext) fieldContext_Query_topAnime(ctx context.Context, fie
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Anime_id(ctx, field)
+			case "anidbid":
+				return ec.fieldContext_Anime_anidbid(ctx, field)
 			case "titleEn":
 				return ec.fieldContext_Anime_titleEn(ctx, field)
 			case "titleJp":
@@ -4091,6 +4151,10 @@ func (ec *executionContext) _Anime(ctx context.Context, sel ast.SelectionSet, ob
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "anidbid":
+
+			out.Values[i] = ec._Anime_anidbid(ctx, field, obj)
+
 		case "titleEn":
 
 			out.Values[i] = ec._Anime_titleEn(ctx, field, obj)
