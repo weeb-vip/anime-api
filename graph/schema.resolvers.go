@@ -34,8 +34,8 @@ func (r *queryResolver) Anime(ctx context.Context, id string) (*model.Anime, err
 }
 
 // NewestAnime is the resolver for the newestAnime field.
-func (r *queryResolver) NewestAnime(ctx context.Context) ([]*model.Anime, error) {
-	panic(fmt.Errorf("not implemented: NewestAnime - newestAnime"))
+func (r *queryResolver) NewestAnime(ctx context.Context, limit *int) ([]*model.Anime, error) {
+	return resolvers.NewestAnime(ctx, r.AnimeService, limit)
 }
 
 // TopRatedAnime is the resolver for the topRatedAnime field.

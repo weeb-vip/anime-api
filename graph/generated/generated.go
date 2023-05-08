@@ -92,7 +92,7 @@ type ComplexityRoot struct {
 		Anime              func(childComplexity int, id string) int
 		DbSearch           func(childComplexity int, searchQuery model.AnimeSearchInput) int
 		MostPopularAnime   func(childComplexity int, limit *int) int
-		NewestAnime        func(childComplexity int) int
+		NewestAnime        func(childComplexity int, limit *int) int
 		TopRatedAnime      func(childComplexity int, limit *int) int
 		__resolve__service func(childComplexity int) int
 		__resolve_entities func(childComplexity int, representations []map[string]interface{}) int
@@ -113,7 +113,7 @@ type QueryResolver interface {
 	DbSearch(ctx context.Context, searchQuery model.AnimeSearchInput) ([]*model.Anime, error)
 	APIInfo(ctx context.Context) (*model.APIInfo, error)
 	Anime(ctx context.Context, id string) (*model.Anime, error)
-	NewestAnime(ctx context.Context) ([]*model.Anime, error)
+	NewestAnime(ctx context.Context, limit *int) ([]*model.Anime, error)
 	TopRatedAnime(ctx context.Context, limit *int) ([]*model.Anime, error)
 	MostPopularAnime(ctx context.Context, limit *int) ([]*model.Anime, error)
 }
@@ -375,7 +375,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Query.NewestAnime(childComplexity), true
+		args, err := ec.field_Query_newestAnime_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.NewestAnime(childComplexity, args["limit"].(*int)), true
 
 	case "Query.topRatedAnime":
 		if e.complexity.Query.TopRatedAnime == nil {
@@ -526,7 +531,7 @@ type Query {
     dbSearch(searchQuery: AnimeSearchInput!): [Anime!]
     apiInfo:  ApiInfo!
     anime(id: ID!): Anime!
-    newestAnime: [Anime!]
+    newestAnime(limit: Int): [Anime!]
     topRatedAnime(limit: Int): [Anime!]
     mostPopularAnime(limit: Int): [Anime!]
 }
@@ -678,6 +683,21 @@ func (ec *executionContext) field_Query_dbSearch_args(ctx context.Context, rawAr
 }
 
 func (ec *executionContext) field_Query_mostPopularAnime_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *int
+	if tmp, ok := rawArgs["limit"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+		arg0, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["limit"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_newestAnime_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 *int
@@ -2203,7 +2223,7 @@ func (ec *executionContext) _Query_newestAnime(ctx context.Context, field graphq
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().NewestAnime(rctx)
+		return ec.resolvers.Query().NewestAnime(rctx, fc.Args["limit"].(*int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2274,6 +2294,17 @@ func (ec *executionContext) fieldContext_Query_newestAnime(ctx context.Context, 
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Anime", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_newestAnime_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }
