@@ -60,6 +60,7 @@ type ComplexityRoot struct {
 		ID            func(childComplexity int) int
 		ImageURL      func(childComplexity int) int
 		Licensors     func(childComplexity int) int
+		Ranking       func(childComplexity int) int
 		Rating        func(childComplexity int) int
 		Source        func(childComplexity int) int
 		StartDate     func(childComplexity int) int
@@ -206,6 +207,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Anime.Licensors(childComplexity), true
+
+	case "Anime.ranking":
+		if e.complexity.Anime.Ranking == nil {
+			break
+		}
+
+		return e.complexity.Anime.Ranking(childComplexity), true
 
 	case "Anime.rating":
 		if e.complexity.Anime.Rating == nil {
@@ -497,6 +505,7 @@ type Anime @key(fields: "id") {
     broadcast: String
     source: String
     licensors: [String!]
+    ranking: Int
 }
 
 type Query {
@@ -1617,6 +1626,47 @@ func (ec *executionContext) fieldContext_Anime_licensors(ctx context.Context, fi
 	return fc, nil
 }
 
+func (ec *executionContext) _Anime_ranking(ctx context.Context, field graphql.CollectedField, obj *model.Anime) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Anime_ranking(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Ranking, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Anime_ranking(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Anime",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _AnimeApi_version(ctx context.Context, field graphql.CollectedField, obj *model.AnimeAPI) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_AnimeApi_version(ctx, field)
 	if err != nil {
@@ -1836,6 +1886,8 @@ func (ec *executionContext) fieldContext_Entity_findAnimeByID(ctx context.Contex
 				return ec.fieldContext_Anime_source(ctx, field)
 			case "licensors":
 				return ec.fieldContext_Anime_licensors(ctx, field)
+			case "ranking":
+				return ec.fieldContext_Anime_ranking(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Anime", field.Name)
 		},
@@ -1934,6 +1986,8 @@ func (ec *executionContext) fieldContext_Query_dbSearch(ctx context.Context, fie
 				return ec.fieldContext_Anime_source(ctx, field)
 			case "licensors":
 				return ec.fieldContext_Anime_licensors(ctx, field)
+			case "ranking":
+				return ec.fieldContext_Anime_ranking(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Anime", field.Name)
 		},
@@ -2085,6 +2139,8 @@ func (ec *executionContext) fieldContext_Query_anime(ctx context.Context, field 
 				return ec.fieldContext_Anime_source(ctx, field)
 			case "licensors":
 				return ec.fieldContext_Anime_licensors(ctx, field)
+			case "ranking":
+				return ec.fieldContext_Anime_ranking(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Anime", field.Name)
 		},
@@ -2183,6 +2239,8 @@ func (ec *executionContext) fieldContext_Query_newestAnime(ctx context.Context, 
 				return ec.fieldContext_Anime_source(ctx, field)
 			case "licensors":
 				return ec.fieldContext_Anime_licensors(ctx, field)
+			case "ranking":
+				return ec.fieldContext_Anime_ranking(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Anime", field.Name)
 		},
@@ -2270,6 +2328,8 @@ func (ec *executionContext) fieldContext_Query_topAnime(ctx context.Context, fie
 				return ec.fieldContext_Anime_source(ctx, field)
 			case "licensors":
 				return ec.fieldContext_Anime_licensors(ctx, field)
+			case "ranking":
+				return ec.fieldContext_Anime_ranking(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Anime", field.Name)
 		},
@@ -4548,6 +4608,10 @@ func (ec *executionContext) _Anime(ctx context.Context, sel ast.SelectionSet, ob
 		case "licensors":
 
 			out.Values[i] = ec._Anime_licensors(ctx, field, obj)
+
+		case "ranking":
+
+			out.Values[i] = ec._Anime_ranking(ctx, field, obj)
 
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))

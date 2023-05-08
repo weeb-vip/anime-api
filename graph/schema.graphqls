@@ -35,6 +35,7 @@ type Anime @key(fields: "id") {
     broadcast: String
     source: String
     licensors: [String!]
+    ranking: Int
 }
 
 type Query {
