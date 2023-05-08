@@ -38,9 +38,14 @@ func (r *queryResolver) NewestAnime(ctx context.Context) ([]*model.Anime, error)
 	panic(fmt.Errorf("not implemented: NewestAnime - newestAnime"))
 }
 
-// TopAnime is the resolver for the topAnime field.
-func (r *queryResolver) TopAnime(ctx context.Context, limit *int) ([]*model.Anime, error) {
-	return resolvers.TopAnime(ctx, r.AnimeService, limit)
+// TopRatedAnime is the resolver for the topRatedAnime field.
+func (r *queryResolver) TopRatedAnime(ctx context.Context, limit *int) ([]*model.Anime, error) {
+	return resolvers.TopRatedAnime(ctx, r.AnimeService, limit)
+}
+
+// MostPopularAnime is the resolver for the mostPopularAnime field.
+func (r *queryResolver) MostPopularAnime(ctx context.Context, limit *int) ([]*model.Anime, error) {
+	return resolvers.MostPopularAnime(ctx, r.AnimeService, limit)
 }
 
 // ApiInfo returns generated.ApiInfoResolver implementation.

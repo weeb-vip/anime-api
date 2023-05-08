@@ -87,12 +87,34 @@ func AnimeByID(ctx context.Context, animeService anime.AnimeServiceImpl, id stri
 	return transformAnimeToGraphQL(*foundAnime)
 }
 
-func TopAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit *int) ([]*model.Anime, error) {
+func TopRatedAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit *int) ([]*model.Anime, error) {
 	if limit == nil {
 		l := 10
 		limit = &l
 	}
-	foundAnime, err := animeService.TopAnime(ctx, *limit)
+	foundAnime, err := animeService.TopRatedAnime(ctx, *limit)
+	if err != nil {
+		return nil, err
+	}
+
+	var animes []*model.Anime
+	for _, animeEntity := range foundAnime {
+		anime, err := transformAnimeToGraphQL(*animeEntity)
+		if err != nil {
+			return nil, err
+		}
+		animes = append(animes, anime)
+	}
+
+	return animes, nil
+}
+
+func MostPopularAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit *int) ([]*model.Anime, error) {
+	if limit == nil {
+		l := 10
+		limit = &l
+	}
+	foundAnime, err := animeService.MostPopularAnime(ctx, *limit)
 	if err != nil {
 		return nil, err
 	}
