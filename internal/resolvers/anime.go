@@ -72,6 +72,7 @@ func transformAnimeToGraphQL(animeEntity anime2.Anime) (*model.Anime, error) {
 		Broadcast:     animeEntity.Broadcast,
 		Source:        animeEntity.Source,
 		Licensors:     licensors,
+		Ranking:       animeEntity.Ranking,
 		CreatedAt:     animeEntity.CreatedAt.Format("2006-01-02 15:04:05"),
 		UpdatedAt:     animeEntity.UpdatedAt.Format("2006-01-02 15:04:05"),
 	}, nil
