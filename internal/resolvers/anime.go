@@ -130,3 +130,25 @@ func MostPopularAnime(ctx context.Context, animeService anime.AnimeServiceImpl, 
 
 	return animes, nil
 }
+
+func NewestAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit *int) ([]*model.Anime, error) {
+	if limit == nil {
+		l := 10
+		limit = &l
+	}
+	foundAnime, err := animeService.NewestAnime(ctx, *limit)
+	if err != nil {
+		return nil, err
+	}
+
+	var animes []*model.Anime
+	for _, animeEntity := range foundAnime {
+		anime, err := transformAnimeToGraphQL(*animeEntity)
+		if err != nil {
+			return nil, err
+		}
+		animes = append(animes, anime)
+	}
+
+	return animes, nil
+}

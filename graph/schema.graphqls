@@ -42,7 +42,7 @@ type Query {
     dbSearch(searchQuery: AnimeSearchInput!): [Anime!]
     apiInfo:  ApiInfo!
     anime(id: ID!): Anime!
-    newestAnime: [Anime!]
+    newestAnime(limit: Int): [Anime!]
     topRatedAnime(limit: Int): [Anime!]
     mostPopularAnime(limit: Int): [Anime!]
 }
