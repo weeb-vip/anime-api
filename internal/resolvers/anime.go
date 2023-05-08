@@ -6,6 +6,7 @@ import (
 	"github.com/weeb-vip/anime-api/graph/model"
 	anime2 "github.com/weeb-vip/anime-api/internal/db/repositories/anime"
 	"github.com/weeb-vip/anime-api/internal/services/anime"
+	"time"
 )
 
 func transformAnimeToGraphQL(animeEntity anime2.Anime) (*model.Anime, error) {
@@ -32,6 +33,24 @@ func transformAnimeToGraphQL(animeEntity anime2.Anime) (*model.Anime, error) {
 		}
 	}
 
+	var licensors []string
+	if animeEntity.Licensors != nil {
+		err := json.Unmarshal([]byte(*animeEntity.Licensors), &licensors)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var startDate *time.Time
+	if !animeEntity.StartDate.Valid {
+		startDate = &animeEntity.StartDate.Time
+	}
+
+	var endDate *time.Time
+	if !animeEntity.EndDate.Valid {
+		endDate = &animeEntity.EndDate.Time
+	}
+
 	return &model.Anime{
 		ID:            animeEntity.ID,
 		Anidbid:       animeEntity.AnidbID,
@@ -48,6 +67,11 @@ func transformAnimeToGraphQL(animeEntity anime2.Anime) (*model.Anime, error) {
 		Rating:        animeEntity.Rating,
 		AnimeStatus:   animeEntity.Status,
 		ImageURL:      animeEntity.ImageURL,
+		StartDate:     startDate,
+		EndDate:       endDate,
+		Broadcast:     animeEntity.Broadcast,
+		Source:        animeEntity.Source,
+		Licensors:     licensors,
 		CreatedAt:     animeEntity.CreatedAt.Format("2006-01-02 15:04:05"),
 		UpdatedAt:     animeEntity.UpdatedAt.Format("2006-01-02 15:04:05"),
 	}, nil

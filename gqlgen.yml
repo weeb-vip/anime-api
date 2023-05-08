@@ -43,6 +43,10 @@ resolver:
 # modelgen, the others will be allowed when binding to fields. Configure them to
 # your liking
 models:
+  Date:
+    model: github.com/99designs/gqlgen/graphql.String
+  Time:
+    model: github.com/99designs/gqlgen/graphql.Time
   ID:
     model:
       - github.com/99designs/gqlgen/graphql.ID

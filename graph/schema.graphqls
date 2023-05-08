@@ -30,6 +30,11 @@ type Anime @key(fields: "id") {
     rating: String
     createdAt: String!
     updatedAt: String!
+    startDate: Time
+    endDate: Time
+    broadcast: String
+    source: String
+    licensors: [String!]
 }
 
 type Query {

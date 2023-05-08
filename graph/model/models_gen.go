@@ -2,24 +2,33 @@
 
 package model
 
+import (
+	"time"
+)
+
 type Anime struct {
-	ID            string   `json:"id"`
-	Anidbid       *string  `json:"anidbid,omitempty"`
-	TitleEn       *string  `json:"titleEn,omitempty"`
-	TitleJp       *string  `json:"titleJp,omitempty"`
-	TitleRomaji   *string  `json:"titleRomaji,omitempty"`
-	TitleKanji    *string  `json:"titleKanji,omitempty"`
-	TitleSynonyms []string `json:"titleSynonyms,omitempty"`
-	Description   *string  `json:"description,omitempty"`
-	ImageURL      *string  `json:"imageUrl,omitempty"`
-	Tags          []string `json:"tags,omitempty"`
-	Studios       []string `json:"studios,omitempty"`
-	AnimeStatus   *string  `json:"animeStatus,omitempty"`
-	Episodes      *int     `json:"episodes,omitempty"`
-	Duration      *string  `json:"duration,omitempty"`
-	Rating        *string  `json:"rating,omitempty"`
-	CreatedAt     string   `json:"createdAt"`
-	UpdatedAt     string   `json:"updatedAt"`
+	ID            string     `json:"id"`
+	Anidbid       *string    `json:"anidbid,omitempty"`
+	TitleEn       *string    `json:"titleEn,omitempty"`
+	TitleJp       *string    `json:"titleJp,omitempty"`
+	TitleRomaji   *string    `json:"titleRomaji,omitempty"`
+	TitleKanji    *string    `json:"titleKanji,omitempty"`
+	TitleSynonyms []string   `json:"titleSynonyms,omitempty"`
+	Description   *string    `json:"description,omitempty"`
+	ImageURL      *string    `json:"imageUrl,omitempty"`
+	Tags          []string   `json:"tags,omitempty"`
+	Studios       []string   `json:"studios,omitempty"`
+	AnimeStatus   *string    `json:"animeStatus,omitempty"`
+	Episodes      *int       `json:"episodes,omitempty"`
+	Duration      *string    `json:"duration,omitempty"`
+	Rating        *string    `json:"rating,omitempty"`
+	CreatedAt     string     `json:"createdAt"`
+	UpdatedAt     string     `json:"updatedAt"`
+	StartDate     *time.Time `json:"startDate,omitempty"`
+	EndDate       *time.Time `json:"endDate,omitempty"`
+	Broadcast     *string    `json:"broadcast,omitempty"`
+	Source        *string    `json:"source,omitempty"`
+	Licensors     []string   `json:"licensors,omitempty"`
 }
 
 func (Anime) IsEntity() {}
