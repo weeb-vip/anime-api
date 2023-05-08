@@ -43,7 +43,8 @@ type Query {
     apiInfo:  ApiInfo!
     anime(id: ID!): Anime!
     newestAnime: [Anime!]
-    topAnime(limit: Int): [Anime!]
+    topRatedAnime(limit: Int): [Anime!]
+    mostPopularAnime(limit: Int): [Anime!]
 }
 
 input AnimeSearchInput {

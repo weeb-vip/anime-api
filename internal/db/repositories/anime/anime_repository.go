@@ -26,7 +26,8 @@ type AnimeRepositoryImpl interface {
 	FindByYearAndSeasonAndTypeAndStatusAndSourceAndGenreAndStudioAndLicensors(year int, season string, recordType RECORD_TYPE, status string, source string, genre string, studio string, licensors string) ([]*Anime, error)
 	FindByYearAndSeasonAndTypeAndStatusAndSourceAndGenreAndStudioAndLicensorsAndRating(year int, season string, recordType RECORD_TYPE, status string, source string, genre string, studio string, licensors string, rating string) ([]*Anime, error)
 	FindByYearAndSeasonAndTypeAndStatusAndSourceAndGenreAndStudioAndLicensorsAndRatingAndName(year int, season string, recordType RECORD_TYPE, status string, source string, genre string, studio string, licensors string, rating string, name string) ([]*Anime, error)
-	TopAnime(limit int) ([]*Anime, error)
+	TopRatedAnime(limit int) ([]*Anime, error)
+	MostPopularAnime(limit int) ([]*Anime, error)
 }
 
 type AnimeRepository struct {
@@ -226,10 +227,20 @@ func (a *AnimeRepository) FindByYearAndSeasonAndTypeAndStatusAndSourceAndGenreAn
 	return animes, nil
 }
 
-func (a *AnimeRepository) TopAnime(limit int) ([]*Anime, error) {
+func (a *AnimeRepository) TopRatedAnime(limit int) ([]*Anime, error) {
 	var animes []*Anime
 	// order by rating desc and rating does not equal N/A
 	err := a.db.DB.Where("rating != ?", "N/A").Order("rating desc").Limit(limit).Find(&animes).Error
+	if err != nil {
+		return nil, err
+	}
+	return animes, nil
+}
+
+func (a *AnimeRepository) MostPopularAnime(limit int) ([]*Anime, error) {
+	var animes []*Anime
+	// order by popularity desc and popularity does not equal N/A
+	err := a.db.DB.Where("ranking != ?", "N/A").Order("ranking desc").Limit(limit).Find(&animes).Error
 	if err != nil {
 		return nil, err
 	}

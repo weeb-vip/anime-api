@@ -7,7 +7,8 @@ import (
 
 type AnimeServiceImpl interface {
 	AnimeByID(ctx context.Context, id string) (*anime.Anime, error)
-	TopAnime(ctx context.Context, limit int) ([]*anime.Anime, error)
+	TopRatedAnime(ctx context.Context, limit int) ([]*anime.Anime, error)
+	MostPopularAnime(ctx context.Context, limit int) ([]*anime.Anime, error)
 }
 
 type AnimeService struct {
@@ -24,6 +25,10 @@ func (a *AnimeService) AnimeByID(ctx context.Context, id string) (*anime.Anime, 
 	return a.Repository.FindById(id)
 }
 
-func (a *AnimeService) TopAnime(ctx context.Context, limit int) ([]*anime.Anime, error) {
-	return a.Repository.TopAnime(limit)
+func (a *AnimeService) TopRatedAnime(ctx context.Context, limit int) ([]*anime.Anime, error) {
+	return a.Repository.TopRatedAnime(limit)
+}
+
+func (a *AnimeService) MostPopularAnime(ctx context.Context, limit int) ([]*anime.Anime, error) {
+	return a.Repository.MostPopularAnime(limit)
 }
