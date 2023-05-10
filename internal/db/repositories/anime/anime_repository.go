@@ -241,7 +241,7 @@ func (a *AnimeRepository) TopRatedAnime(limit int) ([]*Anime, error) {
 func (a *AnimeRepository) MostPopularAnime(limit int) ([]*Anime, error) {
 	var animes []*Anime
 	// order by popularity desc and popularity does not equal N/A
-	err := a.db.DB.Where("ranking != ?", "N/A").Order("ranking desc").Limit(limit).Find(&animes).Error
+	err := a.db.DB.Where("ranking != ?", "N/A").Order("ranking asc").Limit(limit).Find(&animes).Error
 	if err != nil {
 		return nil, err
 	}
