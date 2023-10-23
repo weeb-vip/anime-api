@@ -8,11 +8,13 @@ import (
 	"github.com/weeb-vip/anime-api/http/handlers"
 	"log"
 	"net/http"
+	muxtrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/gorilla/mux"
+    "gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 )
 
 func SetupServer(cfg config.Config) *mux.Router {
 
-	router := mux.NewRouter()
+	router := muxtrace.NewRouter()
 
 	router.Handle("/ui/playground", playground.Handler("GraphQL playground", "/graphql")).Methods("GET")
 	router.Handle("/graphql", handlers.BuildRootHandler(cfg)).Methods("POST")
@@ -24,6 +26,8 @@ func SetupServer(cfg config.Config) *mux.Router {
 func StartServer() error {
 	cfg := config.LoadConfigOrPanic()
 	router := SetupServer(cfg)
+	tracer.Start()
+    defer tracer.Stop()
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", cfg.AppConfig.Port)
 
