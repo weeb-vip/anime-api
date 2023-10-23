@@ -3,16 +3,15 @@ package http
 import (
 	"fmt"
 	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/gorilla/mux"
 	"github.com/weeb-vip/anime-api/config"
 	"github.com/weeb-vip/anime-api/http/handlers"
+	muxtrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/gorilla/mux"
+	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 	"log"
 	"net/http"
-	muxtrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/gorilla/mux"
-    "gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 )
 
-func SetupServer(cfg config.Config) *mux.Router {
+func SetupServer(cfg config.Config) *muxtrace.Router {
 
 	router := muxtrace.NewRouter()
 
@@ -27,7 +26,7 @@ func StartServer() error {
 	cfg := config.LoadConfigOrPanic()
 	router := SetupServer(cfg)
 	tracer.Start()
-    defer tracer.Stop()
+	defer tracer.Stop()
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", cfg.AppConfig.Port)
 
