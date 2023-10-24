@@ -84,20 +84,22 @@ func AnimeByID(ctx context.Context, animeService anime.AnimeServiceImpl, id stri
 	span := tracer.StartSpan("AnimeByID")
 	span.SetTag("id", id)
 	defer span.Finish()
+	startTime := time.Now()
 
 	foundAnime, err := animeService.AnimeByID(ctx, id)
 	if err != nil {
-		metrics.ResolverCountMetricError("AnimeByID")
+		metrics.ResolverHistrogramMetricError("AnimeByID", float64(time.Since(startTime).Milliseconds()))
 		return nil, err
 	}
 
-	metrics.ResolverCountMetricSuccess("AnimeByID")
+	metrics.ResolverHistrogramMetricSuccess("AnimeByID", float64(time.Since(startTime).Milliseconds()))
 	return transformAnimeToGraphQL(*foundAnime)
 }
 
 func TopRatedAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit *int) ([]*model.Anime, error) {
 	span := tracer.StartSpan("TopRatedAnime")
 	defer span.Finish()
+	startTime := time.Now()
 
 	if limit == nil {
 		l := 10
@@ -105,7 +107,7 @@ func TopRatedAnime(ctx context.Context, animeService anime.AnimeServiceImpl, lim
 	}
 	foundAnime, err := animeService.TopRatedAnime(ctx, *limit)
 	if err != nil {
-		metrics.ResolverCountMetricError("TopRatedAnime")
+		metrics.ResolverHistrogramMetricError("TopRatedAnime", float64(time.Since(startTime).Milliseconds()))
 		return nil, err
 	}
 
@@ -113,19 +115,19 @@ func TopRatedAnime(ctx context.Context, animeService anime.AnimeServiceImpl, lim
 	for _, animeEntity := range foundAnime {
 		anime, err := transformAnimeToGraphQL(*animeEntity)
 		if err != nil {
-			metrics.ResolverCountMetricError("TopRatedAnime")
 			return nil, err
 		}
 		animes = append(animes, anime)
 	}
 
-	metrics.ResolverCountMetricSuccess("TopRatedAnime")
+	metrics.ResolverHistrogramMetricSuccess("TopRatedAnime", float64(time.Since(startTime).Milliseconds()))
 	return animes, nil
 }
 
 func MostPopularAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit *int) ([]*model.Anime, error) {
 	span := tracer.StartSpan("MostPopularAnime")
 	defer span.Finish()
+	startTime := time.Now()
 
 	if limit == nil {
 		l := 10
@@ -133,7 +135,7 @@ func MostPopularAnime(ctx context.Context, animeService anime.AnimeServiceImpl, 
 	}
 	foundAnime, err := animeService.MostPopularAnime(ctx, *limit)
 	if err != nil {
-		metrics.ResolverCountMetricError("MostPopularAnime")
+		metrics.ResolverHistrogramMetricError("MostPopularAnime", float64(time.Since(startTime).Milliseconds()))
 		return nil, err
 	}
 
@@ -146,13 +148,14 @@ func MostPopularAnime(ctx context.Context, animeService anime.AnimeServiceImpl, 
 		animes = append(animes, anime)
 	}
 
-	metrics.ResolverCountMetricSuccess("MostPopularAnime")
+	metrics.ResolverHistrogramMetricSuccess("MostPopularAnime", float64(time.Since(startTime).Milliseconds()))
 	return animes, nil
 }
 
 func NewestAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit *int) ([]*model.Anime, error) {
 	span := tracer.StartSpan("NewestAnime")
 	defer span.Finish()
+	startTime := time.Now()
 
 	if limit == nil {
 		l := 10
@@ -160,7 +163,7 @@ func NewestAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit
 	}
 	foundAnime, err := animeService.NewestAnime(ctx, *limit)
 	if err != nil {
-		metrics.ResolverCountMetricError("NewestAnime")
+		metrics.ResolverHistrogramMetricError("NewestAnime", float64(time.Since(startTime).Milliseconds()))
 		return nil, err
 	}
 
@@ -173,6 +176,6 @@ func NewestAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit
 		animes = append(animes, anime)
 	}
 
-	metrics.ResolverCountMetricSuccess("NewestAnime")
+	metrics.ResolverHistrogramMetricSuccess("NewestAnime", float64(time.Since(startTime).Milliseconds()))
 	return animes, nil
 }
