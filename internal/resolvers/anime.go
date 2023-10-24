@@ -84,7 +84,6 @@ func AnimeByID(ctx context.Context, animeService anime.AnimeServiceImpl, id stri
 	span := tracer.StartSpan("AnimeByID")
 	span.SetTag("id", id)
 	defer span.Finish()
-	defer metrics.ResolverCountMetricSuccess("AnimeByID")
 
 	foundAnime, err := animeService.AnimeByID(ctx, id)
 	if err != nil {
@@ -92,13 +91,13 @@ func AnimeByID(ctx context.Context, animeService anime.AnimeServiceImpl, id stri
 		return nil, err
 	}
 
+	metrics.ResolverCountMetricSuccess("AnimeByID")
 	return transformAnimeToGraphQL(*foundAnime)
 }
 
 func TopRatedAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit *int) ([]*model.Anime, error) {
 	span := tracer.StartSpan("TopRatedAnime")
 	defer span.Finish()
-	defer metrics.ResolverCountMetricSuccess("TopRatedAnime")
 
 	if limit == nil {
 		l := 10
@@ -120,13 +119,14 @@ func TopRatedAnime(ctx context.Context, animeService anime.AnimeServiceImpl, lim
 		animes = append(animes, anime)
 	}
 
+	metrics.ResolverCountMetricSuccess("TopRatedAnime")
 	return animes, nil
 }
 
 func MostPopularAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit *int) ([]*model.Anime, error) {
 	span := tracer.StartSpan("MostPopularAnime")
 	defer span.Finish()
-	defer metrics.ResolverCountMetricSuccess("MostPopularAnime")
+
 	if limit == nil {
 		l := 10
 		limit = &l
@@ -146,14 +146,13 @@ func MostPopularAnime(ctx context.Context, animeService anime.AnimeServiceImpl, 
 		animes = append(animes, anime)
 	}
 
+	metrics.ResolverCountMetricSuccess("MostPopularAnime")
 	return animes, nil
 }
 
 func NewestAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit *int) ([]*model.Anime, error) {
 	span := tracer.StartSpan("NewestAnime")
 	defer span.Finish()
-
-	defer metrics.ResolverCountMetricSuccess("NewestAnime")
 
 	if limit == nil {
 		l := 10
@@ -174,5 +173,6 @@ func NewestAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit
 		animes = append(animes, anime)
 	}
 
+	metrics.ResolverCountMetricSuccess("NewestAnime")
 	return animes, nil
 }
