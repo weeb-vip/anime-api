@@ -6,6 +6,8 @@ import (
 	"github.com/weeb-vip/anime-api/graph/model"
 	anime2 "github.com/weeb-vip/anime-api/internal/db/repositories/anime"
 	"github.com/weeb-vip/anime-api/internal/services/anime"
+	"github.com/weeb-vip/anime-api/metrics"
+	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 	"time"
 )
 
@@ -79,8 +81,14 @@ func transformAnimeToGraphQL(animeEntity anime2.Anime) (*model.Anime, error) {
 }
 
 func AnimeByID(ctx context.Context, animeService anime.AnimeServiceImpl, id string) (*model.Anime, error) {
+	span := tracer.StartSpan("AnimeByID")
+	span.SetTag("id", id)
+	defer span.Finish()
+	defer metrics.ResolverCountMetricSuccess("AnimeByID")
+
 	foundAnime, err := animeService.AnimeByID(ctx, id)
 	if err != nil {
+		metrics.ResolverCountMetricError("AnimeByID")
 		return nil, err
 	}
 
@@ -88,12 +96,17 @@ func AnimeByID(ctx context.Context, animeService anime.AnimeServiceImpl, id stri
 }
 
 func TopRatedAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit *int) ([]*model.Anime, error) {
+	span := tracer.StartSpan("TopRatedAnime")
+	defer span.Finish()
+	defer metrics.ResolverCountMetricSuccess("TopRatedAnime")
+
 	if limit == nil {
 		l := 10
 		limit = &l
 	}
 	foundAnime, err := animeService.TopRatedAnime(ctx, *limit)
 	if err != nil {
+		metrics.ResolverCountMetricError("TopRatedAnime")
 		return nil, err
 	}
 
@@ -101,6 +114,7 @@ func TopRatedAnime(ctx context.Context, animeService anime.AnimeServiceImpl, lim
 	for _, animeEntity := range foundAnime {
 		anime, err := transformAnimeToGraphQL(*animeEntity)
 		if err != nil {
+			metrics.ResolverCountMetricError("TopRatedAnime")
 			return nil, err
 		}
 		animes = append(animes, anime)
@@ -110,12 +124,16 @@ func TopRatedAnime(ctx context.Context, animeService anime.AnimeServiceImpl, lim
 }
 
 func MostPopularAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit *int) ([]*model.Anime, error) {
+	span := tracer.StartSpan("MostPopularAnime")
+	defer span.Finish()
+	defer metrics.ResolverCountMetricSuccess("MostPopularAnime")
 	if limit == nil {
 		l := 10
 		limit = &l
 	}
 	foundAnime, err := animeService.MostPopularAnime(ctx, *limit)
 	if err != nil {
+		metrics.ResolverCountMetricError("MostPopularAnime")
 		return nil, err
 	}
 
@@ -132,12 +150,18 @@ func MostPopularAnime(ctx context.Context, animeService anime.AnimeServiceImpl, 
 }
 
 func NewestAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit *int) ([]*model.Anime, error) {
+	span := tracer.StartSpan("NewestAnime")
+	defer span.Finish()
+
+	defer metrics.ResolverCountMetricSuccess("NewestAnime")
+
 	if limit == nil {
 		l := 10
 		limit = &l
 	}
 	foundAnime, err := animeService.NewestAnime(ctx, *limit)
 	if err != nil {
+		metrics.ResolverCountMetricError("NewestAnime")
 		return nil, err
 	}
 

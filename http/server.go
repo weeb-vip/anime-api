@@ -26,6 +26,8 @@ func StartServer() error {
 	cfg := config.LoadConfigOrPanic()
 	router := SetupServer(cfg)
 	tracer.Start()
+	tracer.WithService(cfg.AppConfig.APPName)
+	tracer.WithServiceVersion(cfg.AppConfig.Version)
 	defer tracer.Stop()
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", cfg.AppConfig.Port)
