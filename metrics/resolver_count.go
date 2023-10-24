@@ -12,7 +12,12 @@ func ResolverCountMetricSuccess(ResolverName string) {
 		fmt.Sprintf("result:%s", "success"),
 	}
 
-	client.GetClient().Count("graphql.resolver.count", 1, tags, 1)
+	fmt.Println(tags)
+
+	err := client.GetClient().Count("graphql.resolver.count", 1, tags, 1)
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 func ResolverCountMetricError(ResolverName string) {
@@ -23,5 +28,10 @@ func ResolverCountMetricError(ResolverName string) {
 		fmt.Sprintf("result:%s", "error"),
 	}
 
-	client.GetClient().Count("graphql.resolver.count", 1, tags, 1)
+	fmt.Println(tags)
+
+	err := client.GetClient().Count("graphql.resolver.count", 1, tags, 1)
+	if err != nil {
+		fmt.Println(err)
+	}
 }
