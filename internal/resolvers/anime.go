@@ -85,10 +85,7 @@ func AnimeByID(ctx context.Context, animeService anime.AnimeServiceImpl, id stri
 	span.SetTag("id", id)
 	span.SetTag("type", "resolver")
 	defer span.Finish()
-<<<<<<< Updated upstream
 	startTime := time.Now()
-=======
->>>>>>> Stashed changes
 
 	foundAnime, err := animeService.AnimeByID(ctx, id)
 	if err != nil {
@@ -96,11 +93,8 @@ func AnimeByID(ctx context.Context, animeService anime.AnimeServiceImpl, id stri
 		return nil, err
 	}
 
-<<<<<<< Updated upstream
 	metrics.ResolverHistrogramMetricSuccess("AnimeByID", float64(time.Since(startTime).Milliseconds()))
-=======
-	metrics.ResolverCountMetricSuccess("AnimeByID")
->>>>>>> Stashed changes
+
 	return transformAnimeToGraphQL(*foundAnime)
 }
 
@@ -108,10 +102,7 @@ func TopRatedAnime(ctx context.Context, animeService anime.AnimeServiceImpl, lim
 	span := tracer.StartSpan("TopRatedAnime")
 	span.SetTag("type", "resolver")
 	defer span.Finish()
-<<<<<<< Updated upstream
 	startTime := time.Now()
-=======
->>>>>>> Stashed changes
 
 	if limit == nil {
 		l := 10
@@ -132,11 +123,8 @@ func TopRatedAnime(ctx context.Context, animeService anime.AnimeServiceImpl, lim
 		animes = append(animes, anime)
 	}
 
-<<<<<<< Updated upstream
 	metrics.ResolverHistrogramMetricSuccess("TopRatedAnime", float64(time.Since(startTime).Milliseconds()))
-=======
-	metrics.ResolverCountMetricSuccess("TopRatedAnime")
->>>>>>> Stashed changes
+
 	return animes, nil
 }
 
@@ -144,10 +132,7 @@ func MostPopularAnime(ctx context.Context, animeService anime.AnimeServiceImpl, 
 	span := tracer.StartSpan("MostPopularAnime")
 	span.SetTag("type", "resolver")
 	defer span.Finish()
-<<<<<<< Updated upstream
 	startTime := time.Now()
-=======
->>>>>>> Stashed changes
 
 	if limit == nil {
 		l := 10
@@ -168,11 +153,8 @@ func MostPopularAnime(ctx context.Context, animeService anime.AnimeServiceImpl, 
 		animes = append(animes, anime)
 	}
 
-<<<<<<< Updated upstream
 	metrics.ResolverHistrogramMetricSuccess("MostPopularAnime", float64(time.Since(startTime).Milliseconds()))
-=======
-	metrics.ResolverCountMetricSuccess("MostPopularAnime")
->>>>>>> Stashed changes
+
 	return animes, nil
 }
 
@@ -180,10 +162,7 @@ func NewestAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit
 	span := tracer.StartSpan("NewestAnime")
 	span.SetTag("type", "resolver")
 	defer span.Finish()
-<<<<<<< Updated upstream
 	startTime := time.Now()
-=======
->>>>>>> Stashed changes
 
 	if limit == nil {
 		l := 10
@@ -204,10 +183,7 @@ func NewestAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit
 		animes = append(animes, anime)
 	}
 
-<<<<<<< Updated upstream
 	metrics.ResolverHistrogramMetricSuccess("NewestAnime", float64(time.Since(startTime).Milliseconds()))
-=======
-	metrics.ResolverCountMetricSuccess("NewestAnime")
->>>>>>> Stashed changes
+
 	return animes, nil
 }
