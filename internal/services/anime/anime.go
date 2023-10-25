@@ -3,6 +3,7 @@ package anime
 import (
 	"context"
 	"github.com/weeb-vip/anime-api/internal/db/repositories/anime"
+	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 )
 
 type AnimeServiceImpl interface {
@@ -23,17 +24,37 @@ func NewAnimeService(animeRepository anime.AnimeRepositoryImpl) AnimeServiceImpl
 }
 
 func (a *AnimeService) AnimeByID(ctx context.Context, id string) (*anime.Anime, error) {
+	span := tracer.StartSpan("AnimeByID")
+	span.SetTag("service", "anime")
+	span.SetTag("type", "service")
+	defer span.Finish()
+
 	return a.Repository.FindById(id)
 }
 
 func (a *AnimeService) TopRatedAnime(ctx context.Context, limit int) ([]*anime.Anime, error) {
+	span := tracer.StartSpan("TopRatedAnime")
+	span.SetTag("service", "anime")
+	span.SetTag("type", "service")
+	defer span.Finish()
+
 	return a.Repository.TopRatedAnime(limit)
 }
 
 func (a *AnimeService) MostPopularAnime(ctx context.Context, limit int) ([]*anime.Anime, error) {
+	span := tracer.StartSpan("MostPopularAnime")
+	span.SetTag("service", "anime")
+	span.SetTag("type", "service")
+	defer span.Finish()
+
 	return a.Repository.MostPopularAnime(limit)
 }
 
 func (a *AnimeService) NewestAnime(ctx context.Context, limit int) ([]*anime.Anime, error) {
+	span := tracer.StartSpan("NewestAnime")
+	span.SetTag("service", "anime")
+	span.SetTag("type", "service")
+	defer span.Finish()
+
 	return a.Repository.NewestAnime(limit)
 }

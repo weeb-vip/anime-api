@@ -83,6 +83,7 @@ func transformAnimeToGraphQL(animeEntity anime2.Anime) (*model.Anime, error) {
 func AnimeByID(ctx context.Context, animeService anime.AnimeServiceImpl, id string) (*model.Anime, error) {
 	span := tracer.StartSpan("AnimeByID")
 	span.SetTag("id", id)
+	span.SetTag("type", "resolver")
 	defer span.Finish()
 	startTime := time.Now()
 
@@ -93,11 +94,13 @@ func AnimeByID(ctx context.Context, animeService anime.AnimeServiceImpl, id stri
 	}
 
 	metrics.ResolverHistrogramMetricSuccess("AnimeByID", float64(time.Since(startTime).Milliseconds()))
+
 	return transformAnimeToGraphQL(*foundAnime)
 }
 
 func TopRatedAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit *int) ([]*model.Anime, error) {
 	span := tracer.StartSpan("TopRatedAnime")
+	span.SetTag("type", "resolver")
 	defer span.Finish()
 	startTime := time.Now()
 
@@ -121,11 +124,13 @@ func TopRatedAnime(ctx context.Context, animeService anime.AnimeServiceImpl, lim
 	}
 
 	metrics.ResolverHistrogramMetricSuccess("TopRatedAnime", float64(time.Since(startTime).Milliseconds()))
+
 	return animes, nil
 }
 
 func MostPopularAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit *int) ([]*model.Anime, error) {
 	span := tracer.StartSpan("MostPopularAnime")
+	span.SetTag("type", "resolver")
 	defer span.Finish()
 	startTime := time.Now()
 
@@ -149,11 +154,13 @@ func MostPopularAnime(ctx context.Context, animeService anime.AnimeServiceImpl, 
 	}
 
 	metrics.ResolverHistrogramMetricSuccess("MostPopularAnime", float64(time.Since(startTime).Milliseconds()))
+
 	return animes, nil
 }
 
 func NewestAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit *int) ([]*model.Anime, error) {
 	span := tracer.StartSpan("NewestAnime")
+	span.SetTag("type", "resolver")
 	defer span.Finish()
 	startTime := time.Now()
 
@@ -177,5 +184,6 @@ func NewestAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit
 	}
 
 	metrics.ResolverHistrogramMetricSuccess("NewestAnime", float64(time.Since(startTime).Milliseconds()))
+
 	return animes, nil
 }
