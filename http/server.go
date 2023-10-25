@@ -14,7 +14,7 @@ import (
 func SetupServer(cfg config.Config) *muxtrace.Router {
 
 	router := muxtrace.NewRouter()
-
+	router.Use(handlers.TracingMiddleware)
 	router.Handle("/ui/playground", playground.Handler("GraphQL playground", "/graphql")).Methods("GET")
 	router.Handle("/graphql", handlers.BuildRootHandler(cfg)).Methods("POST")
 	router.Handle("/healthcheck", handlers.HealthCheckHandler()).Methods("GET")
