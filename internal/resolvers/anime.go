@@ -81,7 +81,7 @@ func transformAnimeToGraphQL(animeEntity anime2.Anime) (*model.Anime, error) {
 }
 
 func AnimeByID(ctx context.Context, animeService anime.AnimeServiceImpl, id string) (*model.Anime, error) {
-	span := tracer.StartSpan("AnimeByID")
+	span, _ := tracer.StartSpanFromContext(ctx, "AnimeByID")
 	span.SetTag("id", id)
 	span.SetTag("type", "resolver")
 	defer span.Finish()
@@ -99,7 +99,7 @@ func AnimeByID(ctx context.Context, animeService anime.AnimeServiceImpl, id stri
 }
 
 func TopRatedAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit *int) ([]*model.Anime, error) {
-	span := tracer.StartSpan("TopRatedAnime")
+	span, _ := tracer.StartSpanFromContext(ctx, "TopRatedAnime")
 	span.SetTag("type", "resolver")
 	defer span.Finish()
 	startTime := time.Now()
@@ -129,7 +129,7 @@ func TopRatedAnime(ctx context.Context, animeService anime.AnimeServiceImpl, lim
 }
 
 func MostPopularAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit *int) ([]*model.Anime, error) {
-	span := tracer.StartSpan("MostPopularAnime")
+	span, _ := tracer.StartSpanFromContext(ctx, "MostPopularAnime")
 	span.SetTag("type", "resolver")
 	defer span.Finish()
 	startTime := time.Now()
@@ -159,7 +159,7 @@ func MostPopularAnime(ctx context.Context, animeService anime.AnimeServiceImpl, 
 }
 
 func NewestAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit *int) ([]*model.Anime, error) {
-	span := tracer.StartSpan("NewestAnime")
+	span, _ := tracer.StartSpanFromContext(ctx, "NewestAnime")
 	span.SetTag("type", "resolver")
 	defer span.Finish()
 	startTime := time.Now()

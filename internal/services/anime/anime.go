@@ -24,7 +24,7 @@ func NewAnimeService(animeRepository anime.AnimeRepositoryImpl) AnimeServiceImpl
 }
 
 func (a *AnimeService) AnimeByID(ctx context.Context, id string) (*anime.Anime, error) {
-	span := tracer.StartSpan("AnimeByID")
+	span, _ := tracer.StartSpanFromContext(ctx, "AnimeByID")
 	span.SetTag("service", "anime")
 	span.SetTag("type", "service")
 	defer span.Finish()
@@ -33,7 +33,7 @@ func (a *AnimeService) AnimeByID(ctx context.Context, id string) (*anime.Anime, 
 }
 
 func (a *AnimeService) TopRatedAnime(ctx context.Context, limit int) ([]*anime.Anime, error) {
-	span := tracer.StartSpan("TopRatedAnime")
+	span, _ := tracer.StartSpanFromContext(ctx, "TopRatedAnime")
 	span.SetTag("service", "anime")
 	span.SetTag("type", "service")
 	defer span.Finish()
@@ -42,7 +42,7 @@ func (a *AnimeService) TopRatedAnime(ctx context.Context, limit int) ([]*anime.A
 }
 
 func (a *AnimeService) MostPopularAnime(ctx context.Context, limit int) ([]*anime.Anime, error) {
-	span := tracer.StartSpan("MostPopularAnime")
+	span, _ := tracer.StartSpanFromContext(ctx, "MostPopularAnime")
 	span.SetTag("service", "anime")
 	span.SetTag("type", "service")
 	defer span.Finish()
@@ -51,7 +51,7 @@ func (a *AnimeService) MostPopularAnime(ctx context.Context, limit int) ([]*anim
 }
 
 func (a *AnimeService) NewestAnime(ctx context.Context, limit int) ([]*anime.Anime, error) {
-	span := tracer.StartSpan("NewestAnime")
+	span, _ := tracer.StartSpanFromContext(ctx, "NewestAnime")
 	span.SetTag("service", "anime")
 	span.SetTag("type", "service")
 	defer span.Finish()
