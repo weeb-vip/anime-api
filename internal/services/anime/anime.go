@@ -29,7 +29,7 @@ func (a *AnimeService) AnimeByID(ctx context.Context, id string) (*anime.Anime, 
 	span.SetTag("type", "service")
 	defer span.Finish()
 
-	return a.Repository.FindById(id)
+	return a.Repository.FindById(tracer.ContextWithSpan(ctx, span), id)
 }
 
 func (a *AnimeService) TopRatedAnime(ctx context.Context, limit int) ([]*anime.Anime, error) {
@@ -38,7 +38,7 @@ func (a *AnimeService) TopRatedAnime(ctx context.Context, limit int) ([]*anime.A
 	span.SetTag("type", "service")
 	defer span.Finish()
 
-	return a.Repository.TopRatedAnime(limit)
+	return a.Repository.TopRatedAnime(tracer.ContextWithSpan(ctx, span), limit)
 }
 
 func (a *AnimeService) MostPopularAnime(ctx context.Context, limit int) ([]*anime.Anime, error) {
@@ -47,7 +47,7 @@ func (a *AnimeService) MostPopularAnime(ctx context.Context, limit int) ([]*anim
 	span.SetTag("type", "service")
 	defer span.Finish()
 
-	return a.Repository.MostPopularAnime(limit)
+	return a.Repository.MostPopularAnime(tracer.ContextWithSpan(ctx, span), limit)
 }
 
 func (a *AnimeService) NewestAnime(ctx context.Context, limit int) ([]*anime.Anime, error) {
@@ -56,5 +56,5 @@ func (a *AnimeService) NewestAnime(ctx context.Context, limit int) ([]*anime.Ani
 	span.SetTag("type", "service")
 	defer span.Finish()
 
-	return a.Repository.NewestAnime(limit)
+	return a.Repository.NewestAnime(tracer.ContextWithSpan(ctx, span), limit)
 }
