@@ -24,37 +24,37 @@ func NewAnimeService(animeRepository anime.AnimeRepositoryImpl) AnimeServiceImpl
 }
 
 func (a *AnimeService) AnimeByID(ctx context.Context, id string) (*anime.Anime, error) {
-	span, _ := tracer.StartSpanFromContext(ctx, "AnimeByID")
+	span, spanCtx := tracer.StartSpanFromContext(ctx, "AnimeByID")
 	span.SetTag("service", "anime")
 	span.SetTag("type", "service")
 	defer span.Finish()
 
-	return a.Repository.FindById(tracer.ContextWithSpan(ctx, span), id)
+	return a.Repository.FindById(spanCtx, id)
 }
 
 func (a *AnimeService) TopRatedAnime(ctx context.Context, limit int) ([]*anime.Anime, error) {
-	span, _ := tracer.StartSpanFromContext(ctx, "TopRatedAnime")
+	span, spanCtx := tracer.StartSpanFromContext(ctx, "TopRatedAnime")
 	span.SetTag("service", "anime")
 	span.SetTag("type", "service")
 	defer span.Finish()
 
-	return a.Repository.TopRatedAnime(tracer.ContextWithSpan(ctx, span), limit)
+	return a.Repository.TopRatedAnime(spanCtx, limit)
 }
 
 func (a *AnimeService) MostPopularAnime(ctx context.Context, limit int) ([]*anime.Anime, error) {
-	span, _ := tracer.StartSpanFromContext(ctx, "MostPopularAnime")
+	span, spanCtx := tracer.StartSpanFromContext(ctx, "MostPopularAnime")
 	span.SetTag("service", "anime")
 	span.SetTag("type", "service")
 	defer span.Finish()
 
-	return a.Repository.MostPopularAnime(tracer.ContextWithSpan(ctx, span), limit)
+	return a.Repository.MostPopularAnime(spanCtx, limit)
 }
 
 func (a *AnimeService) NewestAnime(ctx context.Context, limit int) ([]*anime.Anime, error) {
-	span, _ := tracer.StartSpanFromContext(ctx, "NewestAnime")
+	span, spanCtx := tracer.StartSpanFromContext(ctx, "NewestAnime")
 	span.SetTag("service", "anime")
 	span.SetTag("type", "service")
 	defer span.Finish()
 
-	return a.Repository.NewestAnime(tracer.ContextWithSpan(ctx, span), limit)
+	return a.Repository.NewestAnime(spanCtx, limit)
 }
