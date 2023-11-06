@@ -89,11 +89,11 @@ func AnimeByID(ctx context.Context, animeService anime.AnimeServiceImpl, id stri
 
 	foundAnime, err := animeService.AnimeByID(spanCtx, id)
 	if err != nil {
-		metrics.ResolverHistrogramMetricError("AnimeByID", float64(time.Since(startTime).Milliseconds()))
+		metrics.ResolverHistoDistMetricError("AnimeByID", float64(time.Since(startTime).Milliseconds()))
 		return nil, err
 	}
 
-	metrics.ResolverHistrogramMetricSuccess("AnimeByID", float64(time.Since(startTime).Milliseconds()))
+	metrics.ResolverHistoDistMetricSuccess("AnimeByID", float64(time.Since(startTime).Milliseconds()))
 
 	return transformAnimeToGraphQL(*foundAnime)
 }
@@ -110,7 +110,7 @@ func TopRatedAnime(ctx context.Context, animeService anime.AnimeServiceImpl, lim
 	}
 	foundAnime, err := animeService.TopRatedAnime(spanCtx, *limit)
 	if err != nil {
-		metrics.ResolverHistrogramMetricError("TopRatedAnime", float64(time.Since(startTime).Milliseconds()))
+		metrics.ResolverHistoDistMetricError("TopRatedAnime", float64(time.Since(startTime).Milliseconds()))
 		return nil, err
 	}
 
@@ -123,7 +123,7 @@ func TopRatedAnime(ctx context.Context, animeService anime.AnimeServiceImpl, lim
 		animes = append(animes, anime)
 	}
 
-	metrics.ResolverHistrogramMetricSuccess("TopRatedAnime", float64(time.Since(startTime).Milliseconds()))
+	metrics.ResolverHistoDistMetricSuccess("TopRatedAnime", float64(time.Since(startTime).Milliseconds()))
 
 	return animes, nil
 }
@@ -140,7 +140,7 @@ func MostPopularAnime(ctx context.Context, animeService anime.AnimeServiceImpl, 
 	}
 	foundAnime, err := animeService.MostPopularAnime(spanCtx, *limit)
 	if err != nil {
-		metrics.ResolverHistrogramMetricError("MostPopularAnime", float64(time.Since(startTime).Milliseconds()))
+		metrics.ResolverHistoDistMetricError("MostPopularAnime", float64(time.Since(startTime).Milliseconds()))
 		return nil, err
 	}
 
@@ -153,7 +153,7 @@ func MostPopularAnime(ctx context.Context, animeService anime.AnimeServiceImpl, 
 		animes = append(animes, anime)
 	}
 
-	metrics.ResolverHistrogramMetricSuccess("MostPopularAnime", float64(time.Since(startTime).Milliseconds()))
+	metrics.ResolverHistoDistMetricSuccess("MostPopularAnime", float64(time.Since(startTime).Milliseconds()))
 
 	return animes, nil
 }
@@ -170,7 +170,7 @@ func NewestAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit
 	}
 	foundAnime, err := animeService.NewestAnime(spanCtx, *limit)
 	if err != nil {
-		metrics.ResolverHistrogramMetricError("NewestAnime", float64(time.Since(startTime).Milliseconds()))
+		metrics.ResolverHistoDistMetricError("NewestAnime", float64(time.Since(startTime).Milliseconds()))
 		return nil, err
 	}
 
@@ -183,7 +183,7 @@ func NewestAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit
 		animes = append(animes, anime)
 	}
 
-	metrics.ResolverHistrogramMetricSuccess("NewestAnime", float64(time.Since(startTime).Milliseconds()))
+	metrics.ResolverHistoDistMetricSuccess("NewestAnime", float64(time.Since(startTime).Milliseconds()))
 
 	return animes, nil
 }
