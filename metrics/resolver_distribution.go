@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-func ResolverHistrogramMetricSuccess(ResolverName string, duration float64) error {
+func ResolverDistributionMetricSuccess(ResolverName string, duration float64) error {
 	client := NewMetricPusher()
 
 	tags := []string{
@@ -14,7 +14,7 @@ func ResolverHistrogramMetricSuccess(ResolverName string, duration float64) erro
 
 	fmt.Println(tags)
 
-	err := client.GetClient().Histogram("graphql.resolver.millisecond", duration, tags, 1)
+	err := client.GetClient().Distribution("graphql.resolver.dist.millisecond", duration, tags, 1)
 	if err != nil {
 		return err
 	}
@@ -22,7 +22,7 @@ func ResolverHistrogramMetricSuccess(ResolverName string, duration float64) erro
 	return nil
 }
 
-func ResolverHistrogramMetricError(ResolverName string, duration float64) error {
+func ResolverDistributionMetricError(ResolverName string, duration float64) error {
 	client := NewMetricPusher()
 
 	tags := []string{
@@ -32,7 +32,7 @@ func ResolverHistrogramMetricError(ResolverName string, duration float64) error 
 
 	fmt.Println(tags)
 
-	err := client.GetClient().Histogram("graphql.resolver.millisecond", duration, tags, 1)
+	err := client.GetClient().Distribution("graphql.resolver.dist.millisecond", duration, tags, 1)
 	if err != nil {
 		return err
 	}
