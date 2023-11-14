@@ -2,15 +2,13 @@ package handlers
 
 import (
 	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/weeb-vip/anime-api/config"
+	"github.com/weeb-vip/anime-api/graph"
 	"github.com/weeb-vip/anime-api/graph/generated"
 	"github.com/weeb-vip/anime-api/internal/db"
 	anime2 "github.com/weeb-vip/anime-api/internal/db/repositories/anime"
-	"github.com/weeb-vip/anime-api/internal/services/anime"
-	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
-
-	"github.com/weeb-vip/anime-api/config"
-	"github.com/weeb-vip/anime-api/graph"
 	"github.com/weeb-vip/anime-api/internal/directives"
+	"github.com/weeb-vip/anime-api/internal/services/anime"
 	"net/http"
 )
 
@@ -28,13 +26,4 @@ func BuildRootHandler(conf config.Config) http.Handler {
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(cfg))
 
 	return srv
-}
-
-// middleware to pass span in context
-func TracingMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		span, ctx := tracer.StartSpanFromContext(r.Context(), "http.request")
-		defer span.Finish()
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
 }

@@ -1,47 +1,43 @@
 package metrics
 
 import (
-	"fmt"
-	"github.com/DataDog/datadog-go/v5/statsd"
-	"log"
-	"os"
+	metricsLib "github.com/tempmee/go-metrics-lib"
+	"github.com/tempmee/go-metrics-lib/clients/prometheus"
 )
 
-var (
-	// MetricsPusherInstance is a singleton of MetricsPusher
-	MetricsPusherInstance MetricsPusher
-)
+var metricsInstance metricsLib.MetricsImpl
 
-type MetricsPusher interface {
-	GetClient() *statsd.Client
+var prometheusInstance *prometheus.PrometheusClient
+
+func NewMetricsInstance() metricsLib.MetricsImpl {
+	if metricsInstance == nil {
+		prometheusInstance = NewPrometheusInstance()
+		initMetrics(prometheusInstance)
+		metricsInstance = metricsLib.NewMetrics(prometheusInstance, 1)
+	}
+	return metricsInstance
 }
 
-type MetricsPusherImpl struct {
-	Client *statsd.Client
+func NewPrometheusInstance() *prometheus.PrometheusClient {
+	if prometheusInstance == nil {
+		prometheusInstance = prometheus.NewPrometheusClient()
+		initMetrics(prometheusInstance)
+	}
+	return prometheusInstance
 }
 
-// NewMetricPusher singleton
-func NewMetricPusher() MetricsPusher {
-	// get DD_AGENT_HOST and DD_DOGSTATSD_PORT from env
-	DD_AGENT_HOST := os.Getenv("DD_AGENT_HOST")
-	dogstatsd_client, err := statsd.New(fmt.Sprintf("%s:%d", DD_AGENT_HOST, 8125))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if dogstatsd_client == nil {
-		log.Fatal("dogstatsd_client is nil")
-	}
-
-	if MetricsPusherInstance == nil {
-		MetricsPusherInstance = &MetricsPusherImpl{
-			Client: dogstatsd_client,
-		}
-	}
-
-	return MetricsPusherInstance
-}
-
-func (m *MetricsPusherImpl) GetClient() *statsd.Client {
-	return m.Client
+func initMetrics(prometheusInstance *prometheus.PrometheusClient) {
+	prometheusInstance.CreateHistogramVec("graphql_resolver_millisecond", "graphql resolver millisecond", []string{"resolver", "service", "result"}, []float64{
+		// create buckets 10000 split into 10 buckets
+		100,
+		200,
+		300,
+		400,
+		500,
+		600,
+		700,
+		800,
+		900,
+		1000,
+	})
 }
