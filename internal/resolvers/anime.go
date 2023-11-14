@@ -3,11 +3,11 @@ package resolvers
 import (
 	"context"
 	"encoding/json"
+	metrics_lib "github.com/tempmee/go-metrics-lib"
 	"github.com/weeb-vip/anime-api/graph/model"
 	anime2 "github.com/weeb-vip/anime-api/internal/db/repositories/anime"
 	"github.com/weeb-vip/anime-api/internal/services/anime"
 	"github.com/weeb-vip/anime-api/metrics"
-	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 	"time"
 )
 
@@ -81,36 +81,45 @@ func transformAnimeToGraphQL(animeEntity anime2.Anime) (*model.Anime, error) {
 }
 
 func AnimeByID(ctx context.Context, animeService anime.AnimeServiceImpl, id string) (*model.Anime, error) {
-	span, spanCtx := tracer.StartSpanFromContext(ctx, "AnimeByID")
-	span.SetTag("id", id)
-	span.SetTag("type", "resolver")
-	defer span.Finish()
+
 	startTime := time.Now()
 
-	foundAnime, err := animeService.AnimeByID(spanCtx, id)
+	foundAnime, err := animeService.AnimeByID(ctx, id)
 	if err != nil {
-		metrics.ResolverHistoDistMetricError("AnimeByID", float64(time.Since(startTime).Milliseconds()))
+		_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
+			Resolver: "AnimeByID",
+			Service:  "anime-api",
+			Protocol: "graphql",
+			Result:   metrics_lib.Error,
+		})
 		return nil, err
 	}
 
-	metrics.ResolverHistoDistMetricSuccess("AnimeByID", float64(time.Since(startTime).Milliseconds()))
+	_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
+		Resolver: "AnimeByID",
+		Service:  "anime-api",
+		Protocol: "graphql",
+		Result:   metrics_lib.Success,
+	})
 
 	return transformAnimeToGraphQL(*foundAnime)
 }
 
 func TopRatedAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit *int) ([]*model.Anime, error) {
-	span, spanCtx := tracer.StartSpanFromContext(ctx, "TopRatedAnime")
-	span.SetTag("type", "resolver")
-	defer span.Finish()
 	startTime := time.Now()
 
 	if limit == nil {
 		l := 10
 		limit = &l
 	}
-	foundAnime, err := animeService.TopRatedAnime(spanCtx, *limit)
+	foundAnime, err := animeService.TopRatedAnime(ctx, *limit)
 	if err != nil {
-		metrics.ResolverHistoDistMetricError("TopRatedAnime", float64(time.Since(startTime).Milliseconds()))
+		_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
+			Resolver: "TopRatedAnime",
+			Service:  "anime-api",
+			Protocol: "graphql",
+			Result:   metrics_lib.Error,
+		})
 		return nil, err
 	}
 
@@ -123,24 +132,31 @@ func TopRatedAnime(ctx context.Context, animeService anime.AnimeServiceImpl, lim
 		animes = append(animes, anime)
 	}
 
-	metrics.ResolverHistoDistMetricSuccess("TopRatedAnime", float64(time.Since(startTime).Milliseconds()))
+	_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
+		Resolver: "TopRatedAnime",
+		Service:  "anime-api",
+		Protocol: "graphql",
+		Result:   metrics_lib.Success,
+	})
 
 	return animes, nil
 }
 
 func MostPopularAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit *int) ([]*model.Anime, error) {
-	span, spanCtx := tracer.StartSpanFromContext(ctx, "MostPopularAnime")
-	span.SetTag("type", "resolver")
-	defer span.Finish()
 	startTime := time.Now()
 
 	if limit == nil {
 		l := 10
 		limit = &l
 	}
-	foundAnime, err := animeService.MostPopularAnime(spanCtx, *limit)
+	foundAnime, err := animeService.MostPopularAnime(ctx, *limit)
 	if err != nil {
-		metrics.ResolverHistoDistMetricError("MostPopularAnime", float64(time.Since(startTime).Milliseconds()))
+		_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
+			Resolver: "MostPopularAnime",
+			Service:  "anime-api",
+			Protocol: "graphql",
+			Result:   metrics_lib.Error,
+		})
 		return nil, err
 	}
 
@@ -153,24 +169,31 @@ func MostPopularAnime(ctx context.Context, animeService anime.AnimeServiceImpl, 
 		animes = append(animes, anime)
 	}
 
-	metrics.ResolverHistoDistMetricSuccess("MostPopularAnime", float64(time.Since(startTime).Milliseconds()))
+	_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
+		Resolver: "MostPopularAnime",
+		Service:  "anime-api",
+		Protocol: "graphql",
+		Result:   metrics_lib.Success,
+	})
 
 	return animes, nil
 }
 
 func NewestAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit *int) ([]*model.Anime, error) {
-	span, spanCtx := tracer.StartSpanFromContext(ctx, "NewestAnime")
-	span.SetTag("type", "resolver")
-	defer span.Finish()
 	startTime := time.Now()
 
 	if limit == nil {
 		l := 10
 		limit = &l
 	}
-	foundAnime, err := animeService.NewestAnime(spanCtx, *limit)
+	foundAnime, err := animeService.NewestAnime(ctx, *limit)
 	if err != nil {
-		metrics.ResolverHistoDistMetricError("NewestAnime", float64(time.Since(startTime).Milliseconds()))
+		_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
+			Resolver: "NewestAnime",
+			Service:  "anime-api",
+			Protocol: "graphql",
+			Result:   metrics_lib.Error,
+		})
 		return nil, err
 	}
 
@@ -183,7 +206,12 @@ func NewestAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit
 		animes = append(animes, anime)
 	}
 
-	metrics.ResolverHistoDistMetricSuccess("NewestAnime", float64(time.Since(startTime).Milliseconds()))
+	_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
+		Resolver: "NewestAnime",
+		Service:  "anime-api",
+		Protocol: "graphql",
+		Result:   metrics_lib.Success,
+	})
 
 	return animes, nil
 }
