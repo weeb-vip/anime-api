@@ -27,7 +27,7 @@ func NewPrometheusInstance() *prometheus.PrometheusClient {
 }
 
 func initMetrics(prometheusInstance *prometheus.PrometheusClient) {
-	prometheusInstance.CreateHistogramVec("graphql_resolver_millisecond", "graphql resolver millisecond", []string{"resolver", "service", "result"}, []float64{
+	prometheusInstance.CreateHistogramVec("", "graphql resolver millisecond", []string{"resolver", "service", "result"}, []float64{
 		// create buckets 10000 split into 10 buckets
 		100,
 		200,
