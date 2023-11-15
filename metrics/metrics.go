@@ -40,4 +40,18 @@ func initMetrics(prometheusInstance *prometheus.PrometheusClient) {
 		900,
 		1000,
 	})
+
+	prometheusInstance.CreateHistogramVec("database_query_duration_histogram_milliseconds", "database calls millisecond", []string{"service", "table", "method", "result"}, []float64{
+		// create buckets 10000 split into 10 buckets
+		100,
+		200,
+		300,
+		400,
+		500,
+		600,
+		700,
+		800,
+		900,
+		1000,
+	})
 }
