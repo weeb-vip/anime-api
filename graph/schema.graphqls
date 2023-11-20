@@ -3,47 +3,77 @@
 # https://gqlgen.com/getting-started/
 
 type AnimeApi {
-    "Version of event publish service"
+    "Version of event anime-api service"
     version: String!
 }
 
 type ApiInfo {
+    "API Info of the AnimeAPI"
     animeApi: AnimeApi! @goField(forceResolver: true)
+    "Name of the API"
     name: String!
 }
 
+"Anime Type"
 type Anime @key(fields: "id") {
+    "ID of the anime"
     id: ID!
+    "AniDB ID of the anime"
     anidbid: String
+    "English titel the anime"
     titleEn: String
+    "Japanese titel the anime"
     titleJp: String
+    "Romaji titel the anime"
     titleRomaji: String
+    "Kanji titel the anime"
     titleKanji: String
+    "Synonyms of the anime"
     titleSynonyms: [String!]
+    "Description of the anime"
     description: String
+    "Image URL of the anime"
     imageUrl: String
+    "Tags of the anime"
     tags: [String!]
+    "Studios of the anime"
     studios: [String!]
+    "Anime status (finished, airing, upcoming)"
     animeStatus: String
+    "Anime episode count"
     episodes: Int
+    "Anime episode duration"
     duration: String
+    "Anime rating"
     rating: String
-    createdAt: String!
-    updatedAt: String!
+    "Anime first air date"
     startDate: Time
+    "Anime last air date"
     endDate: Time
+    "Anime broadcast"
     broadcast: String
+    "Anime source (myanimelist, anime-planet, anidb, anilist, kitsu, anime_news_network)"
     source: String
+    "Anime licensors"
     licensors: [String!]
+    "Anime rank"
     ranking: Int
+    createdAt: String!
+        updatedAt: String!
 }
 
 type Query {
+    "Search for anime in the database"
     dbSearch(searchQuery: AnimeSearchInput!): [Anime!]
+    "AnimeAPI info"
     apiInfo:  ApiInfo!
+    "Get anime by ID"
     anime(id: ID!): Anime!
+    "Get newest anime with a response limit"
     newestAnime(limit: Int): [Anime!]
+    "Get top rated anime with a response limit"
     topRatedAnime(limit: Int): [Anime!]
+    "Get most popular anime with a response limit"
     mostPopularAnime(limit: Int): [Anime!]
 }
 
