@@ -10,6 +10,7 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/httpfs"
 	"github.com/weeb-vip/anime-api/config"
 	"github.com/weeb-vip/anime-api/internal/db"
+	"log"
 	"net/http"
 )
 
@@ -53,6 +54,7 @@ func getMigration() (*migrate.Migrate, error) {
 }
 
 func MigrateUp() error {
+	log.Println("Migrating up")
 	m, err := getMigration()
 	if err != nil {
 		return err

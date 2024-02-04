@@ -7,11 +7,17 @@ package graph
 import (
 	"context"
 	"fmt"
-
 	"github.com/weeb-vip/anime-api/graph/generated"
 	"github.com/weeb-vip/anime-api/graph/model"
 	"github.com/weeb-vip/anime-api/internal/resolvers"
 )
+
+// Episodes is the resolver for the episodes field.
+func (r *animeResolver) Episodes(ctx context.Context, obj *model.Anime) ([]*model.Episode, error) {
+	animeID := obj.ID
+	return resolvers.EpisodesByAnimeID(ctx, r.AnimeEpisodeService, animeID)
+
+}
 
 // AnimeAPI is the resolver for the animeApi field.
 func (r *apiInfoResolver) AnimeAPI(ctx context.Context, obj *model.APIInfo) (*model.AnimeAPI, error) {
@@ -48,11 +54,25 @@ func (r *queryResolver) MostPopularAnime(ctx context.Context, limit *int) ([]*mo
 	return resolvers.MostPopularAnime(ctx, r.AnimeService, limit)
 }
 
+// Episode is the resolver for the episode field.
+func (r *queryResolver) Episode(ctx context.Context, id string) (*model.Episode, error) {
+	panic(fmt.Errorf("not implemented: Episode - episode"))
+}
+
+// EpisodesByAnimeID is the resolver for the episodesByAnimeId field.
+func (r *queryResolver) EpisodesByAnimeID(ctx context.Context, animeID string) ([]*model.Episode, error) {
+	return resolvers.EpisodesByAnimeID(ctx, r.AnimeEpisodeService, animeID)
+}
+
+// Anime returns generated.AnimeResolver implementation.
+func (r *Resolver) Anime() generated.AnimeResolver { return &animeResolver{r} }
+
 // ApiInfo returns generated.ApiInfoResolver implementation.
 func (r *Resolver) ApiInfo() generated.ApiInfoResolver { return &apiInfoResolver{r} }
 
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
+type animeResolver struct{ *Resolver }
 type apiInfoResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }

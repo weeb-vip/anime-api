@@ -24,10 +24,17 @@ func main() {
 		DD_AGENT_HOST: "localhost",
 		DD_AGENT_PORT: 8125,
 	})
+	datadogClient.CreateHistogram("graphql.resolver.millisecond", []float64{10, 20, 30, 40, 50, 60, 70, 80, 90, 100}, map[string]string{
+		"resolver": "resolver",
+		"service":  "graphql",
+		"result":   "success",
+	}, 1)
+
 	metrics := MetricsLib.NewMetrics(
 		datadogClient,
 		1,
 	)
+
 	err := metrics.HistogramMetric("graphql.resolver.millisecond", 100,
 		map[string]string{
 			"resolver": "resolver",

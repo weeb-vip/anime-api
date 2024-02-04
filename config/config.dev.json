@@ -1,0 +1,9 @@
+{
+  "dbconfig": {
+    "host": "localhost",
+    "user": "user",
+    "password": "mysecretpassword",
+    "database": "anime",
+    "port": 15306
+  }
+}
