@@ -15,6 +15,7 @@ require (
 	github.com/spf13/cobra v1.7.0
 	github.com/tempmee/go-metrics-lib v0.0.0-00010101000000-000000000000
 	github.com/vektah/gqlparser/v2 v2.5.8
+	github.com/weeb-vip/anime-sync v1.2.0
 	gopkg.in/DataDog/dd-trace-go.v1 v1.56.0
 	gorm.io/driver/mysql v1.5.0
 	gorm.io/gorm v1.25.3
