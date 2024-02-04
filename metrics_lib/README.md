@@ -14,6 +14,41 @@ library currently supports these standard metrics:
 | call_duration_histogram_milliseconds             | service= service name<br/>result= success \|fail<br/>function= function name                                                                         | Looking at the duration of a call for a function (not for every function, used for things we want to watch)                                 | |
 
 
+### Usage of metrics specific to clients
+
+Some clients will provide their own metrics, such as the prometheus client. Additionally, metrics like Histograms 
+support more details such as buckets. In the case of histograms, Buckets need to be set initially to keep consistency in
+metrics.
+
+How to setup metric:
+```go
+datadogClient.CreateHistogram("graphql.resolver.millisecond", []float64{10, 20, 30, 40, 50, 60, 70, 80, 90, 100}, map[string]string{
+    "resolver": "resolver",
+    "service":  "graphql",
+    "result":   "success",
+}, 1)
+```
+
+How to use metric:
+```go
+metrics := MetricsLib.NewMetrics(
+    datadogClient,
+    1,
+)
+err := metrics.HistogramMetric("graphql.resolver.millisecond", 100, // if metric not created, will have empty buckets (le:+Inf) 
+    map[string]string{
+        "resolver": "resolver",
+        "service":  "graphql",
+        "result":   "success",
+    },
+)
+```
+
+Reference to metrics is done through the metric name, thus metrics cannot be overwritten. You may add on more labels 
+and overwrite label values, however labels initially set cannot be removed during runtime.
+
+## Examples
+
 See examples in examples folder.
 
 Example Usage:
@@ -45,11 +80,21 @@ func main() {
 		DD_AGENT_HOST: "localhost",
 		DD_AGENT_PORT: 8125,
 	})
+	err := datadogClient.CreateHistogram("graphql.resolver.millisecond", []float64{10, 20, 30, 40, 50, 60, 70, 80, 90, 100}, map[string]string{
+		"resolver": "resolver",
+		"service":  "graphql",
+		"result":   "success",
+	}, 1)
+	if err != nil {
+		log.Println("Failed to create histogram")
+	}
+
 	metrics := MetricsLib.NewMetrics(
 		datadogClient,
 		1,
 	)
-	err := metrics.HistogramMetric("graphql.resolver.millisecond", 100,
+
+	err = metrics.HistogramMetric("graphql.resolver.millisecond", 100,
 		map[string]string{
 			"resolver": "resolver",
 			"service":  "graphql",
@@ -85,4 +130,17 @@ func main() {
 
 }
 
+
 ```
+
+# References for Metrics
+https://prometheus.io/docs/concepts/metric_types/
+
+## Best Practices (applies to datadog as well)
+
+https://prometheus.io/docs/practices/naming/
+https://prometheus.io/docs/practices/consoles/
+https://prometheus.io/docs/practices/instrumentation/
+https://prometheus.io/docs/practices/histograms/
+https://prometheus.io/docs/practices/alerting/
+https://prometheus.io/docs/practices/rules/

@@ -7,7 +7,6 @@ package graph
 import (
 	"context"
 	"fmt"
-
 	"github.com/weeb-vip/anime-api/graph/generated"
 	"github.com/weeb-vip/anime-api/graph/model"
 )
@@ -15,6 +14,11 @@ import (
 // FindAnimeByID is the resolver for the findAnimeByID field.
 func (r *entityResolver) FindAnimeByID(ctx context.Context, id string) (*model.Anime, error) {
 	panic(fmt.Errorf("not implemented: FindAnimeByID - findAnimeByID"))
+}
+
+// FindEpisodeByAnimeID is the resolver for the findEpisodeByAnimeID field.
+func (r *entityResolver) FindEpisodeByAnimeID(ctx context.Context, animeID *string) (*model.Episode, error) {
+	panic(fmt.Errorf("not implemented: FindEpisodeByAnimeID - findEpisodeByAnimeID"))
 }
 
 // Entity returns generated.EntityResolver implementation.

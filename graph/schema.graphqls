@@ -41,7 +41,9 @@ type Anime @key(fields: "id") {
     "Anime status (finished, airing, upcoming)"
     animeStatus: String
     "Anime episode count"
-    episodes: Int
+    episodeCount: Int
+    "returns all episodes of the anime"
+    episodes: [Episode!] @goField(forceResolver: true)
     "Anime episode duration"
     duration: String
     "Anime rating"
@@ -59,7 +61,27 @@ type Anime @key(fields: "id") {
     "Anime rank"
     ranking: Int
     createdAt: String!
-        updatedAt: String!
+    updatedAt: String!
+}
+
+type Episode @key(fields: "animeId") {
+    "ID of the episode"
+    id: ID!
+    "Anime ID of the episode"
+    animeId: String
+    "Episode number"
+    episodeNumber: Int
+    "Episode title"
+    titleEn: String
+    "Episode title"
+    titleJp: String
+    "Episode synopsis"
+    synopsis: String
+    "Episode air date"
+    airDate: Time
+
+    createdAt: String!
+    updatedAt: String!
 }
 
 type Query {
@@ -75,6 +97,10 @@ type Query {
     topRatedAnime(limit: Int): [Anime!]
     "Get most popular anime with a response limit"
     mostPopularAnime(limit: Int): [Anime!]
+    "Get episode by ID"
+    episode(id: ID!): Episode!
+    "Get episodes by anime ID"
+    episodesByAnimeId(animeId: ID!): [Episode!]
 }
 
 input AnimeSearchInput {

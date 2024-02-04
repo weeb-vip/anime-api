@@ -6,36 +6,60 @@ import (
 	"time"
 )
 
+// Anime Type
 type Anime struct {
-	ID            string     `json:"id"`
-	Anidbid       *string    `json:"anidbid,omitempty"`
-	TitleEn       *string    `json:"titleEn,omitempty"`
-	TitleJp       *string    `json:"titleJp,omitempty"`
-	TitleRomaji   *string    `json:"titleRomaji,omitempty"`
-	TitleKanji    *string    `json:"titleKanji,omitempty"`
-	TitleSynonyms []string   `json:"titleSynonyms,omitempty"`
-	Description   *string    `json:"description,omitempty"`
-	ImageURL      *string    `json:"imageUrl,omitempty"`
-	Tags          []string   `json:"tags,omitempty"`
-	Studios       []string   `json:"studios,omitempty"`
-	AnimeStatus   *string    `json:"animeStatus,omitempty"`
-	Episodes      *int       `json:"episodes,omitempty"`
-	Duration      *string    `json:"duration,omitempty"`
-	Rating        *string    `json:"rating,omitempty"`
-	CreatedAt     string     `json:"createdAt"`
-	UpdatedAt     string     `json:"updatedAt"`
-	StartDate     *time.Time `json:"startDate,omitempty"`
-	EndDate       *time.Time `json:"endDate,omitempty"`
-	Broadcast     *string    `json:"broadcast,omitempty"`
-	Source        *string    `json:"source,omitempty"`
-	Licensors     []string   `json:"licensors,omitempty"`
-	Ranking       *int       `json:"ranking,omitempty"`
+	// ID of the anime
+	ID string `json:"id"`
+	// AniDB ID of the anime
+	Anidbid *string `json:"anidbid,omitempty"`
+	// English titel the anime
+	TitleEn *string `json:"titleEn,omitempty"`
+	// Japanese titel the anime
+	TitleJp *string `json:"titleJp,omitempty"`
+	// Romaji titel the anime
+	TitleRomaji *string `json:"titleRomaji,omitempty"`
+	// Kanji titel the anime
+	TitleKanji *string `json:"titleKanji,omitempty"`
+	// Synonyms of the anime
+	TitleSynonyms []string `json:"titleSynonyms,omitempty"`
+	// Description of the anime
+	Description *string `json:"description,omitempty"`
+	// Image URL of the anime
+	ImageURL *string `json:"imageUrl,omitempty"`
+	// Tags of the anime
+	Tags []string `json:"tags,omitempty"`
+	// Studios of the anime
+	Studios []string `json:"studios,omitempty"`
+	// Anime status (finished, airing, upcoming)
+	AnimeStatus *string `json:"animeStatus,omitempty"`
+	// Anime episode count
+	EpisodeCount *int `json:"episodeCount,omitempty"`
+	// returns all episodes of the anime
+	Episodes []*Episode `json:"episodes,omitempty"`
+	// Anime episode duration
+	Duration *string `json:"duration,omitempty"`
+	// Anime rating
+	Rating *string `json:"rating,omitempty"`
+	// Anime first air date
+	StartDate *time.Time `json:"startDate,omitempty"`
+	// Anime last air date
+	EndDate *time.Time `json:"endDate,omitempty"`
+	// Anime broadcast
+	Broadcast *string `json:"broadcast,omitempty"`
+	// Anime source (myanimelist, anime-planet, anidb, anilist, kitsu, anime_news_network)
+	Source *string `json:"source,omitempty"`
+	// Anime licensors
+	Licensors []string `json:"licensors,omitempty"`
+	// Anime rank
+	Ranking   *int   `json:"ranking,omitempty"`
+	CreatedAt string `json:"createdAt"`
+	UpdatedAt string `json:"updatedAt"`
 }
 
 func (Anime) IsEntity() {}
 
 type AnimeAPI struct {
-	// Version of event publish service
+	// Version of event anime-api service
 	Version string `json:"version"`
 }
 
@@ -59,6 +83,29 @@ type AnimeSearchInput struct {
 }
 
 type APIInfo struct {
+	// API Info of the AnimeAPI
 	AnimeAPI *AnimeAPI `json:"animeApi"`
-	Name     string    `json:"name"`
+	// Name of the API
+	Name string `json:"name"`
 }
+
+type Episode struct {
+	// ID of the episode
+	ID string `json:"id"`
+	// Anime ID of the episode
+	AnimeID *string `json:"animeId,omitempty"`
+	// Episode number
+	EpisodeNumber *int `json:"episodeNumber,omitempty"`
+	// Episode title
+	TitleEn *string `json:"titleEn,omitempty"`
+	// Episode title
+	TitleJp *string `json:"titleJp,omitempty"`
+	// Episode synopsis
+	Synopsis *string `json:"synopsis,omitempty"`
+	// Episode air date
+	AirDate   *time.Time `json:"airDate,omitempty"`
+	CreatedAt string     `json:"createdAt"`
+	UpdatedAt string     `json:"updatedAt"`
+}
+
+func (Episode) IsEntity() {}

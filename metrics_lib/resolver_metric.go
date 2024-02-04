@@ -11,8 +11,6 @@ type ResolverMetricLabels struct {
 
 func ResolverMetric(client Client, value float64, labels ResolverMetricLabels) error {
 	err := client.Histogram("resolver_request_duration_histogram_milliseconds", value, map[string]string{
-		"service":  labels.Service,
-		"protocol": labels.Protocol,
 		"resolver": labels.Resolver,
 		"result":   labels.Result,
 	}, 1)

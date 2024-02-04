@@ -62,7 +62,7 @@ func transformAnimeToGraphQL(animeEntity anime2.Anime) (*model.Anime, error) {
 		TitleRomaji:   animeEntity.TitleRomaji,
 		TitleSynonyms: titleSynonyms,
 		Description:   animeEntity.Synopsis,
-		Episodes:      animeEntity.Episodes,
+		EpisodeCount:  animeEntity.Episodes,
 		Duration:      animeEntity.Duration,
 		Studios:       studios,
 		Tags:          tags,
