@@ -8,7 +8,7 @@ import (
 
 var datadogInstance *datadog.DataDogClient
 
-func NewMetricsInstance() metricsLib.MetricsImpl {
+func NewMetricsInstanceD() metricsLib.MetricsImpl {
 	cfg := config.LoadConfigOrPanic()
 	if metricsInstance == nil {
 		datadogInstance = datadog.NewDatadogClient(datadog.DataDogConfig{
