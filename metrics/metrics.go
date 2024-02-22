@@ -9,7 +9,7 @@ var metricsInstance metricsLib.MetricsImpl
 
 var prometheusInstance *prometheus.PrometheusClient
 
-func NewMetricsInstanceP() metricsLib.MetricsImpl {
+func NewMetricsInstance() metricsLib.MetricsImpl {
 	if metricsInstance == nil {
 		prometheusInstance = NewPrometheusInstance()
 		initMetrics(prometheusInstance)
