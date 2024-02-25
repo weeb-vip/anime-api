@@ -12,9 +12,9 @@ ALTER TABLE `anime` ADD COLUMN end_date VARCHAR(255);
 UPDATE `anime` SET end_date = formatted_timestamp WHERE formatted_timestamp IS NOT NULL;
 ALTER TABLE `anime` DROP COLUMN formatted_timestamp;
 
-ALTER TABLE `anime` ADD COLUMN formatted_timestamp VARCHAR(255);
-UPDATE `anime` SET formatted_timestamp = DATE_FORMAT(airing_start, '%Y-%m-%d %H:%i:%s') WHERE airing_start IS NOT NULL;
-ALTER TABLE `anime` DROP COLUMN airing_start;
-ALTER TABLE `anime` ADD COLUMN airing_start VARCHAR(255);
-UPDATE `anime` SET airing_start = formatted_timestamp WHERE formatted_timestamp IS NOT NULL;
-ALTER TABLE `anime` DROP COLUMN formatted_timestamp;
+ALTER TABLE `episodes` ADD COLUMN formatted_timestamp VARCHAR(255);
+UPDATE `episodes` SET formatted_timestamp = DATE_FORMAT(aired, '%Y-%m-%d %H:%i:%s') WHERE aired IS NOT NULL;
+ALTER TABLE `episodes` DROP COLUMN aired;
+ALTER TABLE `episodes` ADD COLUMN aired VARCHAR(255);
+UPDATE `episodes` SET aired = formatted_timestamp WHERE formatted_timestamp IS NOT NULL;
+ALTER TABLE `episodes` DROP COLUMN formatted_timestamp;
