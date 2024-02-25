@@ -10,8 +10,12 @@ import (
 
 func transformEpisodeToGraphql(episodeEntity anime2.AnimeEpisode) (*model.Episode, error) {
 	var aired *time.Time
-	if episodeEntity.Aired.Valid {
-		aired = &episodeEntity.Aired.Time
+	if episodeEntity.Aired != nil {
+		airedTime, err := time.Parse("2006-01-02 15:04:05", *episodeEntity.Aired)
+		if err != nil {
+			return nil, err
+		}
+		aired = &airedTime
 	}
 
 	return &model.Episode{

@@ -16,7 +16,7 @@ ALTER TABLE `episodes` ADD `aired2` TIMESTAMP NULL DEFAULT NULL AFTER `aired`;
 UPDATE `episodes` SET aired2=FROM_UNIXTIME(aired) WHERE 1=1;
 ALTER TABLE `episodes` DROP `aired`;
 ALTER TABLE `episodes` ADD `aired` TIMESTAMP NULL DEFAULT NULL AFTER `aired2`;
-UPDATE `episodes` SET aired=aired2 WHERE 1=1;;
+UPDATE `episodes` SET aired=aired2 WHERE 1=1;
 ALTER TABLE `episodes` DROP `aired2`;
 
 

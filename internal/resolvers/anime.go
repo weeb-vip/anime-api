@@ -12,6 +12,7 @@ import (
 )
 
 func transformAnimeToGraphQL(animeEntity anime2.Anime) (*model.Anime, error) {
+
 	var studios []string
 	if animeEntity.Studios != nil {
 		err := json.Unmarshal([]byte(*animeEntity.Studios), &studios)
@@ -44,13 +45,21 @@ func transformAnimeToGraphQL(animeEntity anime2.Anime) (*model.Anime, error) {
 	}
 
 	var startDate *time.Time
-	if animeEntity.StartDate.Valid {
-		startDate = &animeEntity.StartDate.Time
+	if animeEntity.StartDate != nil {
+		startDateTime, err := time.Parse("2006-01-02 15:04:05", *animeEntity.StartDate)
+		if err != nil {
+			return nil, err
+		}
+		startDate = &startDateTime
 	}
 
 	var endDate *time.Time
-	if animeEntity.EndDate.Valid {
-		endDate = &animeEntity.EndDate.Time
+	if animeEntity.EndDate != nil {
+		endDateTime, err := time.Parse("2006-01-02 15:04:05", *animeEntity.EndDate)
+		if err != nil {
+			return nil, err
+		}
+		endDate = &endDateTime
 	}
 
 	return &model.Anime{
