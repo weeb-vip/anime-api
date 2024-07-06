@@ -127,8 +127,8 @@ type ApiInfoResolver interface {
 	AnimeAPI(ctx context.Context, obj *model.APIInfo) (*model.AnimeAPI, error)
 }
 type EntityResolver interface {
-	FindAnimeByID(ctx context.Context, id string) (*model.Anime, error)
-	FindEpisodeByAnimeID(ctx context.Context, animeID *string) (*model.Episode, error)
+	FindAnimeByID(ctx context.Context, obj fedruntime.Entity, id string) (*model.Anime, error)
+	FindEpisodeByAnimeID(ctx context.Context, obj fedruntime.Entity, animeID *string) (*model.Episode, error)
 }
 type QueryResolver interface {
 	DbSearch(ctx context.Context, searchQuery model.AnimeSearchInput) ([]*model.Anime, error)
@@ -2195,7 +2195,7 @@ func (ec *executionContext) fieldContext_ApiInfo_name(ctx context.Context, field
 	return fc, nil
 }
 
-func (ec *executionContext) _Entity_findAnimeByID(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Entity_findAnimeByID(ctx context.Context, field graphql.CollectedField, obj fedruntime.Entity) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Entity_findAnimeByID(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -2209,7 +2209,7 @@ func (ec *executionContext) _Entity_findAnimeByID(ctx context.Context, field gra
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Entity().FindAnimeByID(rctx, fc.Args["id"].(string))
+		return ec.resolvers.Entity().FindAnimeByID(rctx, obj, fc.Args["id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2300,7 +2300,7 @@ func (ec *executionContext) fieldContext_Entity_findAnimeByID(ctx context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _Entity_findEpisodeByAnimeID(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Entity_findEpisodeByAnimeID(ctx context.Context, field graphql.CollectedField, obj fedruntime.Entity) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Entity_findEpisodeByAnimeID(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -2314,7 +2314,7 @@ func (ec *executionContext) _Entity_findEpisodeByAnimeID(ctx context.Context, fi
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Entity().FindEpisodeByAnimeID(rctx, fc.Args["animeID"].(*string))
+		return ec.resolvers.Entity().FindEpisodeByAnimeID(rctx, obj, fc.Args["animeID"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5870,20 +5870,12 @@ func (ec *executionContext) _ApiInfo(ctx context.Context, sel ast.SelectionSet, 
 
 var entityImplementors = []string{"Entity"}
 
-func (ec *executionContext) _Entity(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
+func (ec *executionContext) _Entity(ctx context.Context, sel ast.SelectionSet, obj fedruntime.Entity) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, entityImplementors)
-	ctx = graphql.WithFieldContext(ctx, &graphql.FieldContext{
-		Object: "Entity",
-	})
 
 	out := graphql.NewFieldSet(fields)
 	deferred := make(map[string]*graphql.FieldSet)
 	for i, field := range fields {
-		innerCtx := graphql.WithRootFieldContext(ctx, &graphql.RootFieldContext{
-			Object: field.Name,
-			Field:  field,
-		})
-
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Entity")
@@ -5896,19 +5888,33 @@ func (ec *executionContext) _Entity(ctx context.Context, sel ast.SelectionSet) g
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Entity_findAnimeByID(ctx, field)
+				res = ec._Entity_findAnimeByID(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
 				return res
 			}
 
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx,
-					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
 			}
 
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "findEpisodeByAnimeID":
 			field := field
 
@@ -5918,19 +5924,33 @@ func (ec *executionContext) _Entity(ctx context.Context, sel ast.SelectionSet) g
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Entity_findEpisodeByAnimeID(ctx, field)
+				res = ec._Entity_findEpisodeByAnimeID(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
 				return res
 			}
 
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx,
-					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
 			}
 
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

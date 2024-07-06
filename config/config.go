@@ -3,7 +3,7 @@ package config
 import "github.com/jinzhu/configor"
 
 type Config struct {
-	AppConfig     AppConfig
+	AppConfig     AppConfig `env:"APPCONFIG"`
 	DBConfig      DBConfig
 	DataDogConfig DataDogConfig
 }
@@ -11,7 +11,7 @@ type Config struct {
 type AppConfig struct {
 	APPName string `default:"anime-api"`
 	Port    int    `env:"PORT" default:"3000"`
-	Version string `default:"x.x.x"`
+	Version string `default:"x.x.x" env:"VERSION"`
 }
 
 type DBConfig struct {
