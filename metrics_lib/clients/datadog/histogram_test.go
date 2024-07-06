@@ -1,8 +1,8 @@
 package datadog_test
 
 import (
+	"github.com/TempMee/go-metrics-lib/clients/datadog"
 	"github.com/stretchr/testify/assert"
-	"github.com/tempmee/go-metrics-lib/clients/datadog"
 	"testing"
 )
 

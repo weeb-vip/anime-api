@@ -2,9 +2,9 @@ module example.com/prometheus
 
 go 1.21.0
 
-replace github.com/tempmee/go-metrics-lib => ../../
+replace github.com/TempMee/go-metrics-lib => ../../
 
-require github.com/tempmee/go-metrics-lib v0.0.0-00010101000000-000000000000
+require github.com/TempMee/go-metrics-lib v0.0.0-00010101000000-000000000000
 
 require (
 	github.com/beorn7/perks v1.0.1 // indirect

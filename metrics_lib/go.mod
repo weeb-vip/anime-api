@@ -1,4 +1,4 @@
-module github.com/tempmee/go-metrics-lib
+module github.com/TempMee/go-metrics-lib
 
 go 1.21.0
 

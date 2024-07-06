@@ -4,16 +4,16 @@ go 1.21.0
 
 toolchain go1.21.4
 
-replace github.com/tempmee/go-metrics-lib => ./metrics_lib
+replace github.com/TempMee/go-metrics-lib => ./metrics_lib
 
 require (
 	github.com/99designs/gqlgen v0.17.36
+	github.com/TempMee/go-metrics-lib v0.0.0-00010101000000-000000000000
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/golang-migrate/migrate/v4 v4.15.2
 	github.com/golang/mock v1.6.0
 	github.com/jinzhu/configor v1.2.1
 	github.com/spf13/cobra v1.7.0
-	github.com/tempmee/go-metrics-lib v0.0.0-00010101000000-000000000000
 	github.com/vektah/gqlparser/v2 v2.5.8
 	gopkg.in/DataDog/dd-trace-go.v1 v1.56.0
 	gorm.io/driver/mysql v1.5.0

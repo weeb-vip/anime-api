@@ -1,8 +1,8 @@
 package metrics
 
 import (
-	metricsLib "github.com/tempmee/go-metrics-lib"
-	"github.com/tempmee/go-metrics-lib/clients/datadog"
+	metricsLib "github.com/TempMee/go-metrics-lib"
+	"github.com/TempMee/go-metrics-lib/clients/datadog"
 	"github.com/weeb-vip/anime-api/config"
 )
 

@@ -1,8 +1,8 @@
 package main
 
 import (
-	MetricsLib "github.com/tempmee/go-metrics-lib"
-	"github.com/tempmee/go-metrics-lib/clients/datadog"
+	MetricsLib "github.com/TempMee/go-metrics-lib"
+	"github.com/TempMee/go-metrics-lib/clients/datadog"
 	"log"
 )
 
