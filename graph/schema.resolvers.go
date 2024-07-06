@@ -7,6 +7,7 @@ package graph
 import (
 	"context"
 	"fmt"
+
 	"github.com/weeb-vip/anime-api/graph/generated"
 	"github.com/weeb-vip/anime-api/graph/model"
 	"github.com/weeb-vip/anime-api/internal/resolvers"
@@ -16,7 +17,6 @@ import (
 func (r *animeResolver) Episodes(ctx context.Context, obj *model.Anime) ([]*model.Episode, error) {
 	animeID := obj.ID
 	return resolvers.EpisodesByAnimeID(ctx, r.AnimeEpisodeService, animeID)
-
 }
 
 // AnimeAPI is the resolver for the animeApi field.
