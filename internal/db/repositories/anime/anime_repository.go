@@ -4,6 +4,7 @@ import (
 	"context"
 	metrics_lib "github.com/TempMee/go-metrics-lib"
 	"github.com/weeb-vip/anime-api/internal/db"
+	anime "github.com/weeb-vip/anime-api/internal/db/repositories/anime_episode"
 	"github.com/weeb-vip/anime-api/metrics"
 	"time"
 )
@@ -631,13 +632,19 @@ func (a *AnimeRepository) AiringAnime(ctx context.Context, limit int) ([]*Anime,
 	startTime := time.Now()
 
 	var animes []*Anime
-	// find anime where they are not marked completed and they have an episode in the past 1 month. Join with the episodes table by anime id
-	err := a.db.DB.Joins("JOIN episodes ON episodes.anime_id = anime.id").
+	subQuery := a.db.DB.Model(&anime.AnimeEpisode{}).
+		Select("anime_id, MIN(aired) as aired").
+		// last month
+		Where("aired > ?", time.Now().AddDate(0, 0, -30)).
+		Where("aired < ?", time.Now().AddDate(0, 0, 7)).
+		Group("anime_id")
+
+	err := a.db.DB.Table("anime").
+		Select("anime.*, e.aired").
+		Joins("JOIN (?) e ON anime.id = e.anime_id", subQuery).
 		Where("anime.status = ?", "Finished Airing").
-		Where("episodes.aired > ?", "2024-06-06").
-		Distinct("anime.id, anime.title, anime.status, anime.ranking").
-		Order("anime.ranking").
-		Find(&animes).Error
+		Order("e.aired").
+		Scan(&animes).Error
 
 	if err != nil {
 		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
