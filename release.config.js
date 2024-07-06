@@ -41,7 +41,7 @@ module.exports = {
     prepare: [
         {
             path: "@semantic-release/exec",
-            cmd: "docker build . --build-arg VERSION=${nextRelease.version} -t ${getTestDockerImageName()}:\${nextRelease.version}"
+            cmd: "docker build . --build-arg VERSION=${nextRelease.version} -t ${getTestDockerImageName()}:${nextRelease.version}"
         },
         {
             path: "@semantic-release/exec",
