@@ -644,7 +644,7 @@ func (a *AnimeRepository) AiringAnime(ctx context.Context, limit int) ([]*Anime,
 		Joins("JOIN (?) e ON anime.id = e.anime_id", subQuery).
 		Where("anime.status = ?", "Finished Airing").
 		Where("anime.start_date < ?", time.Now()).
-		Where("anime.end_date > ?", time.Now()).
+		Where("anime.end_date IS NULL OR anime.end_date > ?", time.Now()).
 		Order("e.aired").
 		Scan(&animes).Error
 
