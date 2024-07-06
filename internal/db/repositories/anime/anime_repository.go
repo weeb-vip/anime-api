@@ -635,7 +635,7 @@ func (a *AnimeRepository) AiringAnime(ctx context.Context, limit int) ([]*Anime,
 	subQuery := a.db.DB.Model(&anime.AnimeEpisode{}).
 		Select("anime_id, MIN(aired) as aired").
 		Where("aired > DATE_ADD(NOW(), INTERVAL -2 DAY)").
-		Where("aired < DATE_ADD(NOW(), INTERVAL 1 MONTH)").
+		Where("aired < DATE_ADD(NOW(), INTERVAL 30 DAY)").
 		Group("anime_id")
 
 	err := a.db.DB.Table("anime").
