@@ -635,7 +635,7 @@ func (a *AnimeRepository) AiringAnime(ctx context.Context, limit int) ([]*Anime,
 	subQuery := a.db.DB.Model(&anime.AnimeEpisode{}).
 		Select("anime_id, MIN(aired) as aired").
 		// last month
-		Where("aired > ?", time.Now().AddDate(0, 0, -30)).
+		Where("aired > ?", time.Now().AddDate(0, 0, -1)).
 		Where("aired < ?", time.Now().AddDate(0, 0, 7)).
 		Group("anime_id")
 
