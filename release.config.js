@@ -41,29 +41,29 @@ module.exports = {
     prepare: [
         {
             path: "@semantic-release/exec",
-            cmd: "docker build . --build-arg VERSION=${nextRelease.version} -t ${getTestDockerImageName()}:${nextRelease.version}"
+            cmd: `docker build . --build-arg VERSION=\${nextRelease.version} -t ${getTestDockerImageName()}:\${nextRelease.version}`
         },
         {
             path: "@semantic-release/exec",
-            cmd: "docker tag ${getTestDockerImageName()}:${nextRelease.version} ${getTestDockerImageName()}:latest"
+            cmd: `docker tag ${getTestDockerImageName()}:\${nextRelease.version} ${getTestDockerImageName()}:latest`
         },
         {
             path: "@semantic-release/exec",
-            cmd: "docker tag ${getTestDockerImageName()}:${nextRelease.version} ${getProdDockerImageName()}:\${nextRelease.version}"
+            cmd: `docker tag ${getTestDockerImageName()}:\${nextRelease.version} ${getProdDockerImageName()}:\${nextRelease.version}`
         },
         {
             path: "@semantic-release/exec",
-            cmd: "docker tag ${getTestDockerImageName()}:${nextRelease.version} ${getProdDockerImageName()}:latest"
+            cmd: `docker tag ${getTestDockerImageName()}:\${nextRelease.version} ${getProdDockerImageName()}:latest`
         },
     ],
     publish: [
         {
             path: "@semantic-release/exec",
-            cmd: "docker push ${getProdDockerImageName()}:${nextRelease.version}"
+            cmd: `docker push ${getProdDockerImageName()}:\${nextRelease.version}`
         },
         {
             path: "@semantic-release/exec",
-            cmd: "docker push ${getProdDockerImageName()}:latest"
+            cmd: `docker push ${getProdDockerImageName()}:latest`
         },
         "@semantic-release/github"
     ],
