@@ -64,6 +64,11 @@ func (r *queryResolver) EpisodesByAnimeID(ctx context.Context, animeID string) (
 	return resolvers.EpisodesByAnimeID(ctx, r.AnimeEpisodeService, animeID)
 }
 
+// CurrentlyAiring is the resolver for the currentlyAiring field.
+func (r *queryResolver) CurrentlyAiring(ctx context.Context) ([]*model.Anime, error) {
+	return resolvers.CurrentlyAiring(ctx, r.AnimeService)
+}
+
 // Anime returns generated.AnimeResolver implementation.
 func (r *Resolver) Anime() generated.AnimeResolver { return &animeResolver{r} }
 

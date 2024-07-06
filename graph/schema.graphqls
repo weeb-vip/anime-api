@@ -101,6 +101,8 @@ type Query {
     episode(id: ID!): Episode!
     "Get episodes by anime ID"
     episodesByAnimeId(animeId: ID!): [Episode!]
+    "Get currently airing anime"
+    currentlyAiring: [Anime!]
 }
 
 input AnimeSearchInput {

@@ -105,6 +105,7 @@ type ComplexityRoot struct {
 	Query struct {
 		APIInfo            func(childComplexity int) int
 		Anime              func(childComplexity int, id string) int
+		CurrentlyAiring    func(childComplexity int) int
 		DbSearch           func(childComplexity int, searchQuery model.AnimeSearchInput) int
 		Episode            func(childComplexity int, id string) int
 		EpisodesByAnimeID  func(childComplexity int, animeID string) int
@@ -139,6 +140,7 @@ type QueryResolver interface {
 	MostPopularAnime(ctx context.Context, limit *int) ([]*model.Anime, error)
 	Episode(ctx context.Context, id string) (*model.Episode, error)
 	EpisodesByAnimeID(ctx context.Context, animeID string) ([]*model.Episode, error)
+	CurrentlyAiring(ctx context.Context) ([]*model.Anime, error)
 }
 
 type executableSchema struct {
@@ -450,6 +452,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Anime(childComplexity, args["id"].(string)), true
+
+	case "Query.currentlyAiring":
+		if e.complexity.Query.CurrentlyAiring == nil {
+			break
+		}
+
+		return e.complexity.Query.CurrentlyAiring(childComplexity), true
 
 	case "Query.dbSearch":
 		if e.complexity.Query.DbSearch == nil {
@@ -770,6 +779,8 @@ type Query {
     episode(id: ID!): Episode!
     "Get episodes by anime ID"
     episodesByAnimeId(animeId: ID!): [Episode!]
+    "Get currently airing anime"
+    currentlyAiring: [Anime!]
 }
 
 input AnimeSearchInput {
@@ -3459,6 +3470,97 @@ func (ec *executionContext) fieldContext_Query_episodesByAnimeId(ctx context.Con
 	if fc.Args, err = ec.field_Query_episodesByAnimeId_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_currentlyAiring(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_currentlyAiring(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().CurrentlyAiring(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Anime)
+	fc.Result = res
+	return ec.marshalOAnime2ᚕᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnimeᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_currentlyAiring(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Anime_id(ctx, field)
+			case "anidbid":
+				return ec.fieldContext_Anime_anidbid(ctx, field)
+			case "titleEn":
+				return ec.fieldContext_Anime_titleEn(ctx, field)
+			case "titleJp":
+				return ec.fieldContext_Anime_titleJp(ctx, field)
+			case "titleRomaji":
+				return ec.fieldContext_Anime_titleRomaji(ctx, field)
+			case "titleKanji":
+				return ec.fieldContext_Anime_titleKanji(ctx, field)
+			case "titleSynonyms":
+				return ec.fieldContext_Anime_titleSynonyms(ctx, field)
+			case "description":
+				return ec.fieldContext_Anime_description(ctx, field)
+			case "imageUrl":
+				return ec.fieldContext_Anime_imageUrl(ctx, field)
+			case "tags":
+				return ec.fieldContext_Anime_tags(ctx, field)
+			case "studios":
+				return ec.fieldContext_Anime_studios(ctx, field)
+			case "animeStatus":
+				return ec.fieldContext_Anime_animeStatus(ctx, field)
+			case "episodeCount":
+				return ec.fieldContext_Anime_episodeCount(ctx, field)
+			case "episodes":
+				return ec.fieldContext_Anime_episodes(ctx, field)
+			case "duration":
+				return ec.fieldContext_Anime_duration(ctx, field)
+			case "rating":
+				return ec.fieldContext_Anime_rating(ctx, field)
+			case "startDate":
+				return ec.fieldContext_Anime_startDate(ctx, field)
+			case "endDate":
+				return ec.fieldContext_Anime_endDate(ctx, field)
+			case "broadcast":
+				return ec.fieldContext_Anime_broadcast(ctx, field)
+			case "source":
+				return ec.fieldContext_Anime_source(ctx, field)
+			case "licensors":
+				return ec.fieldContext_Anime_licensors(ctx, field)
+			case "ranking":
+				return ec.fieldContext_Anime_ranking(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Anime_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Anime_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Anime", field.Name)
+		},
 	}
 	return fc, nil
 }
@@ -6186,6 +6288,25 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_episodesByAnimeId(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "currentlyAiring":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_currentlyAiring(ctx, field)
 				return res
 			}
 

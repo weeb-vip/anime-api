@@ -224,3 +224,36 @@ func NewestAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit
 
 	return animes, nil
 }
+
+func CurrentlyAiring(ctx context.Context, animeService anime.AnimeServiceImpl) ([]*model.Anime, error) {
+	startTime := time.Now()
+
+	foundAnime, err := animeService.AiringAnime(ctx, 10)
+	if err != nil {
+		_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
+			Resolver: "CurrentlyAiring",
+			Service:  "anime-api",
+			Protocol: "graphql",
+			Result:   metrics_lib.Error,
+		})
+		return nil, err
+	}
+
+	var animes []*model.Anime
+	for _, animeEntity := range foundAnime {
+		anime, err := transformAnimeToGraphQL(*animeEntity)
+		if err != nil {
+			return nil, err
+		}
+		animes = append(animes, anime)
+	}
+
+	_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
+		Resolver: "CurrentlyAiring",
+		Service:  "anime-api",
+		Protocol: "graphql",
+		Result:   metrics_lib.Success,
+	})
+
+	return animes, nil
+}

@@ -35,6 +35,7 @@ type AnimeRepositoryImpl interface {
 	TopRatedAnime(ctx context.Context, limit int) ([]*Anime, error)
 	MostPopularAnime(ctx context.Context, limit int) ([]*Anime, error)
 	NewestAnime(ctx context.Context, limit int) ([]*Anime, error)
+	AiringAnime(ctx context.Context, limit int) ([]*Anime, error)
 }
 
 type AnimeRepository struct {
@@ -607,6 +608,37 @@ func (a *AnimeRepository) NewestAnime(ctx context.Context, limit int) ([]*Anime,
 	var animes []*Anime
 	// order by start date desc where not null
 	err := a.db.DB.Where("start_date ").Order("start_date desc").Limit(limit).Find(&animes).Error
+	if err != nil {
+		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
+			Service: "anime-api",
+			Table:   "anime",
+			Method:  metrics_lib.DatabaseMetricMethodSelect,
+			Result:  metrics_lib.Error,
+		})
+		return nil, err
+	}
+
+	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
+		Service: "anime-api",
+		Table:   "anime",
+		Method:  metrics_lib.DatabaseMetricMethodSelect,
+		Result:  metrics_lib.Success,
+	})
+	return animes, nil
+}
+
+func (a *AnimeRepository) AiringAnime(ctx context.Context, limit int) ([]*Anime, error) {
+	startTime := time.Now()
+
+	var animes []*Anime
+	// find anime where they are not marked completed and they have an episode in the past 1 month. Join with the episodes table by anime id
+	err := a.db.DB.Joins("JOIN episodes ON episodes.anime_id = anime.id").
+		Where("anime.status = ?", "Finished Airing").
+		Where("episodes.aired > ?", "2024-06-06").
+		Distinct("anime.id, anime.title, anime.status, anime.ranking").
+		Order("anime.ranking").
+		Find(&animes).Error
+
 	if err != nil {
 		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
 			Service: "anime-api",
