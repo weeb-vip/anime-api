@@ -26,7 +26,7 @@ func (r *apiInfoResolver) AnimeAPI(ctx context.Context, obj *model.APIInfo) (*mo
 
 // DbSearch is the resolver for the dbSearch field.
 func (r *queryResolver) DbSearch(ctx context.Context, searchQuery model.AnimeSearchInput) ([]*model.Anime, error) {
-	panic(fmt.Errorf("not implemented: DbSearch - dbSearch"))
+	return resolvers.DBSearchAnime(ctx, r.AnimeService, searchQuery.Query, searchQuery.Page, searchQuery.PerPage)
 }
 
 // APIInfo is the resolver for the apiInfo field.
