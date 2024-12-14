@@ -261,16 +261,6 @@ func CurrentlyAiring(ctx context.Context, animeService anime.AnimeServiceImpl) (
 func DBSearchAnime(ctx context.Context, animeService anime.AnimeServiceImpl, query string, page int, limit int) ([]*model.Anime, error) {
 	startTime := time.Now()
 
-	if page == nil {
-		p := 1
-		page = &p
-	}
-
-	if limit == nil {
-		l := 10
-		limit = &l
-	}
-
 	foundAnime, err := animeService.SearchedAnime(ctx, query, page, limit)
 	if err != nil {
 		_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
