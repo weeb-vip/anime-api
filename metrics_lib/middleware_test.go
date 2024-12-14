@@ -2,7 +2,8 @@ package metrics_lib_test
 
 import (
 	metrics_lib "github.com/TempMee/go-metrics-lib"
-	"github.com/TempMee/go-metrics-lib/mocks"
+	"github.com/weeb-vip/anime-api/metrics/mocks"
+
 	"go.uber.org/mock/gomock"
 	"net/http"
 	"net/http/httptest"

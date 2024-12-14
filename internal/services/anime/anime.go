@@ -12,6 +12,7 @@ type AnimeServiceImpl interface {
 	MostPopularAnime(ctx context.Context, limit int) ([]*anime.Anime, error)
 	NewestAnime(ctx context.Context, limit int) ([]*anime.Anime, error)
 	AiringAnime(ctx context.Context, limit int) ([]*anime.Anime, error)
+	SearchedAnime(ctx context.Context, query string, page int, limit int) ([]*anime.Anime, error)
 }
 
 type AnimeService struct {
@@ -67,4 +68,13 @@ func (a *AnimeService) AiringAnime(ctx context.Context, limit int) ([]*anime.Ani
 	defer span.Finish()
 
 	return a.Repository.AiringAnime(spanCtx, limit)
+}
+
+func (a *AnimeService) SearchedAnime(ctx context.Context, query string, page int, limit int) ([]*anime.Anime, error) {
+	span, spanCtx := tracer.StartSpanFromContext(ctx, "SearchedAnime")
+	span.SetTag("service", "anime")
+	span.SetTag("type", "service")
+	defer span.Finish()
+
+	return a.Repository.SearchAnime(spanCtx, query, page, limit)
 }
