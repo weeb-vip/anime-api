@@ -1,8 +1,6 @@
 module github.com/weeb-vip/anime-api
 
-go 1.22
-
-toolchain go1.22.2
+go 1.23
 
 replace github.com/TempMee/go-metrics-lib => ./metrics_lib
 

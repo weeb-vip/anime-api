@@ -51,9 +51,10 @@ type Anime struct {
 	// Anime licensors
 	Licensors []string `json:"licensors,omitempty"`
 	// Anime rank
-	Ranking   *int   `json:"ranking,omitempty"`
-	CreatedAt string `json:"createdAt"`
-	UpdatedAt string `json:"updatedAt"`
+	Ranking     *int     `json:"ranking,omitempty"`
+	CreatedAt   string   `json:"createdAt"`
+	UpdatedAt   string   `json:"updatedAt"`
+	nextEpisode *Episode `json:"nextEpisode,omitempty"`
 }
 
 func (Anime) IsEntity() {}

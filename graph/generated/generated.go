@@ -45,7 +45,8 @@ type ResolverRoot interface {
 }
 
 type DirectiveRoot struct {
-	Scoped func(ctx context.Context, obj interface{}, next graphql.Resolver, scope string) (res interface{}, err error)
+	GoExtraField func(ctx context.Context, obj interface{}, next graphql.Resolver, name *string, typeArg string, overrideTags *string, description *string) (res interface{}, err error)
+	Scoped       func(ctx context.Context, obj interface{}, next graphql.Resolver, scope string) (res interface{}, err error)
 }
 
 type ComplexityRoot struct {
@@ -62,6 +63,7 @@ type ComplexityRoot struct {
 		ID            func(childComplexity int) int
 		ImageURL      func(childComplexity int) int
 		Licensors     func(childComplexity int) int
+		NextEpisode   func(childComplexity int) int
 		Ranking       func(childComplexity int) int
 		Rating        func(childComplexity int) int
 		Source        func(childComplexity int) int
@@ -123,6 +125,8 @@ type ComplexityRoot struct {
 
 type AnimeResolver interface {
 	Episodes(ctx context.Context, obj *model.Anime) ([]*model.Episode, error)
+
+	NextEpisode(ctx context.Context, obj *model.Anime) (*model.Episode, error)
 }
 type ApiInfoResolver interface {
 	AnimeAPI(ctx context.Context, obj *model.APIInfo) (*model.AnimeAPI, error)
@@ -241,6 +245,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Anime.Licensors(childComplexity), true
+
+	case "Anime.nextEpisode":
+		if e.complexity.Anime.NextEpisode == nil {
+			break
+		}
+
+		return e.complexity.Anime.NextEpisode(childComplexity), true
 
 	case "Anime.ranking":
 		if e.complexity.Anime.Ranking == nil {
@@ -659,12 +670,20 @@ directive @goField(
     forceResolver: Boolean
     name: String
     omittable: Boolean
+    type: String
 ) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
 
 directive @goTag(
     key: String!
     value: String
 ) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
+
+directive @goExtraField(
+    name: String
+    type: String!
+    overrideTags: String
+    description: String
+) repeatable on OBJECT | INPUT_OBJECT
 """
 ensures a user is logged in to access a particular field
 """
@@ -740,6 +759,7 @@ type Anime @key(fields: "id") {
     ranking: Int
     createdAt: String!
     updatedAt: String!
+    nextEpisode: Episode @goField(forceResolver: true, name: "nextEpisode" )
 }
 
 type Episode @key(fields: "animeId") {
@@ -838,6 +858,48 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) dir_goExtraField_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *string
+	if tmp, ok := rawArgs["name"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["name"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["type"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["type"] = arg1
+	var arg2 *string
+	if tmp, ok := rawArgs["overrideTags"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("overrideTags"))
+		arg2, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["overrideTags"] = arg2
+	var arg3 *string
+	if tmp, ok := rawArgs["description"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+		arg3, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["description"] = arg3
+	return args, nil
+}
 
 func (ec *executionContext) dir_scoped_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -2070,6 +2132,67 @@ func (ec *executionContext) fieldContext_Anime_updatedAt(ctx context.Context, fi
 	return fc, nil
 }
 
+func (ec *executionContext) _Anime_nextEpisode(ctx context.Context, field graphql.CollectedField, obj *model.Anime) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Anime_nextEpisode(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Anime().NextEpisode(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Episode)
+	fc.Result = res
+	return ec.marshalOEpisode2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐEpisode(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Anime_nextEpisode(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Anime",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Episode_id(ctx, field)
+			case "animeId":
+				return ec.fieldContext_Episode_animeId(ctx, field)
+			case "episodeNumber":
+				return ec.fieldContext_Episode_episodeNumber(ctx, field)
+			case "titleEn":
+				return ec.fieldContext_Episode_titleEn(ctx, field)
+			case "titleJp":
+				return ec.fieldContext_Episode_titleJp(ctx, field)
+			case "synopsis":
+				return ec.fieldContext_Episode_synopsis(ctx, field)
+			case "airDate":
+				return ec.fieldContext_Episode_airDate(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Episode_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Episode_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Episode", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _AnimeApi_version(ctx context.Context, field graphql.CollectedField, obj *model.AnimeAPI) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_AnimeApi_version(ctx, field)
 	if err != nil {
@@ -2293,6 +2416,8 @@ func (ec *executionContext) fieldContext_Entity_findAnimeByID(ctx context.Contex
 				return ec.fieldContext_Anime_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Anime_updatedAt(ctx, field)
+			case "nextEpisode":
+				return ec.fieldContext_Anime_nextEpisode(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Anime", field.Name)
 		},
@@ -2848,6 +2973,8 @@ func (ec *executionContext) fieldContext_Query_dbSearch(ctx context.Context, fie
 				return ec.fieldContext_Anime_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Anime_updatedAt(ctx, field)
+			case "nextEpisode":
+				return ec.fieldContext_Anime_nextEpisode(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Anime", field.Name)
 		},
@@ -3003,6 +3130,8 @@ func (ec *executionContext) fieldContext_Query_anime(ctx context.Context, field 
 				return ec.fieldContext_Anime_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Anime_updatedAt(ctx, field)
+			case "nextEpisode":
+				return ec.fieldContext_Anime_nextEpisode(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Anime", field.Name)
 		},
@@ -3105,6 +3234,8 @@ func (ec *executionContext) fieldContext_Query_newestAnime(ctx context.Context, 
 				return ec.fieldContext_Anime_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Anime_updatedAt(ctx, field)
+			case "nextEpisode":
+				return ec.fieldContext_Anime_nextEpisode(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Anime", field.Name)
 		},
@@ -3207,6 +3338,8 @@ func (ec *executionContext) fieldContext_Query_topRatedAnime(ctx context.Context
 				return ec.fieldContext_Anime_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Anime_updatedAt(ctx, field)
+			case "nextEpisode":
+				return ec.fieldContext_Anime_nextEpisode(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Anime", field.Name)
 		},
@@ -3309,6 +3442,8 @@ func (ec *executionContext) fieldContext_Query_mostPopularAnime(ctx context.Cont
 				return ec.fieldContext_Anime_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Anime_updatedAt(ctx, field)
+			case "nextEpisode":
+				return ec.fieldContext_Anime_nextEpisode(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Anime", field.Name)
 		},
@@ -3558,6 +3693,8 @@ func (ec *executionContext) fieldContext_Query_currentlyAiring(ctx context.Conte
 				return ec.fieldContext_Anime_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Anime_updatedAt(ctx, field)
+			case "nextEpisode":
+				return ec.fieldContext_Anime_nextEpisode(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Anime", field.Name)
 		},
@@ -5833,6 +5970,39 @@ func (ec *executionContext) _Anime(ctx context.Context, sel ast.SelectionSet, ob
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "nextEpisode":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Anime_nextEpisode(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -7355,6 +7525,13 @@ func (ec *executionContext) marshalOEpisode2ᚕᚖgithubᚗcomᚋweebᚑvipᚋan
 	}
 
 	return ret
+}
+
+func (ec *executionContext) marshalOEpisode2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐEpisode(ctx context.Context, sel ast.SelectionSet, v *model.Episode) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Episode(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {

@@ -48,3 +48,16 @@ func EpisodesByAnimeID(ctx context.Context, animeEpisodeService episodes.AnimeEp
 
 	return episodes, nil
 }
+
+func NextEpisode(ctx context.Context, animeEpisodeService episodes.AnimeEpisodeServiceImpl, animeID string) (*model.Episode, error) {
+	episodeEntity, err := animeEpisodeService.GetNextEpisode(ctx, animeID)
+	if err != nil {
+		return nil, err
+	}
+
+	if episodeEntity == nil {
+		return nil, nil
+	}
+
+	return transformEpisodeToGraphql(*episodeEntity)
+}

@@ -19,6 +19,12 @@ func (r *animeResolver) Episodes(ctx context.Context, obj *model.Anime) ([]*mode
 	return resolvers.EpisodesByAnimeID(ctx, r.AnimeEpisodeService, animeID)
 }
 
+// NextEpisode is the resolver for the nextEpisode field.
+func (r *animeResolver) NextEpisode(ctx context.Context, obj *model.Anime) (*model.Episode, error) {
+	animeID := obj.ID
+	return resolvers.NextEpisode(ctx, r.AnimeEpisodeService, animeID)
+}
+
 // AnimeAPI is the resolver for the animeApi field.
 func (r *apiInfoResolver) AnimeAPI(ctx context.Context, obj *model.APIInfo) (*model.AnimeAPI, error) {
 	return resolvers.AnimeAPI(r.Config)
