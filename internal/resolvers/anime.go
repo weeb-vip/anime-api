@@ -8,6 +8,7 @@ import (
 	anime2 "github.com/weeb-vip/anime-api/internal/db/repositories/anime"
 	"github.com/weeb-vip/anime-api/internal/services/anime"
 	"github.com/weeb-vip/anime-api/metrics"
+	"sort"
 	"time"
 )
 
@@ -253,6 +254,19 @@ func CurrentlyAiring(ctx context.Context, animeService anime.AnimeServiceImpl) (
 		Service:  "anime-api",
 		Protocol: "graphql",
 		Result:   metrics_lib.Success,
+	})
+	// sort anime by next episode aired date
+	sort.Slice(animes, func(i, j int) bool {
+		if animes[i].StartDate == nil && animes[j].StartDate == nil {
+			return false
+		}
+		if animes[i].StartDate == nil {
+			return true
+		}
+		if animes[j].StartDate == nil {
+			return false
+		}
+		return animes[i].StartDate.Before(*animes[j].StartDate)
 	})
 
 	return animes, nil
