@@ -609,7 +609,7 @@ func (a *AnimeRepository) NewestAnime(ctx context.Context, limit int) ([]*Anime,
 
 	var animes []*Anime
 	// order by start date desc where not null
-	err := a.db.DB.Where("start_date ").Order("start_date desc").Limit(limit).Find(&animes).Error
+	err := a.db.DB.Where("created_at ").Order("created_at desc").Limit(limit).Find(&animes).Error
 	if err != nil {
 		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
 			Service: "anime-api",
