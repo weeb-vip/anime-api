@@ -54,7 +54,7 @@ type Anime struct {
 	Ranking     *int     `json:"ranking,omitempty"`
 	CreatedAt   string   `json:"createdAt"`
 	UpdatedAt   string   `json:"updatedAt"`
-	nextEpisode *Episode `json:"nextEpisode,omitempty"`
+	NextEpisode *Episode `json:"nextEpisode,omitempty"`
 }
 
 func (Anime) IsEntity() {}

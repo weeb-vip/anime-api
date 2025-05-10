@@ -62,7 +62,7 @@ type Anime @key(fields: "id") {
     ranking: Int
     createdAt: String!
     updatedAt: String!
-    nextEpisode: Episode @goField(forceResolver: true, name: "nextEpisode" )
+    nextEpisode: Episode @goField(forceResolver: true )
 }
 
 type Episode @key(fields: "animeId") {

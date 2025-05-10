@@ -255,18 +255,16 @@ func CurrentlyAiring(ctx context.Context, animeService anime.AnimeServiceImpl) (
 		Protocol: "graphql",
 		Result:   metrics_lib.Success,
 	})
-	// sort anime by next episode aired date
+	// sort anime by nextEpisode aired date
 	sort.Slice(animes, func(i, j int) bool {
-		if animes[i].StartDate == nil && animes[j].StartDate == nil {
+		if animes[i].NextEpisode == nil || animes[j].NextEpisode == nil {
 			return false
 		}
-		if animes[i].StartDate == nil {
-			return true
-		}
-		if animes[j].StartDate == nil {
+		if animes[i].NextEpisode.AirDate == nil || animes[j].NextEpisode.AirDate == nil {
 			return false
 		}
-		return animes[i].StartDate.Before(*animes[j].StartDate)
+		return animes[i].NextEpisode.AirDate.Before(*animes[j].NextEpisode.AirDate)
+
 	})
 
 	return animes, nil
