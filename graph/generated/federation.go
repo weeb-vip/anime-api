@@ -120,6 +120,30 @@ func (ec *executionContext) __resolve_entities(ctx context.Context, representati
 				list[idx[i]] = entity
 				return nil
 			}
+		case "UserAnime":
+			resolverName, err := entityResolverNameForUserAnime(ctx, rep)
+			if err != nil {
+				return fmt.Errorf(`finding resolver for Entity "UserAnime": %w`, err)
+			}
+			switch resolverName {
+
+			case "findUserAnimeByAnimeID":
+				id0, err := ec.unmarshalNString2string(ctx, rep["animeID"])
+				if err != nil {
+					return fmt.Errorf(`unmarshalling param 0 for findUserAnimeByAnimeID(): %w`, err)
+				}
+				entity, err := ec.resolvers.Entity().FindUserAnimeByAnimeID(ctx, id0)
+				if err != nil {
+					return fmt.Errorf(`resolving Entity "UserAnime": %w`, err)
+				}
+
+				entity.AnimeID, err = ec.unmarshalNString2string(ctx, rep["animeID"])
+				if err != nil {
+					return err
+				}
+				list[idx[i]] = entity
+				return nil
+			}
 
 		}
 		return fmt.Errorf("%w: %s", ErrUnknownType, typeName)
@@ -221,4 +245,21 @@ func entityResolverNameForEpisode(ctx context.Context, rep map[string]interface{
 		return "findEpisodeByAnimeID", nil
 	}
 	return "", fmt.Errorf("%w for Episode", ErrTypeNotFound)
+}
+
+func entityResolverNameForUserAnime(ctx context.Context, rep map[string]interface{}) (string, error) {
+	for {
+		var (
+			m   map[string]interface{}
+			val interface{}
+			ok  bool
+		)
+		_ = val
+		m = rep
+		if _, ok = m["animeID"]; !ok {
+			break
+		}
+		return "findUserAnimeByAnimeID", nil
+	}
+	return "", fmt.Errorf("%w for UserAnime", ErrTypeNotFound)
 }

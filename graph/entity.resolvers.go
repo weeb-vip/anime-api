@@ -22,6 +22,14 @@ func (r *entityResolver) FindEpisodeByAnimeID(ctx context.Context, animeID *stri
 	panic(fmt.Errorf("not implemented: FindEpisodeByAnimeID - findEpisodeByAnimeID"))
 }
 
+// FindUserAnimeByAnimeID is the resolver for the findUserAnimeByAnimeID field.
+func (r *entityResolver) FindUserAnimeByAnimeID(ctx context.Context, animeID string) (*model.UserAnime, error) {
+	// this shouldn't do any checks since this is for federation
+	return &model.UserAnime{
+		AnimeID: animeID,
+	}, nil
+}
+
 // Entity returns generated.EntityResolver implementation.
 func (r *Resolver) Entity() generated.EntityResolver { return &entityResolver{r} }
 

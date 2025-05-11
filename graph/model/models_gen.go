@@ -110,3 +110,10 @@ type Episode struct {
 }
 
 func (Episode) IsEntity() {}
+
+type UserAnime struct {
+	AnimeID string `json:"animeID"`
+	Anime   *Anime `json:"anime,omitempty"`
+}
+
+func (UserAnime) IsEntity() {}

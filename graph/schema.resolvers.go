@@ -78,6 +78,11 @@ func (r *queryResolver) CurrentlyAiring(ctx context.Context) ([]*model.Anime, er
 	return resolvers.CurrentlyAiring(ctx, r.AnimeService)
 }
 
+// Anime is the resolver for the anime field.
+func (r *userAnimeResolver) Anime(ctx context.Context, obj *model.UserAnime) (*model.Anime, error) {
+	panic(fmt.Errorf("not implemented: Anime - anime"))
+}
+
 // Anime returns generated.AnimeResolver implementation.
 func (r *Resolver) Anime() generated.AnimeResolver { return &animeResolver{r} }
 
@@ -87,6 +92,10 @@ func (r *Resolver) ApiInfo() generated.ApiInfoResolver { return &apiInfoResolver
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
+// UserAnime returns generated.UserAnimeResolver implementation.
+func (r *Resolver) UserAnime() generated.UserAnimeResolver { return &userAnimeResolver{r} }
+
 type animeResolver struct{ *Resolver }
 type apiInfoResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
+type userAnimeResolver struct{ *Resolver }
