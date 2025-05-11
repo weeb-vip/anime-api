@@ -1,9 +1,10 @@
-/* rename aired to backup_aired */
+-- Rename the original 'aired' column
 ALTER TABLE episodes RENAME COLUMN aired TO backup_aired;
-/* add aired column with type date */
-ALTER TABLE episodes ADD COLUMN aired date;
 
-/* update aired column with the value from backup_aired */
+-- Add the new 'aired' column as DATE
+ALTER TABLE episodes ADD COLUMN aired DATE;
+
+-- Set 'aired' only where 'backup_aired' is not null
 UPDATE episodes
-SET aired = to_timestamp(backup_aired, 'YYYY-MM-DD HH24:MI:SS')::date
+SET aired = STR_TO_DATE(backup_aired, '%Y-%m-%d %H:%i:%s')
 WHERE backup_aired IS NOT NULL;
