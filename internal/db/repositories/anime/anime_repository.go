@@ -634,19 +634,15 @@ func (a *AnimeRepository) AiringAnime(ctx context.Context, limit int) ([]*Anime,
 
 	var animes []*Anime
 
-	subQuery := a.db.DB.
-		Model(&anime.AnimeEpisode{}).
-		Select("anime_id, MIN(aired) as aired").
-		Where("aired > NOW()").
-		Where("aired < DATE_ADD(NOW(), INTERVAL 30 DAY)").
+	subQuery := a.db.DB.Model(&anime.AnimeEpisode{}).
+		Select("anime_id, MIN(aired) AS next_aired").
+		Where("aired BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY)").
 		Group("anime_id")
 
-	err := a.db.DB.
-		Table("anime").
-		Select("anime.*, next_eps.aired").
-		Joins("JOIN (?) AS next_eps ON anime.id = next_eps.anime_id", subQuery).
+	err := a.db.DB.Table("anime").
+		Joins("JOIN (?) AS e ON anime.id = e.anime_id", subQuery).
 		Where("anime.end_date IS NULL").
-		Order("next_eps.aired ASC").
+		Order("e.next_aired").
 		Scan(&animes).Error
 
 	if err != nil {
