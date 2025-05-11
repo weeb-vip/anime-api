@@ -39,7 +39,7 @@ func (a *AnimeEpisodeService) GetNextEpisode(ctx context.Context, animeID string
 		// parse aired string to time.Time (we only want date, not time) ex: 2005-05-22 04:00:00
 		var airedTime time.Time
 		if episode.Aired != nil {
-			airedTime, err = time.Parse("2006-01-02 15:04:05", *episode.Aired)
+			airedTime = *episode.Aired
 			if err != nil {
 				return nil, err
 			}
