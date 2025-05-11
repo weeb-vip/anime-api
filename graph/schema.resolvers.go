@@ -80,7 +80,8 @@ func (r *queryResolver) CurrentlyAiring(ctx context.Context) ([]*model.Anime, er
 
 // Anime is the resolver for the anime field.
 func (r *userAnimeResolver) Anime(ctx context.Context, obj *model.UserAnime) (*model.Anime, error) {
-	panic(fmt.Errorf("not implemented: Anime - anime"))
+	animeID := obj.AnimeID
+	return resolvers.AnimeByID(ctx, r.AnimeService, animeID)
 }
 
 // Anime returns generated.AnimeResolver implementation.

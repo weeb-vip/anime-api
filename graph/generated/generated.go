@@ -861,7 +861,7 @@ input AnimeSearchInput {
 
 extend type UserAnime @key(fields: "animeID") {
     animeID: String! @external
-    anime: Anime @requires(fields: "animeID") @goField(forceResolver: true)
+    anime: Anime @goField(forceResolver: true)
 }`, BuiltIn: false},
 	{Name: "../../federation/directives.graphql", Input: `
 	directive @key(fields: _FieldSet!) repeatable on OBJECT | INTERFACE

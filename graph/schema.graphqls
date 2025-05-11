@@ -127,5 +127,5 @@ input AnimeSearchInput {
 
 extend type UserAnime @key(fields: "animeID") {
     animeID: String! @external
-    anime: Anime @requires(fields: "animeID") @goField(forceResolver: true)
+    anime: Anime @goField(forceResolver: true)
 }

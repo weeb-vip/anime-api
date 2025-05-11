@@ -137,10 +137,6 @@ func (ec *executionContext) __resolve_entities(ctx context.Context, representati
 					return fmt.Errorf(`resolving Entity "UserAnime": %w`, err)
 				}
 
-				entity.AnimeID, err = ec.unmarshalNString2string(ctx, rep["animeID"])
-				if err != nil {
-					return err
-				}
 				list[idx[i]] = entity
 				return nil
 			}
