@@ -36,7 +36,7 @@ type AnimeRepositoryImpl interface {
 	TopRatedAnime(ctx context.Context, limit int) ([]*Anime, error)
 	MostPopularAnime(ctx context.Context, limit int) ([]*Anime, error)
 	NewestAnime(ctx context.Context, limit int) ([]*Anime, error)
-	AiringAnime(ctx context.Context, limit int) ([]*Anime, error)
+	AiringAnime(ctx context.Context, limit int) ([]*AnimeWithNextEpisode, error)
 	SearchAnime(ctx context.Context, search string, page int, limit int) ([]*Anime, error)
 }
 
@@ -629,10 +629,10 @@ func (a *AnimeRepository) NewestAnime(ctx context.Context, limit int) ([]*Anime,
 	return animes, nil
 }
 
-func (a *AnimeRepository) AiringAnime(ctx context.Context, limit int) ([]*Anime, error) {
+func (a *AnimeRepository) AiringAnime(ctx context.Context, limit int) ([]*AnimeWithNextEpisode, error) {
 	startTime := time.Now()
 
-	var animes []*Anime
+	var animes []*AnimeWithNextEpisode
 
 	subQuery := a.db.DB.Model(&anime.AnimeEpisode{}).
 		Select("anime_id, MIN(aired) AS next_aired").
@@ -640,27 +640,35 @@ func (a *AnimeRepository) AiringAnime(ctx context.Context, limit int) ([]*Anime,
 		Group("anime_id")
 
 	err := a.db.DB.Table("anime").
+		Select("anime.*"). // Only scan anime fields into AnimeWithNextEpisode
 		Joins("JOIN (?) AS e ON anime.id = e.anime_id", subQuery).
 		Where("anime.end_date IS NULL").
 		Order("e.next_aired").
 		Scan(&animes).Error
 
-	if err != nil {
-		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-			Service: "anime-api",
-			Table:   "anime",
-			Method:  metrics_lib.DatabaseMetricMethodSelect,
-			Result:  metrics_lib.Error,
-		})
-		return nil, err
-	}
-
-	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
+	metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
 		Service: "anime-api",
 		Table:   "anime",
 		Method:  metrics_lib.DatabaseMetricMethodSelect,
-		Result:  metrics_lib.Success,
+		Result:  map[bool]string{true: metrics_lib.Success, false: metrics_lib.Error}[err == nil],
 	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Populate the next_aired field in each AnimeWithNextEpisode
+	for i := range animes {
+		var nextEpisode anime.AnimeEpisode
+		err := a.db.DB.Model(&anime.AnimeEpisode{}).
+			Where("anime_id = ? AND aired BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY)", animes[i].ID).
+			Order("aired").
+			First(&nextEpisode).Error
+		if err != nil {
+			return nil, err
+		}
+		animes[i].NextEpisode = &nextEpisode
+	}
 	return animes, nil
 }
 

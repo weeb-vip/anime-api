@@ -11,7 +11,7 @@ type AnimeServiceImpl interface {
 	TopRatedAnime(ctx context.Context, limit int) ([]*anime.Anime, error)
 	MostPopularAnime(ctx context.Context, limit int) ([]*anime.Anime, error)
 	NewestAnime(ctx context.Context, limit int) ([]*anime.Anime, error)
-	AiringAnime(ctx context.Context, limit int) ([]*anime.Anime, error)
+	AiringAnime(ctx context.Context, limit int) ([]*anime.AnimeWithNextEpisode, error)
 	SearchedAnime(ctx context.Context, query string, page int, limit int) ([]*anime.Anime, error)
 }
 
@@ -61,7 +61,7 @@ func (a *AnimeService) NewestAnime(ctx context.Context, limit int) ([]*anime.Ani
 	return a.Repository.NewestAnime(spanCtx, limit)
 }
 
-func (a *AnimeService) AiringAnime(ctx context.Context, limit int) ([]*anime.Anime, error) {
+func (a *AnimeService) AiringAnime(ctx context.Context, limit int) ([]*anime.AnimeWithNextEpisode, error) {
 	span, spanCtx := tracer.StartSpanFromContext(ctx, "AiringAnime")
 	span.SetTag("service", "anime")
 	span.SetTag("type", "service")

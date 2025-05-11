@@ -89,6 +89,102 @@ func transformAnimeToGraphQL(animeEntity anime2.Anime) (*model.Anime, error) {
 	}, nil
 }
 
+func transformAnimeToGraphQLWithEpisode(animeEntity anime2.AnimeWithNextEpisode) (*model.Anime, error) {
+
+	var studios []string
+	if animeEntity.Studios != nil {
+		err := json.Unmarshal([]byte(*animeEntity.Studios), &studios)
+		if err != nil {
+			return nil, err
+		}
+	}
+	var tags []string
+	if animeEntity.Genres != nil {
+		err := json.Unmarshal([]byte(*animeEntity.Genres), &tags)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var titleSynonyms []string
+	if animeEntity.TitleSynonyms != nil {
+		err := json.Unmarshal([]byte(*animeEntity.TitleSynonyms), &titleSynonyms)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var licensors []string
+	if animeEntity.Licensors != nil {
+		err := json.Unmarshal([]byte(*animeEntity.Licensors), &licensors)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var startDate *time.Time
+	if animeEntity.StartDate != nil {
+		startDateTime, err := time.Parse("2006-01-02 15:04:05", *animeEntity.StartDate)
+		if err != nil {
+			return nil, err
+		}
+		startDate = &startDateTime
+	}
+
+	var endDate *time.Time
+	if animeEntity.EndDate != nil {
+		endDateTime, err := time.Parse("2006-01-02 15:04:05", *animeEntity.EndDate)
+		if err != nil {
+			return nil, err
+		}
+		endDate = &endDateTime
+	}
+
+	var nextEpisode *model.Episode
+
+	if animeEntity.NextEpisode != nil {
+		nextEpisodeEntity := animeEntity.NextEpisode
+		nextEpisode = &model.Episode{
+			ID:            nextEpisodeEntity.ID,
+			AnimeID:       nextEpisodeEntity.AnimeID,
+			EpisodeNumber: nextEpisodeEntity.Episode,
+			TitleEn:       nextEpisodeEntity.TitleEn,
+			TitleJp:       nextEpisodeEntity.TitleJp,
+			AirDate:       nextEpisodeEntity.Aired,
+			Synopsis:      nextEpisodeEntity.Synopsis,
+			CreatedAt:     nextEpisodeEntity.CreatedAt.Format("2006-01-02 15:04:05"),
+			UpdatedAt:     nextEpisodeEntity.UpdatedAt.Format("2006-01-02 15:04:05"),
+		}
+	}
+
+	return &model.Anime{
+		ID:            animeEntity.ID,
+		Anidbid:       animeEntity.AnidbID,
+		TitleEn:       animeEntity.TitleEn,
+		TitleJp:       animeEntity.TitleJp,
+		TitleKanji:    animeEntity.TitleKanji,
+		TitleRomaji:   animeEntity.TitleRomaji,
+		TitleSynonyms: titleSynonyms,
+		Description:   animeEntity.Synopsis,
+		EpisodeCount:  animeEntity.Episodes,
+		Duration:      animeEntity.Duration,
+		Studios:       studios,
+		Tags:          tags,
+		Rating:        animeEntity.Rating,
+		AnimeStatus:   animeEntity.Status,
+		ImageURL:      animeEntity.ImageURL,
+		StartDate:     startDate,
+		EndDate:       endDate,
+		Broadcast:     animeEntity.Broadcast,
+		Source:        animeEntity.Source,
+		Licensors:     licensors,
+		Ranking:       animeEntity.Ranking,
+		CreatedAt:     animeEntity.CreatedAt.Format("2006-01-02 15:04:05"),
+		UpdatedAt:     animeEntity.UpdatedAt.Format("2006-01-02 15:04:05"),
+		NextEpisode:   nextEpisode,
+	}, nil
+}
+
 func AnimeByID(ctx context.Context, animeService anime.AnimeServiceImpl, id string) (*model.Anime, error) {
 
 	startTime := time.Now()
@@ -241,7 +337,7 @@ func CurrentlyAiring(ctx context.Context, animeService anime.AnimeServiceImpl) (
 
 	var animes []*model.Anime
 	for _, animeEntity := range foundAnime {
-		anime, err := transformAnimeToGraphQL(*animeEntity)
+		anime, err := transformAnimeToGraphQLWithEpisode(*animeEntity)
 		if err != nil {
 			return nil, err
 		}
