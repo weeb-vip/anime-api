@@ -90,6 +90,15 @@ type APIInfo struct {
 	Name string `json:"name"`
 }
 
+type CurrentlyAiringInput struct {
+	// start date
+	StartDate time.Time `json:"startDate"`
+	// end date
+	EndDate *time.Time `json:"endDate,omitempty"`
+	// days in the future
+	DaysInFuture *int `json:"daysInFuture,omitempty"`
+}
+
 type Episode struct {
 	// ID of the episode
 	ID string `json:"id"`

@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/weeb-vip/anime-api/internal/db/repositories/anime"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
+	"time"
 )
 
 type AnimeServiceImpl interface {
@@ -11,7 +12,7 @@ type AnimeServiceImpl interface {
 	TopRatedAnime(ctx context.Context, limit int) ([]*anime.Anime, error)
 	MostPopularAnime(ctx context.Context, limit int) ([]*anime.Anime, error)
 	NewestAnime(ctx context.Context, limit int) ([]*anime.Anime, error)
-	AiringAnime(ctx context.Context, limit int) ([]*anime.AnimeWithNextEpisode, error)
+	AiringAnime(ctx context.Context, startDate *time.Time, endDate *time.Time, days *int) ([]*anime.AnimeWithNextEpisode, error)
 	SearchedAnime(ctx context.Context, query string, page int, limit int) ([]*anime.Anime, error)
 }
 
@@ -61,13 +62,16 @@ func (a *AnimeService) NewestAnime(ctx context.Context, limit int) ([]*anime.Ani
 	return a.Repository.NewestAnime(spanCtx, limit)
 }
 
-func (a *AnimeService) AiringAnime(ctx context.Context, limit int) ([]*anime.AnimeWithNextEpisode, error) {
+func (a *AnimeService) AiringAnime(ctx context.Context, startDate *time.Time, endDate *time.Time, days *int) ([]*anime.AnimeWithNextEpisode, error) {
 	span, spanCtx := tracer.StartSpanFromContext(ctx, "AiringAnime")
 	span.SetTag("service", "anime")
 	span.SetTag("type", "service")
 	defer span.Finish()
 
-	return a.Repository.AiringAnime(spanCtx, limit)
+	if endDate == nil {
+		return a.Repository.AiringAnimeDays(spanCtx, startDate, days)
+	}
+	return a.Repository.AiringAnimeEndDate(spanCtx, startDate, endDate)
 }
 
 func (a *AnimeService) SearchedAnime(ctx context.Context, query string, page int, limit int) ([]*anime.Anime, error) {

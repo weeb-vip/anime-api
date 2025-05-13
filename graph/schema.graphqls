@@ -103,7 +103,7 @@ type Query {
     "Get episodes by anime ID"
     episodesByAnimeId(animeId: ID!): [Episode!]
     "Get currently airing anime"
-    currentlyAiring: [Anime!]
+    currentlyAiring(input: CurrentlyAiringInput): [Anime!]
 }
 
 input AnimeSearchInput {
@@ -123,6 +123,15 @@ input AnimeSearchInput {
     studios: [String!]
     "Anime statuses"
     animeStatuses: [String!]
+}
+
+input CurrentlyAiringInput {
+    "start date"
+    startDate: Time!
+    "end date"
+    endDate: Time
+    "days in the future"
+    daysInFuture: Int
 }
 
 extend type UserAnime @key(fields: "animeID") {

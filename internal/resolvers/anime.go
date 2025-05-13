@@ -321,10 +321,10 @@ func NewestAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit
 	return animes, nil
 }
 
-func CurrentlyAiring(ctx context.Context, animeService anime.AnimeServiceImpl) ([]*model.Anime, error) {
+func CurrentlyAiring(ctx context.Context, animeService anime.AnimeServiceImpl, input *model.CurrentlyAiringInput) ([]*model.Anime, error) {
 	startTime := time.Now()
 
-	foundAnime, err := animeService.AiringAnime(ctx, 10)
+	foundAnime, err := animeService.AiringAnime(ctx)
 	if err != nil {
 		_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
 			Resolver: "CurrentlyAiring",

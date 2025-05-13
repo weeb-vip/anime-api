@@ -109,7 +109,7 @@ type ComplexityRoot struct {
 	Query struct {
 		APIInfo            func(childComplexity int) int
 		Anime              func(childComplexity int, id string) int
-		CurrentlyAiring    func(childComplexity int) int
+		CurrentlyAiring    func(childComplexity int, input *model.CurrentlyAiringInput) int
 		DbSearch           func(childComplexity int, searchQuery model.AnimeSearchInput) int
 		Episode            func(childComplexity int, id string) int
 		EpisodesByAnimeID  func(childComplexity int, animeID string) int
@@ -152,7 +152,7 @@ type QueryResolver interface {
 	MostPopularAnime(ctx context.Context, limit *int) ([]*model.Anime, error)
 	Episode(ctx context.Context, id string) (*model.Episode, error)
 	EpisodesByAnimeID(ctx context.Context, animeID string) ([]*model.Episode, error)
-	CurrentlyAiring(ctx context.Context) ([]*model.Anime, error)
+	CurrentlyAiring(ctx context.Context, input *model.CurrentlyAiringInput) ([]*model.Anime, error)
 }
 type UserAnimeResolver interface {
 	Anime(ctx context.Context, obj *model.UserAnime) (*model.Anime, error)
@@ -492,7 +492,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Query.CurrentlyAiring(childComplexity), true
+		args, err := ec.field_Query_currentlyAiring_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.CurrentlyAiring(childComplexity, args["input"].(*model.CurrentlyAiringInput)), true
 
 	case "Query.dbSearch":
 		if e.complexity.Query.DbSearch == nil {
@@ -615,6 +620,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	ec := executionContext{rc, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputAnimeSearchInput,
+		ec.unmarshalInputCurrentlyAiringInput,
 	)
 	first := true
 
@@ -837,7 +843,7 @@ type Query {
     "Get episodes by anime ID"
     episodesByAnimeId(animeId: ID!): [Episode!]
     "Get currently airing anime"
-    currentlyAiring: [Anime!]
+    currentlyAiring(input: CurrentlyAiringInput): [Anime!]
 }
 
 input AnimeSearchInput {
@@ -857,6 +863,15 @@ input AnimeSearchInput {
     studios: [String!]
     "Anime statuses"
     animeStatuses: [String!]
+}
+
+input CurrentlyAiringInput {
+    "start date"
+    startDate: Time!
+    "end date"
+    endDate: Time
+    "days in the future"
+    daysInFuture: Int
 }
 
 extend type UserAnime @key(fields: "animeID") {
@@ -1044,6 +1059,21 @@ func (ec *executionContext) field_Query_anime_args(ctx context.Context, rawArgs 
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_currentlyAiring_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.CurrentlyAiringInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalOCurrentlyAiringInput2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐCurrentlyAiringInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -3740,7 +3770,7 @@ func (ec *executionContext) _Query_currentlyAiring(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().CurrentlyAiring(rctx)
+		return ec.resolvers.Query().CurrentlyAiring(rctx, fc.Args["input"].(*model.CurrentlyAiringInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3815,6 +3845,17 @@ func (ec *executionContext) fieldContext_Query_currentlyAiring(ctx context.Conte
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Anime", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_currentlyAiring_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -6094,6 +6135,53 @@ func (ec *executionContext) unmarshalInputAnimeSearchInput(ctx context.Context, 
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputCurrentlyAiringInput(ctx context.Context, obj interface{}) (model.CurrentlyAiringInput, error) {
+	var it model.CurrentlyAiringInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"startDate", "endDate", "daysInFuture"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "startDate":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startDate"))
+			data, err := ec.unmarshalNTime2timeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StartDate = data
+		case "endDate":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("endDate"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EndDate = data
+		case "daysInFuture":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("daysInFuture"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DaysInFuture = data
+		}
+	}
+
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -7399,6 +7487,21 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return res
 }
 
+func (ec *executionContext) unmarshalNTime2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {
+	res, err := graphql.UnmarshalTime(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel ast.SelectionSet, v time.Time) graphql.Marshaler {
+	res := graphql.MarshalTime(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
 func (ec *executionContext) marshalNUserAnime2githubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐUserAnime(ctx context.Context, sel ast.SelectionSet, v model.UserAnime) graphql.Marshaler {
 	return ec._UserAnime(ctx, sel, &v)
 }
@@ -7854,6 +7957,14 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	}
 	res := graphql.MarshalBoolean(*v)
 	return res
+}
+
+func (ec *executionContext) unmarshalOCurrentlyAiringInput2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐCurrentlyAiringInput(ctx context.Context, v interface{}) (*model.CurrentlyAiringInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputCurrentlyAiringInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOEpisode2ᚕᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐEpisodeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Episode) graphql.Marshaler {
