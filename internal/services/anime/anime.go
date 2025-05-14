@@ -68,6 +68,9 @@ func (a *AnimeService) AiringAnime(ctx context.Context, startDate *time.Time, en
 	span.SetTag("type", "service")
 	defer span.Finish()
 
+	if startDate == nil && endDate == nil && days == nil {
+		return a.Repository.AiringAnime(spanCtx)
+	}
 	if endDate == nil {
 		return a.Repository.AiringAnimeDays(spanCtx, startDate, days)
 	}

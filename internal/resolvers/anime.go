@@ -324,15 +324,32 @@ func NewestAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit
 func CurrentlyAiring(ctx context.Context, animeService anime.AnimeServiceImpl, input *model.CurrentlyAiringInput) ([]*model.Anime, error) {
 	startTime := time.Now()
 
-	foundAnime, err := animeService.AiringAnime(ctx)
-	if err != nil {
-		_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
-			Resolver: "CurrentlyAiring",
-			Service:  "anime-api",
-			Protocol: "graphql",
-			Result:   metrics_lib.Error,
-		})
-		return nil, err
+	var foundAnime []*anime2.AnimeWithNextEpisode
+	if input == nil {
+		var err error
+		foundAnime, err = animeService.AiringAnime(ctx, nil, nil, nil)
+		if err != nil {
+			_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
+				Resolver: "CurrentlyAiring",
+				Service:  "anime-api",
+				Protocol: "graphql",
+				Result:   metrics_lib.Error,
+			})
+			return nil, err
+		}
+	} else {
+		var err error
+		startDate := &input.StartDate
+		foundAnime, err = animeService.AiringAnime(ctx, startDate, input.EndDate, input.DaysInFuture)
+		if err != nil {
+			_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
+				Resolver: "CurrentlyAiring",
+				Service:  "anime-api",
+				Protocol: "graphql",
+				Result:   metrics_lib.Error,
+			})
+			return nil, err
+		}
 	}
 
 	var animes []*model.Anime

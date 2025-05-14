@@ -36,7 +36,7 @@ type AnimeRepositoryImpl interface {
 	TopRatedAnime(ctx context.Context, limit int) ([]*Anime, error)
 	MostPopularAnime(ctx context.Context, limit int) ([]*Anime, error)
 	NewestAnime(ctx context.Context, limit int) ([]*Anime, error)
-	AiringAnime(ctx context.Context, limit int) ([]*AnimeWithNextEpisode, error)
+	AiringAnime(ctx context.Context) ([]*AnimeWithNextEpisode, error)
 	AiringAnimeDays(ctx context.Context, startDate *time.Time, days *int) ([]*AnimeWithNextEpisode, error)
 	AiringAnimeEndDate(ctx context.Context, startDate *time.Time, endDate *time.Time) ([]*AnimeWithNextEpisode, error)
 	SearchAnime(ctx context.Context, search string, page int, limit int) ([]*Anime, error)
@@ -631,7 +631,7 @@ func (a *AnimeRepository) NewestAnime(ctx context.Context, limit int) ([]*Anime,
 	return animes, nil
 }
 
-func (a *AnimeRepository) AiringAnime(ctx context.Context, limit int) ([]*AnimeWithNextEpisode, error) {
+func (a *AnimeRepository) AiringAnime(ctx context.Context) ([]*AnimeWithNextEpisode, error) {
 	startTime := time.Now()
 
 	var animes []*AnimeWithNextEpisode
