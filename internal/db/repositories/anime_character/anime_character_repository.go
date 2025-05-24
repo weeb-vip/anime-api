@@ -26,9 +26,11 @@ func NewAnimeCharacterRepository(db *db.DB) AnimeCharacterRepositoryImpl {
 
 func (a *AnimeCharacterRepository) FindAnimeCharacterAndStaffByAnimeId(ctx context.Context, animeId string) ([]*AnimeCharacterWithStaff, error) {
 	var animeCharacters []*AnimeCharacterWithStaff
+	// use anime_character_staff_link table to join anime_character and anime_staff
 	err := a.db.DB.Table("anime_character").
 		Select("anime_character.*, anime_staff.*").
-		Joins("JOIN anime_staff ON anime_character.anime_staff_id = anime_staff.id").
+		Joins("JOIN anime_character_staff_link ON anime_character.id = anime_character_staff_link.character_id").
+		Joins("JOIN anime_staff ON anime_character_staff_link.staff_id = anime_staff.id").
 		Where("anime_character.anime_id = ?", animeId).
 		Scan(&animeCharacters).Error
 	if err != nil {
