@@ -36,7 +36,7 @@ func (a *AnimeCharacterRepository) FindAnimeCharacterAndStaffByAnimeId(ctx conte
 	if err != nil {
 		return nil, err
 	}
-	return animeCharacters, nil
+	return animeCharactersWithStaff, nil
 }
 
 func (a *AnimeCharacterRepository) FindAnimearacterById(ctx context.Context, id string) (*AnimeCharacter, error) {
