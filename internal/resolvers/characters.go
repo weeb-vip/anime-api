@@ -3,11 +3,11 @@ package resolvers
 import (
 	"context"
 	"github.com/weeb-vip/anime-api/graph/model"
-	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_character"
-	anime_character2 "github.com/weeb-vip/anime-api/internal/services/anime_character"
+	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_character_staff_link"
+	anime_character_staff_link2 "github.com/weeb-vip/anime-api/internal/services/anime_character_staff_link"
 )
 
-func convertAnimeCharacterToGraphql(animeCharacterEntity *anime_character.AnimeCharacterWithStaff) (*model.CharacterWithStaff, error) {
+func convertAnimeCharacterToGraphql(animeCharacterEntity *anime_character_staff_link.AnimeCharacterWithStaff) (*model.CharacterWithStaff, error) {
 	if animeCharacterEntity == nil {
 		return nil, nil
 	}
@@ -50,8 +50,8 @@ func convertAnimeCharacterToGraphql(animeCharacterEntity *anime_character.AnimeC
 	}, nil
 }
 
-func CharactersAndStaffByAnimeID(ctx context.Context, animeCharacterService anime_character2.AnimeCharacterServiceImpl, animeId string) ([]*model.CharacterWithStaff, error) {
-	animeCharacters, err := animeCharacterService.FindAnimeCharacterAndStaffByAnimeId(ctx, animeId)
+func CharactersAndStaffByAnimeID(ctx context.Context, animeCharacterStaffLinkService anime_character_staff_link2.AnimeCharacterStaffLinkImpl, animeId string) ([]*model.CharacterWithStaff, error) {
+	animeCharacters, err := animeCharacterStaffLinkService.FindAnimeCharacterAndStaffByAnimeId(ctx, animeId)
 	if err != nil {
 		return nil, err
 	}

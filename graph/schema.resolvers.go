@@ -60,7 +60,7 @@ func (r *queryResolver) CurrentlyAiring(ctx context.Context, input *model.Curren
 
 // CharactersAndStaffByAnimeID is the resolver for the charactersAndStaffByAnimeId field.
 func (r *queryResolver) CharactersAndStaffByAnimeID(ctx context.Context, animeID string) ([]*model.CharacterWithStaff, error) {
-	return resolvers.CharactersAndStaffByAnimeID(ctx, r.AnimeCharacterService, animeID)
+	return resolvers.CharactersAndStaffByAnimeID(ctx, r.AnimeCharacterWithStaffLinkService, animeID)
 }
 
 // Query returns generated.QueryResolver implementation.
