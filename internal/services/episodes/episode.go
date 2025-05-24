@@ -48,7 +48,10 @@ func (a *AnimeEpisodeService) GetNextEpisode(ctx context.Context, animeID string
 			continue
 		}
 
-		if episode.Aired != nil && airedTime.After(time.Now()) {
+		// include current date regardless of time
+		airedTime = airedTime.Truncate(24 * time.Hour)
+		// check if aired time is after current time
+		if airedTime.After(time.Now()) {
 			return episode, nil
 		}
 	}

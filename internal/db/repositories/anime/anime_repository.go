@@ -638,6 +638,7 @@ func (a *AnimeRepository) AiringAnime(ctx context.Context) ([]*AnimeWithNextEpis
 
 	subQuery := a.db.DB.Model(&anime.AnimeEpisode{}).
 		Select("anime_id, MIN(aired) AS next_aired").
+		// curr date inclusive
 		Where("aired BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY)").
 		Group("anime_id")
 

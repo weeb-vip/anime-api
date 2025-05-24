@@ -18,3 +18,11 @@ type AnimeCharacterStaffLink struct {
 func (AnimeCharacterStaffLink) TableName() string {
 	return "anime_character_staff_link"
 }
+
+/**
+INSERT INTO anime (id)
+		SELECT new_id
+		FROM tmp_id_map
+		ON CONFLICT (id) DO UPDATE
+		SET id = EXCLUDED.new_id;
+*/
