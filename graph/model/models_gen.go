@@ -64,6 +64,43 @@ type AnimeAPI struct {
 	Version string `json:"version"`
 }
 
+type AnimeCharacter struct {
+	// Unique identifier for the character
+	ID string `json:"id"`
+	// The ID of the anime this character belongs to
+	AnimeID string `json:"animeId"`
+	// Name of the character
+	Name string `json:"name"`
+	// The role of the character (e.g., main, supporting)
+	Role string `json:"role"`
+	// The character's birthdate (if known)
+	Birthday *string `json:"birthday,omitempty"`
+	// The character's zodiac sign (if known)
+	Zodiac *string `json:"zodiac,omitempty"`
+	// The character's gender (e.g., male, female, non-binary)
+	Gender *string `json:"gender,omitempty"`
+	// The character's race (e.g., human, elf, demon)
+	Race *string `json:"race,omitempty"`
+	// The character's height
+	Height *string `json:"height,omitempty"`
+	// The character's weight
+	Weight *string `json:"weight,omitempty"`
+	// The character's title (e.g., 'The Hero', 'The King')
+	Title *string `json:"title,omitempty"`
+	// The character's marital status (e.g., single, married, unknown)
+	MartialStatus *string `json:"martialStatus,omitempty"`
+	// A brief summary of the character's background or story
+	Summary *string `json:"summary,omitempty"`
+	// URL or path to the character's image
+	Image *string `json:"image,omitempty"`
+	// Timestamp when the character was created in the database
+	CreatedAt *time.Time `json:"createdAt,omitempty"`
+	// Timestamp when the character was last updated in the database
+	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
+	// The voice actor for the character
+	Staff *AnimeStaff `json:"staff,omitempty"`
+}
+
 type AnimeSearchInput struct {
 	// Search query
 	Query string `json:"query"`
@@ -83,11 +120,45 @@ type AnimeSearchInput struct {
 	AnimeStatuses []string `json:"animeStatuses,omitempty"`
 }
 
+type AnimeStaff struct {
+	// Unique identifier for the staff member
+	ID string `json:"id"`
+	// The given name of the staff member
+	GivenName string `json:"givenName"`
+	// The family name of the staff member
+	FamilyName string `json:"familyName"`
+	// URL or path to the staff member's image
+	Image *string `json:"image,omitempty"`
+	// The staff member's birthdate (if known)
+	Birthday *string `json:"birthday,omitempty"`
+	// The staff member's birthplace (if known)
+	BirthPlace *string `json:"birthPlace,omitempty"`
+	// The staff member's blood type (if known)
+	BloodType *string `json:"bloodType,omitempty"`
+	// The staff member's hobbies (if known)
+	Hobbies *string `json:"hobbies,omitempty"`
+	// A brief summary of the staff member's background or career
+	Summary *string `json:"summary,omitempty"`
+	// Timestamp when the staff member was created in the database
+	CreatedAt *time.Time `json:"createdAt,omitempty"`
+	// Timestamp when the staff member was last updated in the database
+	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
+	// the characters associated with the staff member
+	Characters []*AnimeCharacter `json:"characters,omitempty"`
+}
+
 type APIInfo struct {
 	// API Info of the AnimeAPI
 	AnimeAPI *AnimeAPI `json:"animeApi"`
 	// Name of the API
 	Name string `json:"name"`
+}
+
+type CharacterWithStaff struct {
+	// The character details
+	Character *AnimeCharacter `json:"character"`
+	// The staff member associated with the character
+	Staff *AnimeStaff `json:"staff"`
 }
 
 type CurrentlyAiringInput struct {

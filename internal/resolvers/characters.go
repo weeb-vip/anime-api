@@ -1,0 +1,69 @@
+package resolvers
+
+import (
+	"context"
+	"github.com/weeb-vip/anime-api/graph/model"
+	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_character"
+	anime_character2 "github.com/weeb-vip/anime-api/internal/services/anime_character"
+)
+
+func convertAnimeCharacterToGraphql(animeCharacterEntity *anime_character.AnimeCharacterWithStaff) (*model.CharacterWithStaff, error) {
+	if animeCharacterEntity == nil {
+		return nil, nil
+	}
+
+	character := &model.AnimeCharacter{
+		ID:            animeCharacterEntity.AnimeCharacter.ID,
+		AnimeID:       animeCharacterEntity.AnimeCharacter.AnimeID,
+		Name:          animeCharacterEntity.AnimeCharacter.Name,
+		Role:          animeCharacterEntity.AnimeCharacter.Role,
+		Birthday:      &animeCharacterEntity.AnimeCharacter.Birthday,
+		Zodiac:        &animeCharacterEntity.AnimeCharacter.Zodiac,
+		Gender:        &animeCharacterEntity.AnimeCharacter.Gender,
+		Race:          &animeCharacterEntity.AnimeCharacter.Race,
+		Height:        &animeCharacterEntity.AnimeCharacter.Height,
+		Weight:        &animeCharacterEntity.AnimeCharacter.Weight,
+		Title:         &animeCharacterEntity.AnimeCharacter.Title,
+		MartialStatus: &animeCharacterEntity.AnimeCharacter.MartialStatus,
+		Summary:       &animeCharacterEntity.AnimeCharacter.Summary,
+		Image:         &animeCharacterEntity.AnimeCharacter.Image,
+		CreatedAt:     &animeCharacterEntity.AnimeCharacter.CreatedAt,
+		UpdatedAt:     &animeCharacterEntity.AnimeCharacter.UpdatedAt,
+	}
+
+	staff := &model.AnimeStaff{
+		ID:         animeCharacterEntity.AnimeStaff.ID,
+		GivenName:  animeCharacterEntity.AnimeStaff.GivenName,
+		FamilyName: animeCharacterEntity.AnimeStaff.FamilyName,
+		Image:      &animeCharacterEntity.AnimeStaff.Image,
+		Birthday:   &animeCharacterEntity.AnimeStaff.Birthday,
+		BirthPlace: &animeCharacterEntity.AnimeStaff.BirthPlace,
+		BloodType:  &animeCharacterEntity.AnimeStaff.BloodType,
+		Hobbies:    &animeCharacterEntity.AnimeStaff.Hobbies,
+		Summary:    &animeCharacterEntity.AnimeStaff.Summary,
+		CreatedAt:  &animeCharacterEntity.AnimeStaff.CreatedAt,
+		UpdatedAt:  &animeCharacterEntity.AnimeStaff.UpdatedAt,
+	}
+	return &model.CharacterWithStaff{
+		Staff:     staff,
+		Character: character,
+	}, nil
+}
+
+func CharactersAndStaffByAnimeID(ctx context.Context, animeCharacterService anime_character2.AnimeCharacterServiceImpl, animeId string) ([]*model.CharacterWithStaff, error) {
+	animeCharacters, err := animeCharacterService.FindAnimeCharacterAndStaffByAnimeId(ctx, animeId)
+	if err != nil {
+		return nil, err
+	}
+
+	var characters []*model.CharacterWithStaff
+	for _, animeCharacter := range animeCharacters {
+		character, err := convertAnimeCharacterToGraphql(animeCharacter)
+		if err != nil {
+			return nil, err
+		}
+		characters = append(characters, character)
+	}
+
+	return characters, nil
+}

@@ -7,9 +7,11 @@ import (
 	"github.com/weeb-vip/anime-api/graph/generated"
 	"github.com/weeb-vip/anime-api/internal/db"
 	anime2 "github.com/weeb-vip/anime-api/internal/db/repositories/anime"
+	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_character"
 	anime3 "github.com/weeb-vip/anime-api/internal/db/repositories/anime_episode"
 	"github.com/weeb-vip/anime-api/internal/directives"
 	"github.com/weeb-vip/anime-api/internal/services/anime"
+	anime_character2 "github.com/weeb-vip/anime-api/internal/services/anime_character"
 	"github.com/weeb-vip/anime-api/internal/services/episodes"
 	"net/http"
 )
@@ -20,10 +22,13 @@ func BuildRootHandler(conf config.Config) http.Handler {
 	episodeRepository := anime3.NewAnimeEpisodeRepository(database)
 	animeService := anime.NewAnimeService(animeRepository)
 	animeEpisodeService := episodes.NewAnimeEpisodeService(episodeRepository)
+	animeCharacterRepository := anime_character.NewAnimeCharacterRepository(database)
+	animeCharacterService := anime_character2.NewAnimeCharacterService(animeCharacterRepository)
 	resolvers := &graph.Resolver{
-		Config:              conf,
-		AnimeService:        animeService,
-		AnimeEpisodeService: animeEpisodeService,
+		Config:                conf,
+		AnimeService:          animeService,
+		AnimeEpisodeService:   animeEpisodeService,
+		AnimeCharacterService: animeCharacterService,
 	}
 
 	cfg := generated.Config{Resolvers: resolvers, Directives: directives.GetDirectives()}

@@ -83,9 +83,49 @@ type ComplexityRoot struct {
 		Version func(childComplexity int) int
 	}
 
+	AnimeCharacter struct {
+		AnimeID       func(childComplexity int) int
+		Birthday      func(childComplexity int) int
+		CreatedAt     func(childComplexity int) int
+		Gender        func(childComplexity int) int
+		Height        func(childComplexity int) int
+		ID            func(childComplexity int) int
+		Image         func(childComplexity int) int
+		MartialStatus func(childComplexity int) int
+		Name          func(childComplexity int) int
+		Race          func(childComplexity int) int
+		Role          func(childComplexity int) int
+		Staff         func(childComplexity int) int
+		Summary       func(childComplexity int) int
+		Title         func(childComplexity int) int
+		UpdatedAt     func(childComplexity int) int
+		Weight        func(childComplexity int) int
+		Zodiac        func(childComplexity int) int
+	}
+
+	AnimeStaff struct {
+		BirthPlace func(childComplexity int) int
+		Birthday   func(childComplexity int) int
+		BloodType  func(childComplexity int) int
+		Characters func(childComplexity int) int
+		CreatedAt  func(childComplexity int) int
+		FamilyName func(childComplexity int) int
+		GivenName  func(childComplexity int) int
+		Hobbies    func(childComplexity int) int
+		ID         func(childComplexity int) int
+		Image      func(childComplexity int) int
+		Summary    func(childComplexity int) int
+		UpdatedAt  func(childComplexity int) int
+	}
+
 	ApiInfo struct {
 		AnimeAPI func(childComplexity int) int
 		Name     func(childComplexity int) int
+	}
+
+	CharacterWithStaff struct {
+		Character func(childComplexity int) int
+		Staff     func(childComplexity int) int
 	}
 
 	Entity struct {
@@ -107,17 +147,18 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		APIInfo            func(childComplexity int) int
-		Anime              func(childComplexity int, id string) int
-		CurrentlyAiring    func(childComplexity int, input *model.CurrentlyAiringInput) int
-		DbSearch           func(childComplexity int, searchQuery model.AnimeSearchInput) int
-		Episode            func(childComplexity int, id string) int
-		EpisodesByAnimeID  func(childComplexity int, animeID string) int
-		MostPopularAnime   func(childComplexity int, limit *int) int
-		NewestAnime        func(childComplexity int, limit *int) int
-		TopRatedAnime      func(childComplexity int, limit *int) int
-		__resolve__service func(childComplexity int) int
-		__resolve_entities func(childComplexity int, representations []map[string]interface{}) int
+		APIInfo                     func(childComplexity int) int
+		Anime                       func(childComplexity int, id string) int
+		CharactersAndStaffByAnimeID func(childComplexity int, animeID string) int
+		CurrentlyAiring             func(childComplexity int, input *model.CurrentlyAiringInput) int
+		DbSearch                    func(childComplexity int, searchQuery model.AnimeSearchInput) int
+		Episode                     func(childComplexity int, id string) int
+		EpisodesByAnimeID           func(childComplexity int, animeID string) int
+		MostPopularAnime            func(childComplexity int, limit *int) int
+		NewestAnime                 func(childComplexity int, limit *int) int
+		TopRatedAnime               func(childComplexity int, limit *int) int
+		__resolve__service          func(childComplexity int) int
+		__resolve_entities          func(childComplexity int, representations []map[string]interface{}) int
 	}
 
 	UserAnime struct {
@@ -153,6 +194,7 @@ type QueryResolver interface {
 	Episode(ctx context.Context, id string) (*model.Episode, error)
 	EpisodesByAnimeID(ctx context.Context, animeID string) ([]*model.Episode, error)
 	CurrentlyAiring(ctx context.Context, input *model.CurrentlyAiringInput) ([]*model.Anime, error)
+	CharactersAndStaffByAnimeID(ctx context.Context, animeID string) ([]*model.CharacterWithStaff, error)
 }
 type UserAnimeResolver interface {
 	Anime(ctx context.Context, obj *model.UserAnime) (*model.Anime, error)
@@ -355,6 +397,209 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.AnimeApi.Version(childComplexity), true
 
+	case "AnimeCharacter.animeId":
+		if e.complexity.AnimeCharacter.AnimeID == nil {
+			break
+		}
+
+		return e.complexity.AnimeCharacter.AnimeID(childComplexity), true
+
+	case "AnimeCharacter.birthday":
+		if e.complexity.AnimeCharacter.Birthday == nil {
+			break
+		}
+
+		return e.complexity.AnimeCharacter.Birthday(childComplexity), true
+
+	case "AnimeCharacter.createdAt":
+		if e.complexity.AnimeCharacter.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.AnimeCharacter.CreatedAt(childComplexity), true
+
+	case "AnimeCharacter.gender":
+		if e.complexity.AnimeCharacter.Gender == nil {
+			break
+		}
+
+		return e.complexity.AnimeCharacter.Gender(childComplexity), true
+
+	case "AnimeCharacter.height":
+		if e.complexity.AnimeCharacter.Height == nil {
+			break
+		}
+
+		return e.complexity.AnimeCharacter.Height(childComplexity), true
+
+	case "AnimeCharacter.id":
+		if e.complexity.AnimeCharacter.ID == nil {
+			break
+		}
+
+		return e.complexity.AnimeCharacter.ID(childComplexity), true
+
+	case "AnimeCharacter.image":
+		if e.complexity.AnimeCharacter.Image == nil {
+			break
+		}
+
+		return e.complexity.AnimeCharacter.Image(childComplexity), true
+
+	case "AnimeCharacter.martialStatus":
+		if e.complexity.AnimeCharacter.MartialStatus == nil {
+			break
+		}
+
+		return e.complexity.AnimeCharacter.MartialStatus(childComplexity), true
+
+	case "AnimeCharacter.name":
+		if e.complexity.AnimeCharacter.Name == nil {
+			break
+		}
+
+		return e.complexity.AnimeCharacter.Name(childComplexity), true
+
+	case "AnimeCharacter.race":
+		if e.complexity.AnimeCharacter.Race == nil {
+			break
+		}
+
+		return e.complexity.AnimeCharacter.Race(childComplexity), true
+
+	case "AnimeCharacter.role":
+		if e.complexity.AnimeCharacter.Role == nil {
+			break
+		}
+
+		return e.complexity.AnimeCharacter.Role(childComplexity), true
+
+	case "AnimeCharacter.staff":
+		if e.complexity.AnimeCharacter.Staff == nil {
+			break
+		}
+
+		return e.complexity.AnimeCharacter.Staff(childComplexity), true
+
+	case "AnimeCharacter.summary":
+		if e.complexity.AnimeCharacter.Summary == nil {
+			break
+		}
+
+		return e.complexity.AnimeCharacter.Summary(childComplexity), true
+
+	case "AnimeCharacter.title":
+		if e.complexity.AnimeCharacter.Title == nil {
+			break
+		}
+
+		return e.complexity.AnimeCharacter.Title(childComplexity), true
+
+	case "AnimeCharacter.updatedAt":
+		if e.complexity.AnimeCharacter.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.AnimeCharacter.UpdatedAt(childComplexity), true
+
+	case "AnimeCharacter.weight":
+		if e.complexity.AnimeCharacter.Weight == nil {
+			break
+		}
+
+		return e.complexity.AnimeCharacter.Weight(childComplexity), true
+
+	case "AnimeCharacter.zodiac":
+		if e.complexity.AnimeCharacter.Zodiac == nil {
+			break
+		}
+
+		return e.complexity.AnimeCharacter.Zodiac(childComplexity), true
+
+	case "AnimeStaff.birthPlace":
+		if e.complexity.AnimeStaff.BirthPlace == nil {
+			break
+		}
+
+		return e.complexity.AnimeStaff.BirthPlace(childComplexity), true
+
+	case "AnimeStaff.birthday":
+		if e.complexity.AnimeStaff.Birthday == nil {
+			break
+		}
+
+		return e.complexity.AnimeStaff.Birthday(childComplexity), true
+
+	case "AnimeStaff.bloodType":
+		if e.complexity.AnimeStaff.BloodType == nil {
+			break
+		}
+
+		return e.complexity.AnimeStaff.BloodType(childComplexity), true
+
+	case "AnimeStaff.characters":
+		if e.complexity.AnimeStaff.Characters == nil {
+			break
+		}
+
+		return e.complexity.AnimeStaff.Characters(childComplexity), true
+
+	case "AnimeStaff.createdAt":
+		if e.complexity.AnimeStaff.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.AnimeStaff.CreatedAt(childComplexity), true
+
+	case "AnimeStaff.familyName":
+		if e.complexity.AnimeStaff.FamilyName == nil {
+			break
+		}
+
+		return e.complexity.AnimeStaff.FamilyName(childComplexity), true
+
+	case "AnimeStaff.givenName":
+		if e.complexity.AnimeStaff.GivenName == nil {
+			break
+		}
+
+		return e.complexity.AnimeStaff.GivenName(childComplexity), true
+
+	case "AnimeStaff.hobbies":
+		if e.complexity.AnimeStaff.Hobbies == nil {
+			break
+		}
+
+		return e.complexity.AnimeStaff.Hobbies(childComplexity), true
+
+	case "AnimeStaff.id":
+		if e.complexity.AnimeStaff.ID == nil {
+			break
+		}
+
+		return e.complexity.AnimeStaff.ID(childComplexity), true
+
+	case "AnimeStaff.image":
+		if e.complexity.AnimeStaff.Image == nil {
+			break
+		}
+
+		return e.complexity.AnimeStaff.Image(childComplexity), true
+
+	case "AnimeStaff.summary":
+		if e.complexity.AnimeStaff.Summary == nil {
+			break
+		}
+
+		return e.complexity.AnimeStaff.Summary(childComplexity), true
+
+	case "AnimeStaff.updatedAt":
+		if e.complexity.AnimeStaff.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.AnimeStaff.UpdatedAt(childComplexity), true
+
 	case "ApiInfo.animeApi":
 		if e.complexity.ApiInfo.AnimeAPI == nil {
 			break
@@ -368,6 +613,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ApiInfo.Name(childComplexity), true
+
+	case "CharacterWithStaff.character":
+		if e.complexity.CharacterWithStaff.Character == nil {
+			break
+		}
+
+		return e.complexity.CharacterWithStaff.Character(childComplexity), true
+
+	case "CharacterWithStaff.staff":
+		if e.complexity.CharacterWithStaff.Staff == nil {
+			break
+		}
+
+		return e.complexity.CharacterWithStaff.Staff(childComplexity), true
 
 	case "Entity.findAnimeByID":
 		if e.complexity.Entity.FindAnimeByID == nil {
@@ -486,6 +745,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Anime(childComplexity, args["id"].(string)), true
+
+	case "Query.charactersAndStaffByAnimeId":
+		if e.complexity.Query.CharactersAndStaffByAnimeID == nil {
+			break
+		}
+
+		args, err := ec.field_Query_charactersAndStaffByAnimeId_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.CharactersAndStaffByAnimeID(childComplexity, args["animeId"].(string)), true
 
 	case "Query.currentlyAiring":
 		if e.complexity.Query.CurrentlyAiring == nil {
@@ -742,7 +1013,32 @@ scalar Date
 #
 # https://gqlgen.com/getting-started/
 
-type AnimeApi {
+
+
+type Query {
+    "Search for anime in the database"
+    dbSearch(searchQuery: AnimeSearchInput!): [Anime!]
+    "AnimeAPI info"
+    apiInfo:  ApiInfo!
+    "Get anime by ID"
+    anime(id: ID!): Anime!
+    "Get newest anime with a response limit"
+    newestAnime(limit: Int): [Anime!]
+    "Get top rated anime with a response limit"
+    topRatedAnime(limit: Int): [Anime!]
+    "Get most popular anime with a response limit"
+    mostPopularAnime(limit: Int): [Anime!]
+    "Get episode by ID"
+    episode(id: ID!): Episode!
+    "Get episodes by anime ID"
+    episodesByAnimeId(animeId: ID!): [Episode!]
+    "Get currently airing anime"
+    currentlyAiring(input: CurrentlyAiringInput): [Anime!]
+    "characters and staff by anime ID"
+    charactersAndStaffByAnimeId(animeId: ID!): [CharacterWithStaff!]
+}
+`, BuiltIn: false},
+	{Name: "../types.graphqls", Input: `type AnimeApi {
     "Version of event anime-api service"
     version: String!
 }
@@ -825,27 +1121,6 @@ type Episode @key(fields: "animeId") {
     updatedAt: String!
 }
 
-type Query {
-    "Search for anime in the database"
-    dbSearch(searchQuery: AnimeSearchInput!): [Anime!]
-    "AnimeAPI info"
-    apiInfo:  ApiInfo!
-    "Get anime by ID"
-    anime(id: ID!): Anime!
-    "Get newest anime with a response limit"
-    newestAnime(limit: Int): [Anime!]
-    "Get top rated anime with a response limit"
-    topRatedAnime(limit: Int): [Anime!]
-    "Get most popular anime with a response limit"
-    mostPopularAnime(limit: Int): [Anime!]
-    "Get episode by ID"
-    episode(id: ID!): Episode!
-    "Get episodes by anime ID"
-    episodesByAnimeId(animeId: ID!): [Episode!]
-    "Get currently airing anime"
-    currentlyAiring(input: CurrentlyAiringInput): [Anime!]
-}
-
 input AnimeSearchInput {
     "Search query"
     query: String!
@@ -877,6 +1152,107 @@ input CurrentlyAiringInput {
 extend type UserAnime @key(fields: "animeID") {
     animeID: String! @external
     anime: Anime @goField(forceResolver: true)
+}
+
+type AnimeCharacter {
+    "Unique identifier for the character"
+    id: ID!
+
+    "The ID of the anime this character belongs to"
+    animeId: String!
+
+    "Name of the character"
+    name: String!
+
+    "The role of the character (e.g., main, supporting)"
+    role: String!
+
+    "The character's birthdate (if known)"
+    birthday: String
+
+    "The character's zodiac sign (if known)"
+    zodiac: String
+
+    "The character's gender (e.g., male, female, non-binary)"
+    gender: String
+
+    "The character's race (e.g., human, elf, demon)"
+    race: String
+
+    "The character's height"
+    height: String
+
+    "The character's weight"
+    weight: String
+
+    "The character's title (e.g., 'The Hero', 'The King')"
+    title: String
+
+    "The character's marital status (e.g., single, married, unknown)"
+    martialStatus: String
+
+    "A brief summary of the character's background or story"
+    summary: String
+
+    "URL or path to the character's image"
+    image: String
+
+    "Timestamp when the character was created in the database"
+    createdAt: Time
+
+    "Timestamp when the character was last updated in the database"
+    updatedAt: Time
+
+    "The voice actor for the character"
+    staff: AnimeStaff
+}
+
+type AnimeStaff {
+    "Unique identifier for the staff member"
+    id: ID!
+
+    "The given name of the staff member"
+    givenName: String!
+
+    "The family name of the staff member"
+    familyName: String!
+
+    "URL or path to the staff member's image"
+    image: String
+
+    "The staff member's birthdate (if known)"
+    birthday: String
+
+    "The staff member's birthplace (if known)"
+    birthPlace: String
+
+    "The staff member's blood type (if known)"
+    bloodType: String
+
+    "The staff member's hobbies (if known)"
+    hobbies: String
+
+    "A brief summary of the staff member's background or career"
+    summary: String
+
+    "Timestamp when the staff member was created in the database"
+    createdAt: Time
+
+    "Timestamp when the staff member was last updated in the database"
+    updatedAt: Time
+
+    "the characters associated with the staff member"
+    characters: [AnimeCharacter!]
+}
+
+
+
+type CharacterWithStaff {
+    "The character details"
+    character: AnimeCharacter!
+
+    "The staff member associated with the character"
+    staff: AnimeStaff!
 }`, BuiltIn: false},
 	{Name: "../../federation/directives.graphql", Input: `
 	directive @key(fields: _FieldSet!) repeatable on OBJECT | INTERFACE
@@ -1059,6 +1435,21 @@ func (ec *executionContext) field_Query_anime_args(ctx context.Context, rawArgs 
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_charactersAndStaffByAnimeId_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["animeId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("animeId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["animeId"] = arg0
 	return args, nil
 }
 
@@ -2323,6 +2714,1278 @@ func (ec *executionContext) fieldContext_AnimeApi_version(ctx context.Context, f
 	return fc, nil
 }
 
+func (ec *executionContext) _AnimeCharacter_id(ctx context.Context, field graphql.CollectedField, obj *model.AnimeCharacter) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeCharacter_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeCharacter_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeCharacter",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeCharacter_animeId(ctx context.Context, field graphql.CollectedField, obj *model.AnimeCharacter) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeCharacter_animeId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AnimeID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeCharacter_animeId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeCharacter",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeCharacter_name(ctx context.Context, field graphql.CollectedField, obj *model.AnimeCharacter) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeCharacter_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeCharacter_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeCharacter",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeCharacter_role(ctx context.Context, field graphql.CollectedField, obj *model.AnimeCharacter) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeCharacter_role(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Role, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeCharacter_role(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeCharacter",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeCharacter_birthday(ctx context.Context, field graphql.CollectedField, obj *model.AnimeCharacter) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeCharacter_birthday(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Birthday, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeCharacter_birthday(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeCharacter",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeCharacter_zodiac(ctx context.Context, field graphql.CollectedField, obj *model.AnimeCharacter) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeCharacter_zodiac(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Zodiac, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeCharacter_zodiac(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeCharacter",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeCharacter_gender(ctx context.Context, field graphql.CollectedField, obj *model.AnimeCharacter) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeCharacter_gender(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Gender, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeCharacter_gender(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeCharacter",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeCharacter_race(ctx context.Context, field graphql.CollectedField, obj *model.AnimeCharacter) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeCharacter_race(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Race, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeCharacter_race(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeCharacter",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeCharacter_height(ctx context.Context, field graphql.CollectedField, obj *model.AnimeCharacter) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeCharacter_height(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Height, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeCharacter_height(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeCharacter",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeCharacter_weight(ctx context.Context, field graphql.CollectedField, obj *model.AnimeCharacter) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeCharacter_weight(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Weight, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeCharacter_weight(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeCharacter",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeCharacter_title(ctx context.Context, field graphql.CollectedField, obj *model.AnimeCharacter) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeCharacter_title(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Title, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeCharacter_title(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeCharacter",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeCharacter_martialStatus(ctx context.Context, field graphql.CollectedField, obj *model.AnimeCharacter) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeCharacter_martialStatus(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MartialStatus, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeCharacter_martialStatus(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeCharacter",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeCharacter_summary(ctx context.Context, field graphql.CollectedField, obj *model.AnimeCharacter) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeCharacter_summary(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Summary, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeCharacter_summary(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeCharacter",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeCharacter_image(ctx context.Context, field graphql.CollectedField, obj *model.AnimeCharacter) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeCharacter_image(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Image, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeCharacter_image(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeCharacter",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeCharacter_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.AnimeCharacter) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeCharacter_createdAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeCharacter_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeCharacter",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeCharacter_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.AnimeCharacter) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeCharacter_updatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeCharacter_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeCharacter",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeCharacter_staff(ctx context.Context, field graphql.CollectedField, obj *model.AnimeCharacter) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeCharacter_staff(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Staff, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.AnimeStaff)
+	fc.Result = res
+	return ec.marshalOAnimeStaff2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnimeStaff(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeCharacter_staff(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeCharacter",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_AnimeStaff_id(ctx, field)
+			case "givenName":
+				return ec.fieldContext_AnimeStaff_givenName(ctx, field)
+			case "familyName":
+				return ec.fieldContext_AnimeStaff_familyName(ctx, field)
+			case "image":
+				return ec.fieldContext_AnimeStaff_image(ctx, field)
+			case "birthday":
+				return ec.fieldContext_AnimeStaff_birthday(ctx, field)
+			case "birthPlace":
+				return ec.fieldContext_AnimeStaff_birthPlace(ctx, field)
+			case "bloodType":
+				return ec.fieldContext_AnimeStaff_bloodType(ctx, field)
+			case "hobbies":
+				return ec.fieldContext_AnimeStaff_hobbies(ctx, field)
+			case "summary":
+				return ec.fieldContext_AnimeStaff_summary(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_AnimeStaff_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_AnimeStaff_updatedAt(ctx, field)
+			case "characters":
+				return ec.fieldContext_AnimeStaff_characters(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AnimeStaff", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeStaff_id(ctx context.Context, field graphql.CollectedField, obj *model.AnimeStaff) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeStaff_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeStaff_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeStaff",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeStaff_givenName(ctx context.Context, field graphql.CollectedField, obj *model.AnimeStaff) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeStaff_givenName(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.GivenName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeStaff_givenName(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeStaff",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeStaff_familyName(ctx context.Context, field graphql.CollectedField, obj *model.AnimeStaff) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeStaff_familyName(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FamilyName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeStaff_familyName(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeStaff",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeStaff_image(ctx context.Context, field graphql.CollectedField, obj *model.AnimeStaff) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeStaff_image(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Image, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeStaff_image(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeStaff",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeStaff_birthday(ctx context.Context, field graphql.CollectedField, obj *model.AnimeStaff) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeStaff_birthday(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Birthday, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeStaff_birthday(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeStaff",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeStaff_birthPlace(ctx context.Context, field graphql.CollectedField, obj *model.AnimeStaff) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeStaff_birthPlace(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.BirthPlace, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeStaff_birthPlace(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeStaff",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeStaff_bloodType(ctx context.Context, field graphql.CollectedField, obj *model.AnimeStaff) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeStaff_bloodType(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.BloodType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeStaff_bloodType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeStaff",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeStaff_hobbies(ctx context.Context, field graphql.CollectedField, obj *model.AnimeStaff) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeStaff_hobbies(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Hobbies, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeStaff_hobbies(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeStaff",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeStaff_summary(ctx context.Context, field graphql.CollectedField, obj *model.AnimeStaff) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeStaff_summary(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Summary, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeStaff_summary(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeStaff",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeStaff_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.AnimeStaff) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeStaff_createdAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeStaff_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeStaff",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeStaff_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.AnimeStaff) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeStaff_updatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeStaff_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeStaff",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeStaff_characters(ctx context.Context, field graphql.CollectedField, obj *model.AnimeStaff) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeStaff_characters(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Characters, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.AnimeCharacter)
+	fc.Result = res
+	return ec.marshalOAnimeCharacter2ᚕᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnimeCharacterᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeStaff_characters(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeStaff",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_AnimeCharacter_id(ctx, field)
+			case "animeId":
+				return ec.fieldContext_AnimeCharacter_animeId(ctx, field)
+			case "name":
+				return ec.fieldContext_AnimeCharacter_name(ctx, field)
+			case "role":
+				return ec.fieldContext_AnimeCharacter_role(ctx, field)
+			case "birthday":
+				return ec.fieldContext_AnimeCharacter_birthday(ctx, field)
+			case "zodiac":
+				return ec.fieldContext_AnimeCharacter_zodiac(ctx, field)
+			case "gender":
+				return ec.fieldContext_AnimeCharacter_gender(ctx, field)
+			case "race":
+				return ec.fieldContext_AnimeCharacter_race(ctx, field)
+			case "height":
+				return ec.fieldContext_AnimeCharacter_height(ctx, field)
+			case "weight":
+				return ec.fieldContext_AnimeCharacter_weight(ctx, field)
+			case "title":
+				return ec.fieldContext_AnimeCharacter_title(ctx, field)
+			case "martialStatus":
+				return ec.fieldContext_AnimeCharacter_martialStatus(ctx, field)
+			case "summary":
+				return ec.fieldContext_AnimeCharacter_summary(ctx, field)
+			case "image":
+				return ec.fieldContext_AnimeCharacter_image(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_AnimeCharacter_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_AnimeCharacter_updatedAt(ctx, field)
+			case "staff":
+				return ec.fieldContext_AnimeCharacter_staff(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AnimeCharacter", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ApiInfo_animeApi(ctx context.Context, field graphql.CollectedField, obj *model.APIInfo) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ApiInfo_animeApi(ctx, field)
 	if err != nil {
@@ -2410,6 +4073,156 @@ func (ec *executionContext) fieldContext_ApiInfo_name(ctx context.Context, field
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CharacterWithStaff_character(ctx context.Context, field graphql.CollectedField, obj *model.CharacterWithStaff) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CharacterWithStaff_character(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Character, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.AnimeCharacter)
+	fc.Result = res
+	return ec.marshalNAnimeCharacter2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnimeCharacter(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CharacterWithStaff_character(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CharacterWithStaff",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_AnimeCharacter_id(ctx, field)
+			case "animeId":
+				return ec.fieldContext_AnimeCharacter_animeId(ctx, field)
+			case "name":
+				return ec.fieldContext_AnimeCharacter_name(ctx, field)
+			case "role":
+				return ec.fieldContext_AnimeCharacter_role(ctx, field)
+			case "birthday":
+				return ec.fieldContext_AnimeCharacter_birthday(ctx, field)
+			case "zodiac":
+				return ec.fieldContext_AnimeCharacter_zodiac(ctx, field)
+			case "gender":
+				return ec.fieldContext_AnimeCharacter_gender(ctx, field)
+			case "race":
+				return ec.fieldContext_AnimeCharacter_race(ctx, field)
+			case "height":
+				return ec.fieldContext_AnimeCharacter_height(ctx, field)
+			case "weight":
+				return ec.fieldContext_AnimeCharacter_weight(ctx, field)
+			case "title":
+				return ec.fieldContext_AnimeCharacter_title(ctx, field)
+			case "martialStatus":
+				return ec.fieldContext_AnimeCharacter_martialStatus(ctx, field)
+			case "summary":
+				return ec.fieldContext_AnimeCharacter_summary(ctx, field)
+			case "image":
+				return ec.fieldContext_AnimeCharacter_image(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_AnimeCharacter_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_AnimeCharacter_updatedAt(ctx, field)
+			case "staff":
+				return ec.fieldContext_AnimeCharacter_staff(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AnimeCharacter", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CharacterWithStaff_staff(ctx context.Context, field graphql.CollectedField, obj *model.CharacterWithStaff) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CharacterWithStaff_staff(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Staff, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.AnimeStaff)
+	fc.Result = res
+	return ec.marshalNAnimeStaff2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnimeStaff(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CharacterWithStaff_staff(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CharacterWithStaff",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_AnimeStaff_id(ctx, field)
+			case "givenName":
+				return ec.fieldContext_AnimeStaff_givenName(ctx, field)
+			case "familyName":
+				return ec.fieldContext_AnimeStaff_familyName(ctx, field)
+			case "image":
+				return ec.fieldContext_AnimeStaff_image(ctx, field)
+			case "birthday":
+				return ec.fieldContext_AnimeStaff_birthday(ctx, field)
+			case "birthPlace":
+				return ec.fieldContext_AnimeStaff_birthPlace(ctx, field)
+			case "bloodType":
+				return ec.fieldContext_AnimeStaff_bloodType(ctx, field)
+			case "hobbies":
+				return ec.fieldContext_AnimeStaff_hobbies(ctx, field)
+			case "summary":
+				return ec.fieldContext_AnimeStaff_summary(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_AnimeStaff_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_AnimeStaff_updatedAt(ctx, field)
+			case "characters":
+				return ec.fieldContext_AnimeStaff_characters(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AnimeStaff", field.Name)
 		},
 	}
 	return fc, nil
@@ -3854,6 +5667,64 @@ func (ec *executionContext) fieldContext_Query_currentlyAiring(ctx context.Conte
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_currentlyAiring_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_charactersAndStaffByAnimeId(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_charactersAndStaffByAnimeId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().CharactersAndStaffByAnimeID(rctx, fc.Args["animeId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.CharacterWithStaff)
+	fc.Result = res
+	return ec.marshalOCharacterWithStaff2ᚕᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐCharacterWithStaffᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_charactersAndStaffByAnimeId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "character":
+				return ec.fieldContext_CharacterWithStaff_character(ctx, field)
+			case "staff":
+				return ec.fieldContext_CharacterWithStaff_staff(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type CharacterWithStaff", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_charactersAndStaffByAnimeId_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -6414,6 +8285,153 @@ func (ec *executionContext) _AnimeApi(ctx context.Context, sel ast.SelectionSet,
 	return out
 }
 
+var animeCharacterImplementors = []string{"AnimeCharacter"}
+
+func (ec *executionContext) _AnimeCharacter(ctx context.Context, sel ast.SelectionSet, obj *model.AnimeCharacter) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, animeCharacterImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AnimeCharacter")
+		case "id":
+			out.Values[i] = ec._AnimeCharacter_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "animeId":
+			out.Values[i] = ec._AnimeCharacter_animeId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._AnimeCharacter_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "role":
+			out.Values[i] = ec._AnimeCharacter_role(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "birthday":
+			out.Values[i] = ec._AnimeCharacter_birthday(ctx, field, obj)
+		case "zodiac":
+			out.Values[i] = ec._AnimeCharacter_zodiac(ctx, field, obj)
+		case "gender":
+			out.Values[i] = ec._AnimeCharacter_gender(ctx, field, obj)
+		case "race":
+			out.Values[i] = ec._AnimeCharacter_race(ctx, field, obj)
+		case "height":
+			out.Values[i] = ec._AnimeCharacter_height(ctx, field, obj)
+		case "weight":
+			out.Values[i] = ec._AnimeCharacter_weight(ctx, field, obj)
+		case "title":
+			out.Values[i] = ec._AnimeCharacter_title(ctx, field, obj)
+		case "martialStatus":
+			out.Values[i] = ec._AnimeCharacter_martialStatus(ctx, field, obj)
+		case "summary":
+			out.Values[i] = ec._AnimeCharacter_summary(ctx, field, obj)
+		case "image":
+			out.Values[i] = ec._AnimeCharacter_image(ctx, field, obj)
+		case "createdAt":
+			out.Values[i] = ec._AnimeCharacter_createdAt(ctx, field, obj)
+		case "updatedAt":
+			out.Values[i] = ec._AnimeCharacter_updatedAt(ctx, field, obj)
+		case "staff":
+			out.Values[i] = ec._AnimeCharacter_staff(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var animeStaffImplementors = []string{"AnimeStaff"}
+
+func (ec *executionContext) _AnimeStaff(ctx context.Context, sel ast.SelectionSet, obj *model.AnimeStaff) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, animeStaffImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AnimeStaff")
+		case "id":
+			out.Values[i] = ec._AnimeStaff_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "givenName":
+			out.Values[i] = ec._AnimeStaff_givenName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "familyName":
+			out.Values[i] = ec._AnimeStaff_familyName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "image":
+			out.Values[i] = ec._AnimeStaff_image(ctx, field, obj)
+		case "birthday":
+			out.Values[i] = ec._AnimeStaff_birthday(ctx, field, obj)
+		case "birthPlace":
+			out.Values[i] = ec._AnimeStaff_birthPlace(ctx, field, obj)
+		case "bloodType":
+			out.Values[i] = ec._AnimeStaff_bloodType(ctx, field, obj)
+		case "hobbies":
+			out.Values[i] = ec._AnimeStaff_hobbies(ctx, field, obj)
+		case "summary":
+			out.Values[i] = ec._AnimeStaff_summary(ctx, field, obj)
+		case "createdAt":
+			out.Values[i] = ec._AnimeStaff_createdAt(ctx, field, obj)
+		case "updatedAt":
+			out.Values[i] = ec._AnimeStaff_updatedAt(ctx, field, obj)
+		case "characters":
+			out.Values[i] = ec._AnimeStaff_characters(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var apiInfoImplementors = []string{"ApiInfo"}
 
 func (ec *executionContext) _ApiInfo(ctx context.Context, sel ast.SelectionSet, obj *model.APIInfo) graphql.Marshaler {
@@ -6465,6 +8483,50 @@ func (ec *executionContext) _ApiInfo(ctx context.Context, sel ast.SelectionSet, 
 			out.Values[i] = ec._ApiInfo_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var characterWithStaffImplementors = []string{"CharacterWithStaff"}
+
+func (ec *executionContext) _CharacterWithStaff(ctx context.Context, sel ast.SelectionSet, obj *model.CharacterWithStaff) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, characterWithStaffImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CharacterWithStaff")
+		case "character":
+			out.Values[i] = ec._CharacterWithStaff_character(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "staff":
+			out.Values[i] = ec._CharacterWithStaff_staff(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -6848,6 +8910,25 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_currentlyAiring(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "charactersAndStaffByAnimeId":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_charactersAndStaffByAnimeId(ctx, field)
 				return res
 			}
 
@@ -7394,9 +9475,29 @@ func (ec *executionContext) marshalNAnimeApi2ᚖgithubᚗcomᚋweebᚑvipᚋanim
 	return ec._AnimeApi(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNAnimeCharacter2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnimeCharacter(ctx context.Context, sel ast.SelectionSet, v *model.AnimeCharacter) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._AnimeCharacter(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNAnimeSearchInput2githubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnimeSearchInput(ctx context.Context, v interface{}) (model.AnimeSearchInput, error) {
 	res, err := ec.unmarshalInputAnimeSearchInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNAnimeStaff2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnimeStaff(ctx context.Context, sel ast.SelectionSet, v *model.AnimeStaff) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._AnimeStaff(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNApiInfo2githubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAPIInfo(ctx context.Context, sel ast.SelectionSet, v model.APIInfo) graphql.Marshaler {
@@ -7426,6 +9527,16 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNCharacterWithStaff2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐCharacterWithStaff(ctx context.Context, sel ast.SelectionSet, v *model.CharacterWithStaff) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._CharacterWithStaff(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNEpisode2githubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐEpisode(ctx context.Context, sel ast.SelectionSet, v model.Episode) graphql.Marshaler {
@@ -7933,6 +10044,60 @@ func (ec *executionContext) marshalOAnime2ᚖgithubᚗcomᚋweebᚑvipᚋanime�
 	return ec._Anime(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalOAnimeCharacter2ᚕᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnimeCharacterᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.AnimeCharacter) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNAnimeCharacter2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnimeCharacter(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalOAnimeStaff2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnimeStaff(ctx context.Context, sel ast.SelectionSet, v *model.AnimeStaff) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._AnimeStaff(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -7957,6 +10122,53 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	}
 	res := graphql.MarshalBoolean(*v)
 	return res
+}
+
+func (ec *executionContext) marshalOCharacterWithStaff2ᚕᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐCharacterWithStaffᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.CharacterWithStaff) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNCharacterWithStaff2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐCharacterWithStaff(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalOCurrentlyAiringInput2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐCurrentlyAiringInput(ctx context.Context, v interface{}) (*model.CurrentlyAiringInput, error) {

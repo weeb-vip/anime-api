@@ -3,6 +3,7 @@ package graph
 import (
 	"github.com/weeb-vip/anime-api/config"
 	"github.com/weeb-vip/anime-api/internal/services/anime"
+	"github.com/weeb-vip/anime-api/internal/services/anime_character"
 	"github.com/weeb-vip/anime-api/internal/services/episodes"
 )
 
@@ -11,7 +12,8 @@ import (
 // It serves as dependency injection for your app, add any dependencies you require here.
 
 type Resolver struct {
-	Config              config.Config
-	AnimeService        anime.AnimeServiceImpl
-	AnimeEpisodeService episodes.AnimeEpisodeServiceImpl
+	Config                config.Config
+	AnimeService          anime.AnimeServiceImpl
+	AnimeEpisodeService   episodes.AnimeEpisodeServiceImpl
+	AnimeCharacterService anime_character.AnimeCharacterServiceImpl
 }

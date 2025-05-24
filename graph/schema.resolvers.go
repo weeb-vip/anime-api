@@ -13,26 +13,6 @@ import (
 	"github.com/weeb-vip/anime-api/internal/resolvers"
 )
 
-// Episodes is the resolver for the episodes field.
-func (r *animeResolver) Episodes(ctx context.Context, obj *model.Anime) ([]*model.Episode, error) {
-	animeID := obj.ID
-	return resolvers.EpisodesByAnimeID(ctx, r.AnimeEpisodeService, animeID)
-}
-
-// NextEpisode is the resolver for the nextEpisode field.
-func (r *animeResolver) NextEpisode(ctx context.Context, obj *model.Anime) (*model.Episode, error) {
-	if obj.NextEpisode != nil {
-		return obj.NextEpisode, nil
-	}
-	animeID := obj.ID
-	return resolvers.NextEpisode(ctx, r.AnimeEpisodeService, animeID)
-}
-
-// AnimeAPI is the resolver for the animeApi field.
-func (r *apiInfoResolver) AnimeAPI(ctx context.Context, obj *model.APIInfo) (*model.AnimeAPI, error) {
-	return resolvers.AnimeAPI(r.Config)
-}
-
 // DbSearch is the resolver for the dbSearch field.
 func (r *queryResolver) DbSearch(ctx context.Context, searchQuery model.AnimeSearchInput) ([]*model.Anime, error) {
 	return resolvers.DBSearchAnime(ctx, r.AnimeService, searchQuery.Query, searchQuery.Page, searchQuery.PerPage)
@@ -78,25 +58,12 @@ func (r *queryResolver) CurrentlyAiring(ctx context.Context, input *model.Curren
 	return resolvers.CurrentlyAiring(ctx, r.AnimeService, input)
 }
 
-// Anime is the resolver for the anime field.
-func (r *userAnimeResolver) Anime(ctx context.Context, obj *model.UserAnime) (*model.Anime, error) {
-	animeID := obj.AnimeID
-	return resolvers.AnimeByID(ctx, r.AnimeService, animeID)
+// CharactersAndStaffByAnimeID is the resolver for the charactersAndStaffByAnimeId field.
+func (r *queryResolver) CharactersAndStaffByAnimeID(ctx context.Context, animeID string) ([]*model.CharacterWithStaff, error) {
+	return resolvers.CharactersAndStaffByAnimeID(ctx, r.AnimeCharacterService, animeID)
 }
-
-// Anime returns generated.AnimeResolver implementation.
-func (r *Resolver) Anime() generated.AnimeResolver { return &animeResolver{r} }
-
-// ApiInfo returns generated.ApiInfoResolver implementation.
-func (r *Resolver) ApiInfo() generated.ApiInfoResolver { return &apiInfoResolver{r} }
 
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
-// UserAnime returns generated.UserAnimeResolver implementation.
-func (r *Resolver) UserAnime() generated.UserAnimeResolver { return &userAnimeResolver{r} }
-
-type animeResolver struct{ *Resolver }
-type apiInfoResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
-type userAnimeResolver struct{ *Resolver }

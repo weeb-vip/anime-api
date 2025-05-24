@@ -1,10 +1,19 @@
 package anime_character
 
 import (
+	"context"
 	"github.com/weeb-vip/anime-api/internal/db"
+	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_staff"
 )
 
+type AnimeCharacterWithStaff struct {
+	AnimeCharacter *AnimeCharacter         `json:"anime_character"`
+	AnimeStaff     *anime_staff.AnimeStaff `json:"anime_staff"`
+}
+
 type AnimeCharacterRepositoryImpl interface {
+	FindAnimeCharacterAndStaffByAnimeId(ctx context.Context, animeId string) ([]*AnimeCharacterWithStaff, error)
+	FindAnimearacterById(ctx context.Context, id string) (*AnimeCharacter, error)
 }
 
 type AnimeCharacterRepository struct {
@@ -13,4 +22,26 @@ type AnimeCharacterRepository struct {
 
 func NewAnimeCharacterRepository(db *db.DB) AnimeCharacterRepositoryImpl {
 	return &AnimeCharacterRepository{db: db}
+}
+
+func (a *AnimeCharacterRepository) FindAnimeCharacterAndStaffByAnimeId(ctx context.Context, animeId string) ([]*AnimeCharacterWithStaff, error) {
+	var animeCharacters []*AnimeCharacterWithStaff
+	err := a.db.DB.Table("anime_character").
+		Select("anime_character.*, anime_staff.*").
+		Joins("JOIN anime_staff ON anime_character.anime_staff_id = anime_staff.id").
+		Where("anime_character.anime_id = ?", animeId).
+		Scan(&animeCharacters).Error
+	if err != nil {
+		return nil, err
+	}
+	return animeCharacters, nil
+}
+
+func (a *AnimeCharacterRepository) FindAnimearacterById(ctx context.Context, id string) (*AnimeCharacter, error) {
+	var animeCharacter AnimeCharacter
+	err := a.db.DB.Where("id = ?", id).First(&animeCharacter).Error
+	if err != nil {
+		return nil, err
+	}
+	return &animeCharacter, nil
 }

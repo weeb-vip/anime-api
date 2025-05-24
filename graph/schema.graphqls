@@ -2,88 +2,7 @@
 #
 # https://gqlgen.com/getting-started/
 
-type AnimeApi {
-    "Version of event anime-api service"
-    version: String!
-}
 
-type ApiInfo {
-    "API Info of the AnimeAPI"
-    animeApi: AnimeApi! @goField(forceResolver: true)
-    "Name of the API"
-    name: String!
-}
-
-"Anime Type"
-type Anime @key(fields: "id") {
-    "ID of the anime"
-    id: ID!
-    "AniDB ID of the anime"
-    anidbid: String
-    "English titel the anime"
-    titleEn: String
-    "Japanese titel the anime"
-    titleJp: String
-    "Romaji titel the anime"
-    titleRomaji: String
-    "Kanji titel the anime"
-    titleKanji: String
-    "Synonyms of the anime"
-    titleSynonyms: [String!]
-    "Description of the anime"
-    description: String
-    "Image URL of the anime"
-    imageUrl: String
-    "Tags of the anime"
-    tags: [String!]
-    "Studios of the anime"
-    studios: [String!]
-    "Anime status (finished, airing, upcoming)"
-    animeStatus: String
-    "Anime episode count"
-    episodeCount: Int
-    "returns all episodes of the anime"
-    episodes: [Episode!] @goField(forceResolver: true)
-    "Anime episode duration"
-    duration: String
-    "Anime rating"
-    rating: String
-    "Anime first air date"
-    startDate: Time
-    "Anime last air date"
-    endDate: Time
-    "Anime broadcast"
-    broadcast: String
-    "Anime source (myanimelist, anime-planet, anidb, anilist, kitsu, anime_news_network)"
-    source: String
-    "Anime licensors"
-    licensors: [String!]
-    "Anime rank"
-    ranking: Int
-    createdAt: String!
-    updatedAt: String!
-    nextEpisode: Episode @goField(forceResolver: true )
-}
-
-type Episode @key(fields: "animeId") {
-    "ID of the episode"
-    id: ID!
-    "Anime ID of the episode"
-    animeId: String
-    "Episode number"
-    episodeNumber: Int
-    "Episode title"
-    titleEn: String
-    "Episode title"
-    titleJp: String
-    "Episode synopsis"
-    synopsis: String
-    "Episode air date"
-    airDate: Time
-
-    createdAt: String!
-    updatedAt: String!
-}
 
 type Query {
     "Search for anime in the database"
@@ -104,37 +23,6 @@ type Query {
     episodesByAnimeId(animeId: ID!): [Episode!]
     "Get currently airing anime"
     currentlyAiring(input: CurrentlyAiringInput): [Anime!]
-}
-
-input AnimeSearchInput {
-    "Search query"
-    query: String!
-    "Page number"
-    page: Int!
-    "Items per page"
-    perPage: Int!
-    "Sort by"
-    sortBy: String
-    "Sort direction"
-    sortDirection: String
-    "Tags"
-    tags: [String!]
-    "Studios"
-    studios: [String!]
-    "Anime statuses"
-    animeStatuses: [String!]
-}
-
-input CurrentlyAiringInput {
-    "start date"
-    startDate: Time!
-    "end date"
-    endDate: Time
-    "days in the future"
-    daysInFuture: Int
-}
-
-extend type UserAnime @key(fields: "animeID") {
-    animeID: String! @external
-    anime: Anime @goField(forceResolver: true)
+    "characters and staff by anime ID"
+    charactersAndStaffByAnimeId(animeId: ID!): [CharacterWithStaff!]
 }
