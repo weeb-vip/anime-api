@@ -31,14 +31,28 @@ func NewAnimeCharacterStaffLinkRepository(db *db.DB) AnimeCharacterStaffLinkRepo
 
 func (a *AnimeCharacterStaffLinkRepository) FindAnimeCharacterAndStaffByAnimeId(ctx context.Context, animeId string) ([]*AnimeCharacterWithStaff, error) {
 	type joinResult struct {
-		CharacterID    string
-		CharacterName  string
-		CharacterRole  string
-		CharacterImage string
-		StaffID        string
-		GivenName      string
-		FamilyName     string
-		StaffImage     string
+		CharacterID            string
+		CharacterName          string
+		CharacterRole          string
+		CharacterImage         string
+		StaffID                string
+		GivenName              string
+		FamilyName             string
+		StaffImage             string
+		Language               string
+		Birthday               string
+		BirthPlace             string
+		BloodType              string
+		Hobbies                string
+		Summary                string
+		CharacterWeight        string
+		CharacterHeight        string
+		CharacterBirthday      string
+		CharacterZodiac        string
+		CharacterGender        string
+		CharacterMartialStatus string
+		CharacterTitle         string
+		CharacterSummary       string
 	}
 
 	var rows []joinResult
@@ -50,10 +64,24 @@ func (a *AnimeCharacterStaffLinkRepository) FindAnimeCharacterAndStaffByAnimeId(
 			anime_character.name as character_name,
 			anime_character.role as character_role,
 			anime_character.image as character_image,
+			anime_character.weight as character_weight,
+			anime_character.height as character_height,
+			anime_character.birthday as character_birthday,
+			anime_character.zodiac as character_zodiac,
+			anime_character.gender as character_gender,
+			anime_character.martial_status as character_martial_status,
+			anime_character.title as character_title,
+			anime_character.summary as character_summary,
 			anime_staff.id as staff_id,
 			anime_staff.given_name,
 			anime_staff.family_name,
-			anime_staff.image as staff_image
+			anime_staff.image as staff_image,
+			anime_staff.language as language,
+			anime_staff.birthday as birthday,
+			anime_staff.birth_place as birth_place,
+			anime_staff.blood_type as blood_type,
+			anime_staff.hobbies as hobbies,
+			anime_staff.summary as summary
 		`).
 		Joins("JOIN anime_character ON anime_character.id = anime_character_staff_link.character_id").
 		Joins("JOIN anime_staff ON anime_staff.id = anime_character_staff_link.staff_id").
@@ -70,10 +98,18 @@ func (a *AnimeCharacterStaffLinkRepository) FindAnimeCharacterAndStaffByAnimeId(
 		if _, exists := characterMap[row.CharacterID]; !exists {
 			characterMap[row.CharacterID] = &AnimeCharacterWithStaff{
 				AnimeCharacter: anime_character.AnimeCharacter{
-					ID:    row.CharacterID,
-					Name:  row.CharacterName,
-					Role:  row.CharacterRole,
-					Image: row.CharacterImage,
+					ID:            row.CharacterID,
+					Name:          row.CharacterName,
+					Role:          row.CharacterRole,
+					Image:         row.CharacterImage,
+					Weight:        row.CharacterWeight,
+					Height:        row.CharacterHeight,
+					Birthday:      row.CharacterBirthday,
+					Zodiac:        row.CharacterZodiac,
+					Gender:        row.CharacterGender,
+					MartialStatus: row.CharacterMartialStatus,
+					Title:         row.CharacterTitle,
+					Summary:       row.CharacterSummary,
 				},
 				VoiceActors: []anime_staff.AnimeStaff{},
 			}
@@ -84,6 +120,12 @@ func (a *AnimeCharacterStaffLinkRepository) FindAnimeCharacterAndStaffByAnimeId(
 			GivenName:  row.GivenName,
 			FamilyName: row.FamilyName,
 			Image:      row.StaffImage,
+			Language:   row.Language,
+			Birthday:   row.Birthday,
+			BirthPlace: row.BirthPlace,
+			BloodType:  row.BloodType,
+			Hobbies:    row.Hobbies,
+			Summary:    row.Summary,
 		})
 	}
 
