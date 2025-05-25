@@ -114,6 +114,7 @@ type ComplexityRoot struct {
 		Hobbies    func(childComplexity int) int
 		ID         func(childComplexity int) int
 		Image      func(childComplexity int) int
+		Language   func(childComplexity int) int
 		Summary    func(childComplexity int) int
 		UpdatedAt  func(childComplexity int) int
 	}
@@ -585,6 +586,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.AnimeStaff.Image(childComplexity), true
+
+	case "AnimeStaff.language":
+		if e.complexity.AnimeStaff.Language == nil {
+			break
+		}
+
+		return e.complexity.AnimeStaff.Language(childComplexity), true
 
 	case "AnimeStaff.summary":
 		if e.complexity.AnimeStaff.Summary == nil {
@@ -1213,6 +1221,9 @@ type AnimeStaff {
 
     "The given name of the staff member"
     givenName: String!
+
+    "Staff Language"
+    language: String
 
     "The family name of the staff member"
     familyName: String!
@@ -3422,6 +3433,8 @@ func (ec *executionContext) fieldContext_AnimeCharacter_staff(ctx context.Contex
 				return ec.fieldContext_AnimeStaff_id(ctx, field)
 			case "givenName":
 				return ec.fieldContext_AnimeStaff_givenName(ctx, field)
+			case "language":
+				return ec.fieldContext_AnimeStaff_language(ctx, field)
 			case "familyName":
 				return ec.fieldContext_AnimeStaff_familyName(ctx, field)
 			case "image":
@@ -3525,6 +3538,47 @@ func (ec *executionContext) _AnimeStaff_givenName(ctx context.Context, field gra
 }
 
 func (ec *executionContext) fieldContext_AnimeStaff_givenName(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeStaff",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeStaff_language(ctx context.Context, field graphql.CollectedField, obj *model.AnimeStaff) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeStaff_language(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Language, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeStaff_language(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "AnimeStaff",
 		Field:      field,
@@ -4198,6 +4252,8 @@ func (ec *executionContext) fieldContext_CharacterWithStaff_staff(ctx context.Co
 				return ec.fieldContext_AnimeStaff_id(ctx, field)
 			case "givenName":
 				return ec.fieldContext_AnimeStaff_givenName(ctx, field)
+			case "language":
+				return ec.fieldContext_AnimeStaff_language(ctx, field)
 			case "familyName":
 				return ec.fieldContext_AnimeStaff_familyName(ctx, field)
 			case "image":
@@ -8383,6 +8439,8 @@ func (ec *executionContext) _AnimeStaff(ctx context.Context, sel ast.SelectionSe
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "language":
+			out.Values[i] = ec._AnimeStaff_language(ctx, field, obj)
 		case "familyName":
 			out.Values[i] = ec._AnimeStaff_familyName(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

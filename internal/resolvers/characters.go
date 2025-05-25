@@ -35,6 +35,7 @@ func convertAnimeCharacterToGraphql(animeCharacterEntity *anime_character_staff_
 	for _, staff := range animeCharacterEntity.VoiceActors {
 		voiceActor := &model.AnimeStaff{
 			ID:         staff.ID,
+			Language:   &staff.Language,
 			GivenName:  staff.GivenName,
 			FamilyName: staff.FamilyName,
 			Image:      &staff.Image,

@@ -174,6 +174,9 @@ type AnimeStaff {
     "The given name of the staff member"
     givenName: String!
 
+    "Staff Language"
+    language: String
+
     "The family name of the staff member"
     familyName: String!
 

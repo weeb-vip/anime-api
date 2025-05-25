@@ -125,6 +125,8 @@ type AnimeStaff struct {
 	ID string `json:"id"`
 	// The given name of the staff member
 	GivenName string `json:"givenName"`
+	// Staff Language
+	Language *string `json:"language,omitempty"`
 	// The family name of the staff member
 	FamilyName string `json:"familyName"`
 	// URL or path to the staff member's image
