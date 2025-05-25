@@ -98,7 +98,7 @@ type AnimeCharacter struct {
 	// Timestamp when the character was last updated in the database
 	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
 	// The voice actor for the character
-	Staff *AnimeStaff `json:"staff,omitempty"`
+	Staff []*AnimeStaff `json:"staff,omitempty"`
 }
 
 type AnimeSearchInput struct {
@@ -158,7 +158,7 @@ type CharacterWithStaff struct {
 	// The character details
 	Character *AnimeCharacter `json:"character"`
 	// The staff member associated with the character
-	Staff *AnimeStaff `json:"staff"`
+	Staff []*AnimeStaff `json:"staff,omitempty"`
 }
 
 type CurrentlyAiringInput struct {

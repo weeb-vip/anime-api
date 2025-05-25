@@ -1204,7 +1204,7 @@ type AnimeCharacter {
     updatedAt: Time
 
     "The voice actor for the character"
-    staff: AnimeStaff
+    staff: [AnimeStaff!]
 }
 
 type AnimeStaff {
@@ -1252,7 +1252,7 @@ type CharacterWithStaff {
     character: AnimeCharacter!
 
     "The staff member associated with the character"
-    staff: AnimeStaff!
+    staff: [AnimeStaff!]
 }`, BuiltIn: false},
 	{Name: "../../federation/directives.graphql", Input: `
 	directive @key(fields: _FieldSet!) repeatable on OBJECT | INTERFACE
@@ -3405,9 +3405,9 @@ func (ec *executionContext) _AnimeCharacter_staff(ctx context.Context, field gra
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.AnimeStaff)
+	res := resTmp.([]*model.AnimeStaff)
 	fc.Result = res
-	return ec.marshalOAnimeStaff2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnimeStaff(ctx, field.Selections, res)
+	return ec.marshalOAnimeStaff2ᚕᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnimeStaffᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_AnimeCharacter_staff(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4179,14 +4179,11 @@ func (ec *executionContext) _CharacterWithStaff_staff(ctx context.Context, field
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.AnimeStaff)
+	res := resTmp.([]*model.AnimeStaff)
 	fc.Result = res
-	return ec.marshalNAnimeStaff2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnimeStaff(ctx, field.Selections, res)
+	return ec.marshalOAnimeStaff2ᚕᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnimeStaffᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_CharacterWithStaff_staff(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -8525,9 +8522,6 @@ func (ec *executionContext) _CharacterWithStaff(ctx context.Context, sel ast.Sel
 			}
 		case "staff":
 			out.Values[i] = ec._CharacterWithStaff_staff(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -10091,11 +10085,51 @@ func (ec *executionContext) marshalOAnimeCharacter2ᚕᚖgithubᚗcomᚋweebᚑv
 	return ret
 }
 
-func (ec *executionContext) marshalOAnimeStaff2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnimeStaff(ctx context.Context, sel ast.SelectionSet, v *model.AnimeStaff) graphql.Marshaler {
+func (ec *executionContext) marshalOAnimeStaff2ᚕᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnimeStaffᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.AnimeStaff) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
-	return ec._AnimeStaff(ctx, sel, v)
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNAnimeStaff2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnimeStaff(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {

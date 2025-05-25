@@ -8,13 +8,8 @@ import (
 )
 
 type AnimeCharacterWithStaff struct {
-	// Foreign keys for relationships
-	CharacterID string `gorm:"type:varchar(36);not null"` // Foreign key for AnimeCharacter
-	StaffID     string `gorm:"type:varchar(36);not null"` // Foreign key for AnimeStaff
-
-	// The actual associated structs
-	AnimeCharacter anime_character.AnimeCharacter `json:"anime_character" gorm:"foreignkey:CharacterID;references:ID"` // Foreign key to AnimeCharacter
-	AnimeStaff     anime_staff.AnimeStaff         `json:"anime_staff" gorm:"foreignkey:StaffID;references:ID"`         // Foreign key to AnimeStaff
+	anime_character.AnimeCharacter
+	VoiceActors []anime_staff.AnimeStaff `json:"voice_actors"`
 }
 
 func (AnimeCharacterWithStaff) TableName() string {
@@ -35,18 +30,67 @@ func NewAnimeCharacterStaffLinkRepository(db *db.DB) AnimeCharacterStaffLinkRepo
 }
 
 func (a *AnimeCharacterStaffLinkRepository) FindAnimeCharacterAndStaffByAnimeId(ctx context.Context, animeId string) ([]*AnimeCharacterWithStaff, error) {
-	var results []*AnimeCharacterWithStaff
+	type joinResult struct {
+		CharacterID    string
+		CharacterName  string
+		CharacterRole  string
+		CharacterImage string
+		StaffID        string
+		GivenName      string
+		FamilyName     string
+		StaffImage     string
+	}
+
+	var rows []joinResult
 
 	err := a.db.DB.
-		Preload("AnimeCharacter").
-		Preload("AnimeStaff").
+		Table("anime_character_staff_link").
+		Select(`
+			anime_character.id as character_id,
+			anime_character.name as character_name,
+			anime_character.role as character_role,
+			anime_character.image as character_image,
+			anime_staff.id as staff_id,
+			anime_staff.given_name,
+			anime_staff.family_name,
+			anime_staff.image as staff_image
+		`).
 		Joins("JOIN anime_character ON anime_character.id = anime_character_staff_link.character_id").
+		Joins("JOIN anime_staff ON anime_staff.id = anime_character_staff_link.staff_id").
 		Where("anime_character.anime_id = ?", animeId).
-		Find(&results).Error
+		Scan(&rows).Error
 
 	if err != nil {
 		return nil, err
 	}
 
-	return results, nil
+	// Group by character ID
+	characterMap := make(map[string]*AnimeCharacterWithStaff)
+	for _, row := range rows {
+		if _, exists := characterMap[row.CharacterID]; !exists {
+			characterMap[row.CharacterID] = &AnimeCharacterWithStaff{
+				AnimeCharacter: anime_character.AnimeCharacter{
+					ID:    row.CharacterID,
+					Name:  row.CharacterName,
+					Role:  row.CharacterRole,
+					Image: row.CharacterImage,
+				},
+				VoiceActors: []anime_staff.AnimeStaff{},
+			}
+		}
+
+		characterMap[row.CharacterID].VoiceActors = append(characterMap[row.CharacterID].VoiceActors, anime_staff.AnimeStaff{
+			ID:         row.StaffID,
+			GivenName:  row.GivenName,
+			FamilyName: row.FamilyName,
+			Image:      row.StaffImage,
+		})
+	}
+
+	var result []*AnimeCharacterWithStaff
+	for _, char := range characterMap {
+		result = append(result, char)
+	}
+
+	return result, nil
 }

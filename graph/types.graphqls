@@ -164,7 +164,7 @@ type AnimeCharacter {
     updatedAt: Time
 
     "The voice actor for the character"
-    staff: AnimeStaff
+    staff: [AnimeStaff!]
 }
 
 type AnimeStaff {
@@ -212,5 +212,5 @@ type CharacterWithStaff {
     character: AnimeCharacter!
 
     "The staff member associated with the character"
-    staff: AnimeStaff!
+    staff: [AnimeStaff!]
 }

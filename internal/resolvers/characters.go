@@ -30,22 +30,27 @@ func convertAnimeCharacterToGraphql(animeCharacterEntity *anime_character_staff_
 		CreatedAt:     &animeCharacterEntity.AnimeCharacter.CreatedAt,
 		UpdatedAt:     &animeCharacterEntity.AnimeCharacter.UpdatedAt,
 	}
+	staffs := make([]*model.AnimeStaff, 0, len(animeCharacterEntity.VoiceActors))
 
-	staff := &model.AnimeStaff{
-		ID:         animeCharacterEntity.AnimeStaff.ID,
-		GivenName:  animeCharacterEntity.AnimeStaff.GivenName,
-		FamilyName: animeCharacterEntity.AnimeStaff.FamilyName,
-		Image:      &animeCharacterEntity.AnimeStaff.Image,
-		Birthday:   &animeCharacterEntity.AnimeStaff.Birthday,
-		BirthPlace: &animeCharacterEntity.AnimeStaff.BirthPlace,
-		BloodType:  &animeCharacterEntity.AnimeStaff.BloodType,
-		Hobbies:    &animeCharacterEntity.AnimeStaff.Hobbies,
-		Summary:    &animeCharacterEntity.AnimeStaff.Summary,
-		CreatedAt:  &animeCharacterEntity.AnimeStaff.CreatedAt,
-		UpdatedAt:  &animeCharacterEntity.AnimeStaff.UpdatedAt,
+	for _, staff := range animeCharacterEntity.VoiceActors {
+		voiceActor := &model.AnimeStaff{
+			ID:         staff.ID,
+			GivenName:  staff.GivenName,
+			FamilyName: staff.FamilyName,
+			Image:      &staff.Image,
+			Birthday:   &staff.Birthday,
+			BirthPlace: &staff.BirthPlace,
+			BloodType:  &staff.BloodType,
+			Hobbies:    &staff.Hobbies,
+			Summary:    &staff.Summary,
+			CreatedAt:  &staff.CreatedAt,
+			UpdatedAt:  &staff.UpdatedAt,
+		}
+		staffs = append(staffs, voiceActor)
 	}
+
 	return &model.CharacterWithStaff{
-		Staff:     staff,
+		Staff:     staffs,
 		Character: character,
 	}, nil
 }
