@@ -11,6 +11,16 @@ import (
 
 type RECORD_TYPE string
 
+var tzTokyo = mustLoadTZ("Asia/Tokyo")
+
+func mustLoadTZ(name string) *time.Location {
+	loc, err := time.LoadLocation(name)
+	if err != nil {
+		panic(err)
+	}
+	return loc
+}
+
 type AnimeRepositoryImpl interface {
 	FindAll(ctx context.Context) ([]*Anime, error)
 	FindById(ctx context.Context, id string) (*Anime, error)
@@ -636,10 +646,12 @@ func (a *AnimeRepository) AiringAnime(ctx context.Context) ([]*AnimeWithNextEpis
 
 	var animes []*AnimeWithNextEpisode
 
+	nowJST := startOfDayIn(time.Now().UTC(), tzTokyo)
+	endJST := nowJST.AddDate(0, 0, 30)
+
 	subQuery := a.db.DB.Model(&anime.AnimeEpisode{}).
 		Select("anime_id, MIN(aired) AS next_aired").
-		// curr date inclusive
-		Where("aired BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY)").
+		Where("aired BETWEEN ? AND ?", nowJST, endJST).
 		Group("anime_id")
 
 	err := a.db.DB.Table("anime").
@@ -664,7 +676,7 @@ func (a *AnimeRepository) AiringAnime(ctx context.Context) ([]*AnimeWithNextEpis
 	for i := range animes {
 		var nextEpisode anime.AnimeEpisode
 		err := a.db.DB.Model(&anime.AnimeEpisode{}).
-			Where("anime_id = ? AND aired BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY)", animes[i].ID).
+			Where("anime_id = ? AND aired BETWEEN ? AND ?", animes[i].ID, nowJST, endJST).
 			Order("aired").
 			First(&nextEpisode).Error
 		if err != nil {
@@ -702,11 +714,14 @@ func (a *AnimeRepository) SearchAnime(ctx context.Context, search string, page i
 func (a *AnimeRepository) AiringAnimeDays(ctx context.Context, startDate *time.Time, days *int) ([]*AnimeWithNextEpisode, error) {
 	startTime := time.Now()
 
+	startJST := startOfDayIn(startDate.UTC(), tzTokyo)
+	endJST := startJST.AddDate(0, 0, *days)
+
 	var animes []*AnimeWithNextEpisode
 
 	subQuery := a.db.DB.Model(&anime.AnimeEpisode{}).
 		Select("anime_id, MIN(aired) AS next_aired").
-		Where("aired BETWEEN ? AND DATE_ADD(?, INTERVAL ? DAY)", startDate, startDate, days).
+		Where("aired BETWEEN ? AND ?", startJST, endJST).
 		Group("anime_id")
 
 	err := a.db.DB.Table("anime").
@@ -723,7 +738,7 @@ func (a *AnimeRepository) AiringAnimeDays(ctx context.Context, startDate *time.T
 	for i := range animes {
 		var nextEpisode anime.AnimeEpisode
 		err := a.db.DB.Model(&anime.AnimeEpisode{}).
-			Where("anime_id = ? AND aired BETWEEN ? AND DATE_ADD(?, INTERVAL ? DAY)", animes[i].ID, startDate, startDate, days).
+			Where("anime_id = ? AND aired BETWEEN ? AND ?", animes[i].ID, startJST, endJST).
 			Order("aired").
 			First(&nextEpisode).Error
 		if err != nil {
@@ -746,9 +761,13 @@ func (a *AnimeRepository) AiringAnimeEndDate(ctx context.Context, startDate *tim
 
 	var animes []*AnimeWithNextEpisode
 
+	startJST := startOfDayIn(startDate.UTC(), tzTokyo)
+	// keep end as provided but in JST zone (no implicit +1 day)
+	endJST := endDate.In(tzTokyo)
+
 	subQuery := a.db.DB.Model(&anime.AnimeEpisode{}).
 		Select("anime_id, MIN(aired) AS next_aired").
-		Where("aired BETWEEN ? AND ?", startDate, endDate).
+		Where("aired BETWEEN ? AND ?", startJST, endJST).
 		Group("anime_id")
 
 	err := a.db.DB.Table("anime").
@@ -765,7 +784,7 @@ func (a *AnimeRepository) AiringAnimeEndDate(ctx context.Context, startDate *tim
 	for i := range animes {
 		var nextEpisode anime.AnimeEpisode
 		err := a.db.DB.Model(&anime.AnimeEpisode{}).
-			Where("anime_id = ? AND aired BETWEEN ? AND ?", animes[i].ID, startDate, endDate).
+			Where("anime_id = ? AND aired BETWEEN ? AND ?", animes[i].ID, startJST, endJST).
 			Order("aired").
 			First(&nextEpisode).Error
 		if err != nil {
@@ -782,4 +801,10 @@ func (a *AnimeRepository) AiringAnimeEndDate(ctx context.Context, startDate *tim
 	})
 
 	return animes, nil
+}
+
+// Start-of-day in a specific zone (keeps date math stable)
+func startOfDayIn(t time.Time, loc *time.Location) time.Time {
+	y, m, d := t.In(loc).Date()
+	return time.Date(y, m, d, 0, 0, 0, 0, loc)
 }
