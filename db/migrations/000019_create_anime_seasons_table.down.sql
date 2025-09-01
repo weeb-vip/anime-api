@@ -2,12 +2,9 @@
 ALTER TABLE anime ADD COLUMN season VARCHAR(50) NULL;
 
 -- Drop indexes
-DROP INDEX IF EXISTS "IDX_anime_id";
-DROP INDEX IF EXISTS "IDX_status";
-DROP INDEX IF EXISTS "IDX_season";
+DROP INDEX IF EXISTS IDX_anime_id ON anime_seasons;
+DROP INDEX IF EXISTS IDX_status ON anime_seasons;
+DROP INDEX IF EXISTS IDX_season ON anime_seasons;
 
 -- Drop anime_seasons table
 DROP TABLE IF EXISTS anime_seasons;
-
--- Drop enum type
-DROP TYPE IF EXISTS anime_seasons_status_enum;
