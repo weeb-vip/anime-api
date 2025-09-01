@@ -8,7 +8,6 @@ CREATE TABLE anime_seasons (
     created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
     anime_id      VARCHAR(36),
-    CONSTRAINT FK_anime_seasons_anime_id FOREIGN KEY (anime_id) REFERENCES anime(id) ON DELETE CASCADE,
     CONSTRAINT UQ_anime_season UNIQUE (anime_id, season)
 );
 
