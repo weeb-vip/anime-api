@@ -162,7 +162,8 @@ type ComplexityRoot struct {
 	Query struct {
 		APIInfo                     func(childComplexity int) int
 		Anime                       func(childComplexity int, id string) int
-		AnimeBySeasons              func(childComplexity int, season model.Season) int
+		AnimeBySeasonAndYear        func(childComplexity int, seasonName string, year int) int
+		AnimeBySeasons              func(childComplexity int, season string) int
 		CharactersAndStaffByAnimeID func(childComplexity int, animeID string) int
 		CurrentlyAiring             func(childComplexity int, input *model.CurrentlyAiringInput) int
 		DbSearch                    func(childComplexity int, searchQuery model.AnimeSearchInput) int
@@ -210,7 +211,8 @@ type QueryResolver interface {
 	Episode(ctx context.Context, id string) (*model.Episode, error)
 	EpisodesByAnimeID(ctx context.Context, animeID string) ([]*model.Episode, error)
 	CurrentlyAiring(ctx context.Context, input *model.CurrentlyAiringInput) ([]*model.Anime, error)
-	AnimeBySeasons(ctx context.Context, season model.Season) ([]*model.Anime, error)
+	AnimeBySeasons(ctx context.Context, season string) ([]*model.Anime, error)
+	AnimeBySeasonAndYear(ctx context.Context, seasonName string, year int) ([]*model.Anime, error)
 	CharactersAndStaffByAnimeID(ctx context.Context, animeID string) ([]*model.CharacterWithStaff, error)
 }
 type UserAnimeResolver interface {
@@ -833,6 +835,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Anime(childComplexity, args["id"].(string)), true
 
+	case "Query.animeBySeasonAndYear":
+		if e.complexity.Query.AnimeBySeasonAndYear == nil {
+			break
+		}
+
+		args, err := ec.field_Query_animeBySeasonAndYear_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.AnimeBySeasonAndYear(childComplexity, args["seasonName"].(string), args["year"].(int)), true
+
 	case "Query.animeBySeasons":
 		if e.complexity.Query.AnimeBySeasons == nil {
 			break
@@ -843,7 +857,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.AnimeBySeasons(childComplexity, args["season"].(model.Season)), true
+		return e.complexity.Query.AnimeBySeasons(childComplexity, args["season"].(string)), true
 
 	case "Query.charactersAndStaffByAnimeId":
 		if e.complexity.Query.CharactersAndStaffByAnimeID == nil {
@@ -1135,36 +1149,15 @@ type Query {
     currentlyAiring(input: CurrentlyAiringInput): [Anime!]
     "Get anime by season and year"
     animeBySeasons(season: Season!): [Anime!]
+    "Get anime by season name and year (more flexible)"
+    animeBySeasonAndYear(seasonName: String!, year: Int!): [Anime!]
     "characters and staff by anime ID"
     charactersAndStaffByAnimeId(animeId: ID!): [CharacterWithStaff!]
 }
 `, BuiltIn: false},
-	{Name: "../types.graphqls", Input: `enum Season {
-    SPRING_2020
-    SUMMER_2020
-    FALL_2020
-    WINTER_2020
-    SPRING_2021
-    SUMMER_2021
-    FALL_2021
-    WINTER_2021
-    SPRING_2022
-    SUMMER_2022
-    FALL_2022
-    WINTER_2022
-    SPRING_2023
-    SUMMER_2023
-    FALL_2023
-    WINTER_2023
-    SPRING_2024
-    SUMMER_2024
-    FALL_2024
-    WINTER_2024
-    SPRING_2025
-    SUMMER_2025
-    FALL_2025
-    WINTER_2025
-}
+	{Name: "../types.graphqls", Input: `# Season is now a string scalar that can accept any season format
+# Examples: "SPRING_2024", "SUMMER_2025", "FALL_2026", etc.
+scalar Season
 
 enum AnimeSeasonStatus {
     UNKNOWN
@@ -1580,13 +1573,37 @@ func (ec *executionContext) field_Query__entities_args(ctx context.Context, rawA
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_animeBySeasonAndYear_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["seasonName"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("seasonName"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["seasonName"] = arg0
+	var arg1 int
+	if tmp, ok := rawArgs["year"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("year"))
+		arg1, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["year"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_animeBySeasons_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.Season
+	var arg0 string
 	if tmp, ok := rawArgs["season"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("season"))
-		arg0, err = ec.unmarshalNSeason2githubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐSeason(ctx, tmp)
+		arg0, err = ec.unmarshalNSeason2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -3752,9 +3769,9 @@ func (ec *executionContext) _AnimeSeason_season(ctx context.Context, field graph
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.Season)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNSeason2githubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐSeason(ctx, field.Selections, res)
+	return ec.marshalNSeason2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_AnimeSeason_season(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -6317,7 +6334,7 @@ func (ec *executionContext) _Query_animeBySeasons(ctx context.Context, field gra
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().AnimeBySeasons(rctx, fc.Args["season"].(model.Season))
+		return ec.resolvers.Query().AnimeBySeasons(rctx, fc.Args["season"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6403,6 +6420,112 @@ func (ec *executionContext) fieldContext_Query_animeBySeasons(ctx context.Contex
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_animeBySeasons_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_animeBySeasonAndYear(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_animeBySeasonAndYear(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().AnimeBySeasonAndYear(rctx, fc.Args["seasonName"].(string), fc.Args["year"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Anime)
+	fc.Result = res
+	return ec.marshalOAnime2ᚕᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnimeᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_animeBySeasonAndYear(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Anime_id(ctx, field)
+			case "anidbid":
+				return ec.fieldContext_Anime_anidbid(ctx, field)
+			case "titleEn":
+				return ec.fieldContext_Anime_titleEn(ctx, field)
+			case "titleJp":
+				return ec.fieldContext_Anime_titleJp(ctx, field)
+			case "titleRomaji":
+				return ec.fieldContext_Anime_titleRomaji(ctx, field)
+			case "titleKanji":
+				return ec.fieldContext_Anime_titleKanji(ctx, field)
+			case "titleSynonyms":
+				return ec.fieldContext_Anime_titleSynonyms(ctx, field)
+			case "description":
+				return ec.fieldContext_Anime_description(ctx, field)
+			case "imageUrl":
+				return ec.fieldContext_Anime_imageUrl(ctx, field)
+			case "tags":
+				return ec.fieldContext_Anime_tags(ctx, field)
+			case "studios":
+				return ec.fieldContext_Anime_studios(ctx, field)
+			case "animeStatus":
+				return ec.fieldContext_Anime_animeStatus(ctx, field)
+			case "episodeCount":
+				return ec.fieldContext_Anime_episodeCount(ctx, field)
+			case "episodes":
+				return ec.fieldContext_Anime_episodes(ctx, field)
+			case "duration":
+				return ec.fieldContext_Anime_duration(ctx, field)
+			case "rating":
+				return ec.fieldContext_Anime_rating(ctx, field)
+			case "startDate":
+				return ec.fieldContext_Anime_startDate(ctx, field)
+			case "endDate":
+				return ec.fieldContext_Anime_endDate(ctx, field)
+			case "broadcast":
+				return ec.fieldContext_Anime_broadcast(ctx, field)
+			case "source":
+				return ec.fieldContext_Anime_source(ctx, field)
+			case "licensors":
+				return ec.fieldContext_Anime_licensors(ctx, field)
+			case "ranking":
+				return ec.fieldContext_Anime_ranking(ctx, field)
+			case "seasons":
+				return ec.fieldContext_Anime_seasons(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Anime_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Anime_updatedAt(ctx, field)
+			case "nextEpisode":
+				return ec.fieldContext_Anime_nextEpisode(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Anime", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_animeBySeasonAndYear_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -9773,6 +9896,25 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "animeBySeasonAndYear":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_animeBySeasonAndYear(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "charactersAndStaffByAnimeId":
 			field := field
 
@@ -10457,14 +10599,19 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 	return res
 }
 
-func (ec *executionContext) unmarshalNSeason2githubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐSeason(ctx context.Context, v interface{}) (model.Season, error) {
-	var res model.Season
-	err := res.UnmarshalGQL(v)
+func (ec *executionContext) unmarshalNSeason2string(ctx context.Context, v interface{}) (string, error) {
+	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNSeason2githubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐSeason(ctx context.Context, sel ast.SelectionSet, v model.Season) graphql.Marshaler {
-	return v
+func (ec *executionContext) marshalNSeason2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
+	res := graphql.MarshalString(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {

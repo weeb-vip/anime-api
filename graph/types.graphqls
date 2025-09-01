@@ -1,29 +1,6 @@
-enum Season {
-    SPRING_2020
-    SUMMER_2020
-    FALL_2020
-    WINTER_2020
-    SPRING_2021
-    SUMMER_2021
-    FALL_2021
-    WINTER_2021
-    SPRING_2022
-    SUMMER_2022
-    FALL_2022
-    WINTER_2022
-    SPRING_2023
-    SUMMER_2023
-    FALL_2023
-    WINTER_2023
-    SPRING_2024
-    SUMMER_2024
-    FALL_2024
-    WINTER_2024
-    SPRING_2025
-    SUMMER_2025
-    FALL_2025
-    WINTER_2025
-}
+# Season is now a string scalar that can accept any season format
+# Examples: "SPRING_2024", "SUMMER_2025", "FALL_2026", etc.
+scalar Season
 
 enum AnimeSeasonStatus {
     UNKNOWN

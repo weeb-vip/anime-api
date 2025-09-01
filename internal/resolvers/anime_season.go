@@ -2,6 +2,8 @@ package resolvers
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	metrics_lib "github.com/TempMee/go-metrics-lib"
 	"github.com/weeb-vip/anime-api/graph/model"
 	anime_season_repo "github.com/weeb-vip/anime-api/internal/db/repositories/anime_season"
@@ -12,7 +14,7 @@ import (
 )
 
 func transformAnimeSeasonToGraphQL(animeSeasonEntity anime_season_repo.AnimeSeason) (*model.AnimeSeason, error) {
-	season := model.Season(animeSeasonEntity.Season)
+	season := animeSeasonEntity.Season // Now Season is a string scalar
 	status := model.AnimeSeasonStatus(animeSeasonEntity.Status)
 
 	return &model.AnimeSeason{
@@ -60,10 +62,10 @@ func AnimeSeasons(ctx context.Context, animeSeasonService anime_season.AnimeSeas
 	return seasons, nil
 }
 
-func AnimeBySeasons(ctx context.Context, animeSeasonService anime_season.AnimeSeasonServiceImpl, animeService anime_service.AnimeServiceImpl, season model.Season) ([]*model.Anime, error) {
+func AnimeBySeasons(ctx context.Context, animeSeasonService anime_season.AnimeSeasonServiceImpl, animeService anime_service.AnimeServiceImpl, season string) ([]*model.Anime, error) {
 	startTime := time.Now()
 
-	foundSeasons, err := animeSeasonService.FindBySeason(ctx, string(season))
+	foundSeasons, err := animeSeasonService.FindBySeason(ctx, season)
 	if err != nil {
 		_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
 			Resolver: "AnimeBySeasons",
@@ -108,4 +110,10 @@ func AnimeBySeasons(ctx context.Context, animeSeasonService anime_season.AnimeSe
 	})
 
 	return result, nil
+}
+
+func AnimeBySeasonAndYear(ctx context.Context, animeSeasonService anime_season.AnimeSeasonServiceImpl, animeService anime_service.AnimeServiceImpl, seasonName string, year int) ([]*model.Anime, error) {
+	// Construct the season string in the expected format: SPRING_2024, SUMMER_2024, etc.
+	season := fmt.Sprintf("%s_%d", strings.ToUpper(seasonName), year)
+	return AnimeBySeasons(ctx, animeSeasonService, animeService, season)
 }

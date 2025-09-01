@@ -129,7 +129,7 @@ type AnimeSeason struct {
 	// ID of the anime season
 	ID string `json:"id"`
 	// Season identifier (e.g., SPRING_2024)
-	Season Season `json:"season"`
+	Season string `json:"season"`
 	// Status of the anime season
 	Status AnimeSeasonStatus `json:"status"`
 	// Episode count for this season
@@ -264,90 +264,5 @@ func (e *AnimeSeasonStatus) UnmarshalGQL(v interface{}) error {
 }
 
 func (e AnimeSeasonStatus) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-type Season string
-
-const (
-	SeasonSpring2020 Season = "SPRING_2020"
-	SeasonSummer2020 Season = "SUMMER_2020"
-	SeasonFall2020   Season = "FALL_2020"
-	SeasonWinter2020 Season = "WINTER_2020"
-	SeasonSpring2021 Season = "SPRING_2021"
-	SeasonSummer2021 Season = "SUMMER_2021"
-	SeasonFall2021   Season = "FALL_2021"
-	SeasonWinter2021 Season = "WINTER_2021"
-	SeasonSpring2022 Season = "SPRING_2022"
-	SeasonSummer2022 Season = "SUMMER_2022"
-	SeasonFall2022   Season = "FALL_2022"
-	SeasonWinter2022 Season = "WINTER_2022"
-	SeasonSpring2023 Season = "SPRING_2023"
-	SeasonSummer2023 Season = "SUMMER_2023"
-	SeasonFall2023   Season = "FALL_2023"
-	SeasonWinter2023 Season = "WINTER_2023"
-	SeasonSpring2024 Season = "SPRING_2024"
-	SeasonSummer2024 Season = "SUMMER_2024"
-	SeasonFall2024   Season = "FALL_2024"
-	SeasonWinter2024 Season = "WINTER_2024"
-	SeasonSpring2025 Season = "SPRING_2025"
-	SeasonSummer2025 Season = "SUMMER_2025"
-	SeasonFall2025   Season = "FALL_2025"
-	SeasonWinter2025 Season = "WINTER_2025"
-)
-
-var AllSeason = []Season{
-	SeasonSpring2020,
-	SeasonSummer2020,
-	SeasonFall2020,
-	SeasonWinter2020,
-	SeasonSpring2021,
-	SeasonSummer2021,
-	SeasonFall2021,
-	SeasonWinter2021,
-	SeasonSpring2022,
-	SeasonSummer2022,
-	SeasonFall2022,
-	SeasonWinter2022,
-	SeasonSpring2023,
-	SeasonSummer2023,
-	SeasonFall2023,
-	SeasonWinter2023,
-	SeasonSpring2024,
-	SeasonSummer2024,
-	SeasonFall2024,
-	SeasonWinter2024,
-	SeasonSpring2025,
-	SeasonSummer2025,
-	SeasonFall2025,
-	SeasonWinter2025,
-}
-
-func (e Season) IsValid() bool {
-	switch e {
-	case SeasonSpring2020, SeasonSummer2020, SeasonFall2020, SeasonWinter2020, SeasonSpring2021, SeasonSummer2021, SeasonFall2021, SeasonWinter2021, SeasonSpring2022, SeasonSummer2022, SeasonFall2022, SeasonWinter2022, SeasonSpring2023, SeasonSummer2023, SeasonFall2023, SeasonWinter2023, SeasonSpring2024, SeasonSummer2024, SeasonFall2024, SeasonWinter2024, SeasonSpring2025, SeasonSummer2025, SeasonFall2025, SeasonWinter2025:
-		return true
-	}
-	return false
-}
-
-func (e Season) String() string {
-	return string(e)
-}
-
-func (e *Season) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = Season(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid Season", str)
-	}
-	return nil
-}
-
-func (e Season) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
