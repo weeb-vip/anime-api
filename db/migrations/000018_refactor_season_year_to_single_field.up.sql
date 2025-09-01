@@ -1,10 +1,10 @@
 -- Drop the old indexes
-DROP INDEX IF EXISTS idx_anime_season ON anime;
-DROP INDEX IF EXISTS idx_anime_year ON anime;
+ALTER TABLE anime DROP INDEX idx_anime_season;
+ALTER TABLE anime DROP INDEX idx_anime_year;
 
 -- Drop the old separate columns
-ALTER TABLE anime DROP COLUMN IF EXISTS year;
-ALTER TABLE anime DROP COLUMN IF EXISTS season;
+ALTER TABLE anime DROP COLUMN year;
+ALTER TABLE anime DROP COLUMN season;
 
 -- Add the new combined season column
 ALTER TABLE anime ADD COLUMN season VARCHAR(50) NULL;
