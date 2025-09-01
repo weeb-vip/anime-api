@@ -403,3 +403,4 @@ func DBSearchAnime(ctx context.Context, animeService anime.AnimeServiceImpl, que
 
 	return animes, nil
 }
+

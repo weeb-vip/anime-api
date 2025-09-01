@@ -1,3 +1,37 @@
+enum Season {
+    SPRING_2020
+    SUMMER_2020
+    FALL_2020
+    WINTER_2020
+    SPRING_2021
+    SUMMER_2021
+    FALL_2021
+    WINTER_2021
+    SPRING_2022
+    SUMMER_2022
+    FALL_2022
+    WINTER_2022
+    SPRING_2023
+    SUMMER_2023
+    FALL_2023
+    WINTER_2023
+    SPRING_2024
+    SUMMER_2024
+    FALL_2024
+    WINTER_2024
+    SPRING_2025
+    SUMMER_2025
+    FALL_2025
+    WINTER_2025
+}
+
+enum AnimeSeasonStatus {
+    UNKNOWN
+    CONFIRMED
+    ANNOUNCED
+    CANCELLED
+}
+
 type AnimeApi {
     "Version of event anime-api service"
     version: String!
@@ -56,9 +90,28 @@ type Anime @key(fields: "id") {
     licensors: [String!]
     "Anime rank"
     ranking: Int
+    "Anime seasons"
+    seasons: [AnimeSeason!] @goField(forceResolver: true)
     createdAt: String!
     updatedAt: String!
     nextEpisode: Episode @goField(forceResolver: true )
+}
+
+type AnimeSeason {
+    "ID of the anime season"
+    id: ID!
+    "Season identifier (e.g., SPRING_2024)"
+    season: Season!
+    "Status of the anime season"
+    status: AnimeSeasonStatus!
+    "Episode count for this season"
+    episodeCount: Int
+    "Additional notes about this season"
+    notes: String
+    "Anime ID this season belongs to"
+    animeId: String
+    createdAt: Time!
+    updatedAt: Time!
 }
 
 type Episode @key(fields: "animeId") {

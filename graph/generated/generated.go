@@ -67,6 +67,7 @@ type ComplexityRoot struct {
 		NextEpisode   func(childComplexity int) int
 		Ranking       func(childComplexity int) int
 		Rating        func(childComplexity int) int
+		Seasons       func(childComplexity int) int
 		Source        func(childComplexity int) int
 		StartDate     func(childComplexity int) int
 		Studios       func(childComplexity int) int
@@ -101,6 +102,17 @@ type ComplexityRoot struct {
 		UpdatedAt     func(childComplexity int) int
 		Weight        func(childComplexity int) int
 		Zodiac        func(childComplexity int) int
+	}
+
+	AnimeSeason struct {
+		AnimeID      func(childComplexity int) int
+		CreatedAt    func(childComplexity int) int
+		EpisodeCount func(childComplexity int) int
+		ID           func(childComplexity int) int
+		Notes        func(childComplexity int) int
+		Season       func(childComplexity int) int
+		Status       func(childComplexity int) int
+		UpdatedAt    func(childComplexity int) int
 	}
 
 	AnimeStaff struct {
@@ -150,6 +162,7 @@ type ComplexityRoot struct {
 	Query struct {
 		APIInfo                     func(childComplexity int) int
 		Anime                       func(childComplexity int, id string) int
+		AnimeBySeasons              func(childComplexity int, season model.Season) int
 		CharactersAndStaffByAnimeID func(childComplexity int, animeID string) int
 		CurrentlyAiring             func(childComplexity int, input *model.CurrentlyAiringInput) int
 		DbSearch                    func(childComplexity int, searchQuery model.AnimeSearchInput) int
@@ -175,6 +188,8 @@ type ComplexityRoot struct {
 type AnimeResolver interface {
 	Episodes(ctx context.Context, obj *model.Anime) ([]*model.Episode, error)
 
+	Seasons(ctx context.Context, obj *model.Anime) ([]*model.AnimeSeason, error)
+
 	NextEpisode(ctx context.Context, obj *model.Anime) (*model.Episode, error)
 }
 type ApiInfoResolver interface {
@@ -195,6 +210,7 @@ type QueryResolver interface {
 	Episode(ctx context.Context, id string) (*model.Episode, error)
 	EpisodesByAnimeID(ctx context.Context, animeID string) ([]*model.Episode, error)
 	CurrentlyAiring(ctx context.Context, input *model.CurrentlyAiringInput) ([]*model.Anime, error)
+	AnimeBySeasons(ctx context.Context, season model.Season) ([]*model.Anime, error)
 	CharactersAndStaffByAnimeID(ctx context.Context, animeID string) ([]*model.CharacterWithStaff, error)
 }
 type UserAnimeResolver interface {
@@ -320,6 +336,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Anime.Rating(childComplexity), true
+
+	case "Anime.seasons":
+		if e.complexity.Anime.Seasons == nil {
+			break
+		}
+
+		return e.complexity.Anime.Seasons(childComplexity), true
 
 	case "Anime.source":
 		if e.complexity.Anime.Source == nil {
@@ -516,6 +539,62 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.AnimeCharacter.Zodiac(childComplexity), true
+
+	case "AnimeSeason.animeId":
+		if e.complexity.AnimeSeason.AnimeID == nil {
+			break
+		}
+
+		return e.complexity.AnimeSeason.AnimeID(childComplexity), true
+
+	case "AnimeSeason.createdAt":
+		if e.complexity.AnimeSeason.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.AnimeSeason.CreatedAt(childComplexity), true
+
+	case "AnimeSeason.episodeCount":
+		if e.complexity.AnimeSeason.EpisodeCount == nil {
+			break
+		}
+
+		return e.complexity.AnimeSeason.EpisodeCount(childComplexity), true
+
+	case "AnimeSeason.id":
+		if e.complexity.AnimeSeason.ID == nil {
+			break
+		}
+
+		return e.complexity.AnimeSeason.ID(childComplexity), true
+
+	case "AnimeSeason.notes":
+		if e.complexity.AnimeSeason.Notes == nil {
+			break
+		}
+
+		return e.complexity.AnimeSeason.Notes(childComplexity), true
+
+	case "AnimeSeason.season":
+		if e.complexity.AnimeSeason.Season == nil {
+			break
+		}
+
+		return e.complexity.AnimeSeason.Season(childComplexity), true
+
+	case "AnimeSeason.status":
+		if e.complexity.AnimeSeason.Status == nil {
+			break
+		}
+
+		return e.complexity.AnimeSeason.Status(childComplexity), true
+
+	case "AnimeSeason.updatedAt":
+		if e.complexity.AnimeSeason.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.AnimeSeason.UpdatedAt(childComplexity), true
 
 	case "AnimeStaff.birthPlace":
 		if e.complexity.AnimeStaff.BirthPlace == nil {
@@ -753,6 +832,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Anime(childComplexity, args["id"].(string)), true
+
+	case "Query.animeBySeasons":
+		if e.complexity.Query.AnimeBySeasons == nil {
+			break
+		}
+
+		args, err := ec.field_Query_animeBySeasons_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.AnimeBySeasons(childComplexity, args["season"].(model.Season)), true
 
 	case "Query.charactersAndStaffByAnimeId":
 		if e.complexity.Query.CharactersAndStaffByAnimeID == nil {
@@ -1042,11 +1133,47 @@ type Query {
     episodesByAnimeId(animeId: ID!): [Episode!]
     "Get currently airing anime"
     currentlyAiring(input: CurrentlyAiringInput): [Anime!]
+    "Get anime by season and year"
+    animeBySeasons(season: Season!): [Anime!]
     "characters and staff by anime ID"
     charactersAndStaffByAnimeId(animeId: ID!): [CharacterWithStaff!]
 }
 `, BuiltIn: false},
-	{Name: "../types.graphqls", Input: `type AnimeApi {
+	{Name: "../types.graphqls", Input: `enum Season {
+    SPRING_2020
+    SUMMER_2020
+    FALL_2020
+    WINTER_2020
+    SPRING_2021
+    SUMMER_2021
+    FALL_2021
+    WINTER_2021
+    SPRING_2022
+    SUMMER_2022
+    FALL_2022
+    WINTER_2022
+    SPRING_2023
+    SUMMER_2023
+    FALL_2023
+    WINTER_2023
+    SPRING_2024
+    SUMMER_2024
+    FALL_2024
+    WINTER_2024
+    SPRING_2025
+    SUMMER_2025
+    FALL_2025
+    WINTER_2025
+}
+
+enum AnimeSeasonStatus {
+    UNKNOWN
+    CONFIRMED
+    ANNOUNCED
+    CANCELLED
+}
+
+type AnimeApi {
     "Version of event anime-api service"
     version: String!
 }
@@ -1104,9 +1231,28 @@ type Anime @key(fields: "id") {
     licensors: [String!]
     "Anime rank"
     ranking: Int
+    "Anime seasons"
+    seasons: [AnimeSeason!] @goField(forceResolver: true)
     createdAt: String!
     updatedAt: String!
     nextEpisode: Episode @goField(forceResolver: true )
+}
+
+type AnimeSeason {
+    "ID of the anime season"
+    id: ID!
+    "Season identifier (e.g., SPRING_2024)"
+    season: Season!
+    "Status of the anime season"
+    status: AnimeSeasonStatus!
+    "Episode count for this season"
+    episodeCount: Int
+    "Additional notes about this season"
+    notes: String
+    "Anime ID this season belongs to"
+    animeId: String
+    createdAt: Time!
+    updatedAt: Time!
 }
 
 type Episode @key(fields: "animeId") {
@@ -1431,6 +1577,21 @@ func (ec *executionContext) field_Query__entities_args(ctx context.Context, rawA
 		}
 	}
 	args["representations"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_animeBySeasons_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.Season
+	if tmp, ok := rawArgs["season"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("season"))
+		arg0, err = ec.unmarshalNSeason2githubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐSeason(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["season"] = arg0
 	return args, nil
 }
 
@@ -2532,6 +2693,65 @@ func (ec *executionContext) fieldContext_Anime_ranking(ctx context.Context, fiel
 	return fc, nil
 }
 
+func (ec *executionContext) _Anime_seasons(ctx context.Context, field graphql.CollectedField, obj *model.Anime) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Anime_seasons(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Anime().Seasons(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.AnimeSeason)
+	fc.Result = res
+	return ec.marshalOAnimeSeason2ᚕᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnimeSeasonᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Anime_seasons(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Anime",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_AnimeSeason_id(ctx, field)
+			case "season":
+				return ec.fieldContext_AnimeSeason_season(ctx, field)
+			case "status":
+				return ec.fieldContext_AnimeSeason_status(ctx, field)
+			case "episodeCount":
+				return ec.fieldContext_AnimeSeason_episodeCount(ctx, field)
+			case "notes":
+				return ec.fieldContext_AnimeSeason_notes(ctx, field)
+			case "animeId":
+				return ec.fieldContext_AnimeSeason_animeId(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_AnimeSeason_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_AnimeSeason_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AnimeSeason", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Anime_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Anime) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Anime_createdAt(ctx, field)
 	if err != nil {
@@ -3462,6 +3682,349 @@ func (ec *executionContext) fieldContext_AnimeCharacter_staff(ctx context.Contex
 	return fc, nil
 }
 
+func (ec *executionContext) _AnimeSeason_id(ctx context.Context, field graphql.CollectedField, obj *model.AnimeSeason) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeSeason_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeSeason_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeSeason",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeSeason_season(ctx context.Context, field graphql.CollectedField, obj *model.AnimeSeason) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeSeason_season(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Season, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.Season)
+	fc.Result = res
+	return ec.marshalNSeason2githubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐSeason(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeSeason_season(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeSeason",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Season does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeSeason_status(ctx context.Context, field graphql.CollectedField, obj *model.AnimeSeason) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeSeason_status(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.AnimeSeasonStatus)
+	fc.Result = res
+	return ec.marshalNAnimeSeasonStatus2githubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnimeSeasonStatus(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeSeason_status(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeSeason",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type AnimeSeasonStatus does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeSeason_episodeCount(ctx context.Context, field graphql.CollectedField, obj *model.AnimeSeason) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeSeason_episodeCount(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EpisodeCount, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeSeason_episodeCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeSeason",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeSeason_notes(ctx context.Context, field graphql.CollectedField, obj *model.AnimeSeason) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeSeason_notes(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Notes, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeSeason_notes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeSeason",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeSeason_animeId(ctx context.Context, field graphql.CollectedField, obj *model.AnimeSeason) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeSeason_animeId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AnimeID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeSeason_animeId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeSeason",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeSeason_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.AnimeSeason) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeSeason_createdAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeSeason_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeSeason",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeSeason_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.AnimeSeason) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeSeason_updatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeSeason_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeSeason",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _AnimeStaff_id(ctx context.Context, field graphql.CollectedField, obj *model.AnimeStaff) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_AnimeStaff_id(ctx, field)
 	if err != nil {
@@ -4364,6 +4927,8 @@ func (ec *executionContext) fieldContext_Entity_findAnimeByID(ctx context.Contex
 				return ec.fieldContext_Anime_licensors(ctx, field)
 			case "ranking":
 				return ec.fieldContext_Anime_ranking(ctx, field)
+			case "seasons":
+				return ec.fieldContext_Anime_seasons(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Anime_createdAt(ctx, field)
 			case "updatedAt":
@@ -4982,6 +5547,8 @@ func (ec *executionContext) fieldContext_Query_dbSearch(ctx context.Context, fie
 				return ec.fieldContext_Anime_licensors(ctx, field)
 			case "ranking":
 				return ec.fieldContext_Anime_ranking(ctx, field)
+			case "seasons":
+				return ec.fieldContext_Anime_seasons(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Anime_createdAt(ctx, field)
 			case "updatedAt":
@@ -5139,6 +5706,8 @@ func (ec *executionContext) fieldContext_Query_anime(ctx context.Context, field 
 				return ec.fieldContext_Anime_licensors(ctx, field)
 			case "ranking":
 				return ec.fieldContext_Anime_ranking(ctx, field)
+			case "seasons":
+				return ec.fieldContext_Anime_seasons(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Anime_createdAt(ctx, field)
 			case "updatedAt":
@@ -5243,6 +5812,8 @@ func (ec *executionContext) fieldContext_Query_newestAnime(ctx context.Context, 
 				return ec.fieldContext_Anime_licensors(ctx, field)
 			case "ranking":
 				return ec.fieldContext_Anime_ranking(ctx, field)
+			case "seasons":
+				return ec.fieldContext_Anime_seasons(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Anime_createdAt(ctx, field)
 			case "updatedAt":
@@ -5347,6 +5918,8 @@ func (ec *executionContext) fieldContext_Query_topRatedAnime(ctx context.Context
 				return ec.fieldContext_Anime_licensors(ctx, field)
 			case "ranking":
 				return ec.fieldContext_Anime_ranking(ctx, field)
+			case "seasons":
+				return ec.fieldContext_Anime_seasons(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Anime_createdAt(ctx, field)
 			case "updatedAt":
@@ -5451,6 +6024,8 @@ func (ec *executionContext) fieldContext_Query_mostPopularAnime(ctx context.Cont
 				return ec.fieldContext_Anime_licensors(ctx, field)
 			case "ranking":
 				return ec.fieldContext_Anime_ranking(ctx, field)
+			case "seasons":
+				return ec.fieldContext_Anime_seasons(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Anime_createdAt(ctx, field)
 			case "updatedAt":
@@ -5702,6 +6277,8 @@ func (ec *executionContext) fieldContext_Query_currentlyAiring(ctx context.Conte
 				return ec.fieldContext_Anime_licensors(ctx, field)
 			case "ranking":
 				return ec.fieldContext_Anime_ranking(ctx, field)
+			case "seasons":
+				return ec.fieldContext_Anime_seasons(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Anime_createdAt(ctx, field)
 			case "updatedAt":
@@ -5720,6 +6297,112 @@ func (ec *executionContext) fieldContext_Query_currentlyAiring(ctx context.Conte
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_currentlyAiring_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_animeBySeasons(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_animeBySeasons(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().AnimeBySeasons(rctx, fc.Args["season"].(model.Season))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Anime)
+	fc.Result = res
+	return ec.marshalOAnime2ᚕᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnimeᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_animeBySeasons(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Anime_id(ctx, field)
+			case "anidbid":
+				return ec.fieldContext_Anime_anidbid(ctx, field)
+			case "titleEn":
+				return ec.fieldContext_Anime_titleEn(ctx, field)
+			case "titleJp":
+				return ec.fieldContext_Anime_titleJp(ctx, field)
+			case "titleRomaji":
+				return ec.fieldContext_Anime_titleRomaji(ctx, field)
+			case "titleKanji":
+				return ec.fieldContext_Anime_titleKanji(ctx, field)
+			case "titleSynonyms":
+				return ec.fieldContext_Anime_titleSynonyms(ctx, field)
+			case "description":
+				return ec.fieldContext_Anime_description(ctx, field)
+			case "imageUrl":
+				return ec.fieldContext_Anime_imageUrl(ctx, field)
+			case "tags":
+				return ec.fieldContext_Anime_tags(ctx, field)
+			case "studios":
+				return ec.fieldContext_Anime_studios(ctx, field)
+			case "animeStatus":
+				return ec.fieldContext_Anime_animeStatus(ctx, field)
+			case "episodeCount":
+				return ec.fieldContext_Anime_episodeCount(ctx, field)
+			case "episodes":
+				return ec.fieldContext_Anime_episodes(ctx, field)
+			case "duration":
+				return ec.fieldContext_Anime_duration(ctx, field)
+			case "rating":
+				return ec.fieldContext_Anime_rating(ctx, field)
+			case "startDate":
+				return ec.fieldContext_Anime_startDate(ctx, field)
+			case "endDate":
+				return ec.fieldContext_Anime_endDate(ctx, field)
+			case "broadcast":
+				return ec.fieldContext_Anime_broadcast(ctx, field)
+			case "source":
+				return ec.fieldContext_Anime_source(ctx, field)
+			case "licensors":
+				return ec.fieldContext_Anime_licensors(ctx, field)
+			case "ranking":
+				return ec.fieldContext_Anime_ranking(ctx, field)
+			case "seasons":
+				return ec.fieldContext_Anime_seasons(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Anime_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Anime_updatedAt(ctx, field)
+			case "nextEpisode":
+				return ec.fieldContext_Anime_nextEpisode(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Anime", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_animeBySeasons_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -6140,6 +6823,8 @@ func (ec *executionContext) fieldContext_UserAnime_anime(ctx context.Context, fi
 				return ec.fieldContext_Anime_licensors(ctx, field)
 			case "ranking":
 				return ec.fieldContext_Anime_ranking(ctx, field)
+			case "seasons":
+				return ec.fieldContext_Anime_seasons(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Anime_createdAt(ctx, field)
 			case "updatedAt":
@@ -8233,6 +8918,39 @@ func (ec *executionContext) _Anime(ctx context.Context, sel ast.SelectionSet, ob
 			out.Values[i] = ec._Anime_licensors(ctx, field, obj)
 		case "ranking":
 			out.Values[i] = ec._Anime_ranking(ctx, field, obj)
+		case "seasons":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Anime_seasons(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "createdAt":
 			out.Values[i] = ec._Anime_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -8395,6 +9113,71 @@ func (ec *executionContext) _AnimeCharacter(ctx context.Context, sel ast.Selecti
 			out.Values[i] = ec._AnimeCharacter_updatedAt(ctx, field, obj)
 		case "staff":
 			out.Values[i] = ec._AnimeCharacter_staff(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var animeSeasonImplementors = []string{"AnimeSeason"}
+
+func (ec *executionContext) _AnimeSeason(ctx context.Context, sel ast.SelectionSet, obj *model.AnimeSeason) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, animeSeasonImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AnimeSeason")
+		case "id":
+			out.Values[i] = ec._AnimeSeason_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "season":
+			out.Values[i] = ec._AnimeSeason_season(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "status":
+			out.Values[i] = ec._AnimeSeason_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "episodeCount":
+			out.Values[i] = ec._AnimeSeason_episodeCount(ctx, field, obj)
+		case "notes":
+			out.Values[i] = ec._AnimeSeason_notes(ctx, field, obj)
+		case "animeId":
+			out.Values[i] = ec._AnimeSeason_animeId(ctx, field, obj)
+		case "createdAt":
+			out.Values[i] = ec._AnimeSeason_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updatedAt":
+			out.Values[i] = ec._AnimeSeason_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -8962,6 +9745,25 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_currentlyAiring(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "animeBySeasons":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_animeBySeasons(ctx, field)
 				return res
 			}
 
@@ -9542,6 +10344,26 @@ func (ec *executionContext) unmarshalNAnimeSearchInput2githubᚗcomᚋweebᚑvip
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalNAnimeSeason2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnimeSeason(ctx context.Context, sel ast.SelectionSet, v *model.AnimeSeason) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._AnimeSeason(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNAnimeSeasonStatus2githubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnimeSeasonStatus(ctx context.Context, v interface{}) (model.AnimeSeasonStatus, error) {
+	var res model.AnimeSeasonStatus
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNAnimeSeasonStatus2githubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnimeSeasonStatus(ctx context.Context, sel ast.SelectionSet, v model.AnimeSeasonStatus) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) marshalNAnimeStaff2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnimeStaff(ctx context.Context, sel ast.SelectionSet, v *model.AnimeStaff) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -9633,6 +10455,16 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNSeason2githubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐSeason(ctx context.Context, v interface{}) (model.Season, error) {
+	var res model.Season
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNSeason2githubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐSeason(ctx context.Context, sel ast.SelectionSet, v model.Season) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
@@ -10124,6 +10956,53 @@ func (ec *executionContext) marshalOAnimeCharacter2ᚕᚖgithubᚗcomᚋweebᚑv
 				defer wg.Done()
 			}
 			ret[i] = ec.marshalNAnimeCharacter2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnimeCharacter(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalOAnimeSeason2ᚕᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnimeSeasonᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.AnimeSeason) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNAnimeSeason2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnimeSeason(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)

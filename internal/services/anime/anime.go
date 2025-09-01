@@ -85,3 +85,4 @@ func (a *AnimeService) SearchedAnime(ctx context.Context, query string, page int
 
 	return a.Repository.SearchAnime(spanCtx, query, page, limit)
 }
+

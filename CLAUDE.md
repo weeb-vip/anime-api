@@ -17,7 +17,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Testing
 - `go test ./...` - Run all tests
-- Tests are located in `metrics_lib/` subdirectory
+- `go test ./metrics_lib/...` - Run tests for metrics library specifically
+- Tests are primarily in `metrics_lib/` subdirectory
 
 ## Architecture
 
@@ -45,3 +46,22 @@ Uses MySQL with GORM. Entities include anime, episodes, characters, staff, and r
 
 ### Configuration
 Configuration loaded via `internal/db/config.go` with development config in `config/config.dev.json`.
+
+## Important Notes
+
+### Multi-module Structure
+This repository contains two Go modules:
+- Main API: `github.com/weeb-vip/anime-api` (root directory)  
+- Metrics library: `github.com/TempMee/go-metrics-lib` (`./metrics_lib/` directory)
+
+The metrics library is replaced locally via `go.mod` replace directive and provides Datadog and Prometheus metrics support.
+
+### Code Generation
+- GraphQL code is generated via gqlgen - modify `graph/*.graphqls` files and run `make gql`
+- Mocks are generated and included in the `make generate` target
+- Always regenerate after schema changes
+
+### Database Migrations
+- Uses golang-migrate with SQL migration files in `db/migrations/`
+- Sequential naming convention enforced by migrate tool
+- Apply with `go run cmd/main.go migrate up`, rollback with `migrate down`

@@ -23,6 +23,8 @@ type Query {
     episodesByAnimeId(animeId: ID!): [Episode!]
     "Get currently airing anime"
     currentlyAiring(input: CurrentlyAiringInput): [Anime!]
+    "Get anime by season and year"
+    animeBySeasons(season: Season!): [Anime!]
     "characters and staff by anime ID"
     charactersAndStaffByAnimeId(animeId: ID!): [CharacterWithStaff!]
 }
