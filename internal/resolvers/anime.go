@@ -65,6 +65,7 @@ func transformAnimeToGraphQL(animeEntity anime2.Anime) (*model.Anime, error) {
 	return &model.Anime{
 		ID:            animeEntity.ID,
 		Anidbid:       animeEntity.AnidbID,
+		Thetvdbid:     animeEntity.TheTVDBID,
 		TitleEn:       animeEntity.TitleEn,
 		TitleJp:       animeEntity.TitleJp,
 		TitleKanji:    animeEntity.TitleKanji,
@@ -160,6 +161,7 @@ func transformAnimeToGraphQLWithEpisode(animeEntity anime2.AnimeWithNextEpisode)
 	return &model.Anime{
 		ID:            animeEntity.ID,
 		Anidbid:       animeEntity.AnidbID,
+		Thetvdbid:     animeEntity.TheTVDBID,
 		TitleEn:       animeEntity.TitleEn,
 		TitleJp:       animeEntity.TitleJp,
 		TitleKanji:    animeEntity.TitleKanji,
