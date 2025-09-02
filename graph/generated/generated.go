@@ -72,6 +72,7 @@ type ComplexityRoot struct {
 		StartDate     func(childComplexity int) int
 		Studios       func(childComplexity int) int
 		Tags          func(childComplexity int) int
+		Thetvdbid     func(childComplexity int) int
 		TitleEn       func(childComplexity int) int
 		TitleJp       func(childComplexity int) int
 		TitleKanji    func(childComplexity int) int
@@ -373,6 +374,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Anime.Tags(childComplexity), true
+
+	case "Anime.thetvdbid":
+		if e.complexity.Anime.Thetvdbid == nil {
+			break
+		}
+
+		return e.complexity.Anime.Thetvdbid(childComplexity), true
 
 	case "Anime.titleEn":
 		if e.complexity.Anime.TitleEn == nil {
@@ -1184,6 +1192,8 @@ type Anime @key(fields: "id") {
     id: ID!
     "AniDB ID of the anime"
     anidbid: String
+    "TheTVDB ID of the anime"
+    thetvdbid: String
     "English titel the anime"
     titleEn: String
     "Japanese titel the anime"
@@ -1858,6 +1868,47 @@ func (ec *executionContext) _Anime_anidbid(ctx context.Context, field graphql.Co
 }
 
 func (ec *executionContext) fieldContext_Anime_anidbid(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Anime",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Anime_thetvdbid(ctx context.Context, field graphql.CollectedField, obj *model.Anime) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Anime_thetvdbid(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Thetvdbid, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Anime_thetvdbid(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Anime",
 		Field:      field,
@@ -4904,6 +4955,8 @@ func (ec *executionContext) fieldContext_Entity_findAnimeByID(ctx context.Contex
 				return ec.fieldContext_Anime_id(ctx, field)
 			case "anidbid":
 				return ec.fieldContext_Anime_anidbid(ctx, field)
+			case "thetvdbid":
+				return ec.fieldContext_Anime_thetvdbid(ctx, field)
 			case "titleEn":
 				return ec.fieldContext_Anime_titleEn(ctx, field)
 			case "titleJp":
@@ -5524,6 +5577,8 @@ func (ec *executionContext) fieldContext_Query_dbSearch(ctx context.Context, fie
 				return ec.fieldContext_Anime_id(ctx, field)
 			case "anidbid":
 				return ec.fieldContext_Anime_anidbid(ctx, field)
+			case "thetvdbid":
+				return ec.fieldContext_Anime_thetvdbid(ctx, field)
 			case "titleEn":
 				return ec.fieldContext_Anime_titleEn(ctx, field)
 			case "titleJp":
@@ -5683,6 +5738,8 @@ func (ec *executionContext) fieldContext_Query_anime(ctx context.Context, field 
 				return ec.fieldContext_Anime_id(ctx, field)
 			case "anidbid":
 				return ec.fieldContext_Anime_anidbid(ctx, field)
+			case "thetvdbid":
+				return ec.fieldContext_Anime_thetvdbid(ctx, field)
 			case "titleEn":
 				return ec.fieldContext_Anime_titleEn(ctx, field)
 			case "titleJp":
@@ -5789,6 +5846,8 @@ func (ec *executionContext) fieldContext_Query_newestAnime(ctx context.Context, 
 				return ec.fieldContext_Anime_id(ctx, field)
 			case "anidbid":
 				return ec.fieldContext_Anime_anidbid(ctx, field)
+			case "thetvdbid":
+				return ec.fieldContext_Anime_thetvdbid(ctx, field)
 			case "titleEn":
 				return ec.fieldContext_Anime_titleEn(ctx, field)
 			case "titleJp":
@@ -5895,6 +5954,8 @@ func (ec *executionContext) fieldContext_Query_topRatedAnime(ctx context.Context
 				return ec.fieldContext_Anime_id(ctx, field)
 			case "anidbid":
 				return ec.fieldContext_Anime_anidbid(ctx, field)
+			case "thetvdbid":
+				return ec.fieldContext_Anime_thetvdbid(ctx, field)
 			case "titleEn":
 				return ec.fieldContext_Anime_titleEn(ctx, field)
 			case "titleJp":
@@ -6001,6 +6062,8 @@ func (ec *executionContext) fieldContext_Query_mostPopularAnime(ctx context.Cont
 				return ec.fieldContext_Anime_id(ctx, field)
 			case "anidbid":
 				return ec.fieldContext_Anime_anidbid(ctx, field)
+			case "thetvdbid":
+				return ec.fieldContext_Anime_thetvdbid(ctx, field)
 			case "titleEn":
 				return ec.fieldContext_Anime_titleEn(ctx, field)
 			case "titleJp":
@@ -6254,6 +6317,8 @@ func (ec *executionContext) fieldContext_Query_currentlyAiring(ctx context.Conte
 				return ec.fieldContext_Anime_id(ctx, field)
 			case "anidbid":
 				return ec.fieldContext_Anime_anidbid(ctx, field)
+			case "thetvdbid":
+				return ec.fieldContext_Anime_thetvdbid(ctx, field)
 			case "titleEn":
 				return ec.fieldContext_Anime_titleEn(ctx, field)
 			case "titleJp":
@@ -6360,6 +6425,8 @@ func (ec *executionContext) fieldContext_Query_animeBySeasons(ctx context.Contex
 				return ec.fieldContext_Anime_id(ctx, field)
 			case "anidbid":
 				return ec.fieldContext_Anime_anidbid(ctx, field)
+			case "thetvdbid":
+				return ec.fieldContext_Anime_thetvdbid(ctx, field)
 			case "titleEn":
 				return ec.fieldContext_Anime_titleEn(ctx, field)
 			case "titleJp":
@@ -6466,6 +6533,8 @@ func (ec *executionContext) fieldContext_Query_animeBySeasonAndYear(ctx context.
 				return ec.fieldContext_Anime_id(ctx, field)
 			case "anidbid":
 				return ec.fieldContext_Anime_anidbid(ctx, field)
+			case "thetvdbid":
+				return ec.fieldContext_Anime_thetvdbid(ctx, field)
 			case "titleEn":
 				return ec.fieldContext_Anime_titleEn(ctx, field)
 			case "titleJp":
@@ -6906,6 +6975,8 @@ func (ec *executionContext) fieldContext_UserAnime_anime(ctx context.Context, fi
 				return ec.fieldContext_Anime_id(ctx, field)
 			case "anidbid":
 				return ec.fieldContext_Anime_anidbid(ctx, field)
+			case "thetvdbid":
+				return ec.fieldContext_Anime_thetvdbid(ctx, field)
 			case "titleEn":
 				return ec.fieldContext_Anime_titleEn(ctx, field)
 			case "titleJp":
@@ -8970,6 +9041,8 @@ func (ec *executionContext) _Anime(ctx context.Context, sel ast.SelectionSet, ob
 			}
 		case "anidbid":
 			out.Values[i] = ec._Anime_anidbid(ctx, field, obj)
+		case "thetvdbid":
+			out.Values[i] = ec._Anime_thetvdbid(ctx, field, obj)
 		case "titleEn":
 			out.Values[i] = ec._Anime_titleEn(ctx, field, obj)
 		case "titleJp":

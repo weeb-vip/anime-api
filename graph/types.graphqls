@@ -27,6 +27,8 @@ type Anime @key(fields: "id") {
     id: ID!
     "AniDB ID of the anime"
     anidbid: String
+    "TheTVDB ID of the anime"
+    thetvdbid: String
     "English titel the anime"
     titleEn: String
     "Japanese titel the anime"

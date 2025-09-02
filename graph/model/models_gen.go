@@ -15,6 +15,8 @@ type Anime struct {
 	ID string `json:"id"`
 	// AniDB ID of the anime
 	Anidbid *string `json:"anidbid,omitempty"`
+	// TheTVDB ID of the anime
+	Thetvdbid *string `json:"thetvdbid,omitempty"`
 	// English titel the anime
 	TitleEn *string `json:"titleEn,omitempty"`
 	// Japanese titel the anime
