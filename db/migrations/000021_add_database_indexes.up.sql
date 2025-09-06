@@ -1,5 +1,8 @@
 -- Add database indexes for improved query performance
 
+-- Drop procedure if it exists first, then create it
+DROP PROCEDURE IF EXISTS CreateIndexIfNotExists;
+
 -- Helper procedure to safely create indexes
 DELIMITER //
 CREATE PROCEDURE CreateIndexIfNotExists(
@@ -25,13 +28,13 @@ BEGIN
 END//
 DELIMITER ;
 
--- Anime table indexes
-CALL CreateIndexIfNotExists('idx_anime_status', 'anime', '(status)');
-CALL CreateIndexIfNotExists('idx_anime_rating', 'anime', '(rating)');
+-- Anime table indexes (TEXT columns need key length specification)
+CALL CreateIndexIfNotExists('idx_anime_status', 'anime', '(status(50))');
+CALL CreateIndexIfNotExists('idx_anime_rating', 'anime', '(rating(20))');
 CALL CreateIndexIfNotExists('idx_anime_ranking', 'anime', '(ranking)');
 CALL CreateIndexIfNotExists('idx_anime_created_at', 'anime', '(created_at)');
 CALL CreateIndexIfNotExists('idx_anime_type', 'anime', '(type)');
-CALL CreateIndexIfNotExists('idx_anime_source', 'anime', '(source)');
+CALL CreateIndexIfNotExists('idx_anime_source', 'anime', '(source(100))');
 CALL CreateIndexIfNotExists('idx_anime_start_date', 'anime', '(start_date)');
 CALL CreateIndexIfNotExists('idx_anime_end_date', 'anime', '(end_date)');
 CALL CreateIndexIfNotExists('idx_anime_anidbid', 'anime', '(anidbid)');
