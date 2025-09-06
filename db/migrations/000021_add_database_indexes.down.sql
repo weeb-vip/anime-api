@@ -1,5 +1,8 @@
 -- Remove database indexes
 
+-- Drop procedure if it exists first, then create it
+DROP PROCEDURE IF EXISTS DropIndexIfExists;
+
 -- Helper procedure to safely drop indexes
 DELIMITER //
 CREATE PROCEDURE DropIndexIfExists(
