@@ -165,7 +165,7 @@ func (a *AnimeRepository) FindByName(ctx context.Context, name string) ([]*Anime
 	startTime := time.Now()
 
 	var animes []*Anime
-	err := a.db.DB.Where("name = ?", name).Find(&animes).Error
+	err := a.db.DB.WithContext(ctx).Where("name = ?", name).Find(&animes).Error
 	if err != nil {
 		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
 			Service: "anime-api",
@@ -189,7 +189,7 @@ func (a *AnimeRepository) FindByType(ctx context.Context, recordType RECORD_TYPE
 	startTime := time.Now()
 
 	var animes []*Anime
-	err := a.db.DB.Where("type = ?", recordType).Find(&animes).Error
+	err := a.db.DB.WithContext(ctx).Where("type = ?", recordType).Find(&animes).Error
 	if err != nil {
 		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
 			Service: "anime-api",
@@ -213,7 +213,7 @@ func (a *AnimeRepository) FindByStatus(ctx context.Context, status string) ([]*A
 	startTime := time.Now()
 
 	var animes []*Anime
-	err := a.db.DB.Where("status = ?", status).Find(&animes).Error
+	err := a.db.DB.WithContext(ctx).Where("status = ?", status).Find(&animes).Error
 	if err != nil {
 
 		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
@@ -238,7 +238,7 @@ func (a *AnimeRepository) FindBySource(ctx context.Context, source string) ([]*A
 	startTime := time.Now()
 
 	var animes []*Anime
-	err := a.db.DB.Where("source = ?", source).Find(&animes).Error
+	err := a.db.DB.WithContext(ctx).Where("source = ?", source).Find(&animes).Error
 	if err != nil {
 		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
 			Service: "anime-api",
@@ -262,7 +262,7 @@ func (a *AnimeRepository) FindByGenre(ctx context.Context, genre string) ([]*Ani
 	startTime := time.Now()
 
 	var animes []*Anime
-	err := a.db.DB.Where("genre = ?", genre).Find(&animes).Error
+	err := a.db.DB.WithContext(ctx).Where("genre = ?", genre).Find(&animes).Error
 	if err != nil {
 		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
 			Service: "anime-api",
@@ -286,7 +286,7 @@ func (a *AnimeRepository) FindByStudio(ctx context.Context, studio string) ([]*A
 	startTime := time.Now()
 
 	var animes []*Anime
-	err := a.db.DB.Where("studio = ?", studio).Find(&animes).Error
+	err := a.db.DB.WithContext(ctx).Where("studio = ?", studio).Find(&animes).Error
 	if err != nil {
 
 		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
@@ -311,7 +311,7 @@ func (a *AnimeRepository) FindByLicensors(ctx context.Context, licensors string)
 	startTime := time.Now()
 
 	var animes []*Anime
-	err := a.db.DB.Where("licensors = ?", licensors).Find(&animes).Error
+	err := a.db.DB.WithContext(ctx).Where("licensors = ?", licensors).Find(&animes).Error
 	if err != nil {
 		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
 			Service: "anime-api",
@@ -335,7 +335,7 @@ func (a *AnimeRepository) FindByRating(ctx context.Context, rating string) ([]*A
 	startTime := time.Now()
 
 	var animes []*Anime
-	err := a.db.DB.Where("rating = ?", rating).Find(&animes).Error
+	err := a.db.DB.WithContext(ctx).Where("rating = ?", rating).Find(&animes).Error
 	if err != nil {
 		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
 			Service: "anime-api",
@@ -359,7 +359,7 @@ func (a *AnimeRepository) FindByYear(ctx context.Context, year int) ([]*Anime, e
 	startTime := time.Now()
 
 	var animes []*Anime
-	err := a.db.DB.Where("year = ?", year).Find(&animes).Error
+	err := a.db.DB.WithContext(ctx).Where("year = ?", year).Find(&animes).Error
 	if err != nil {
 		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
 			Service: "anime-api",
@@ -462,12 +462,12 @@ func (a *AnimeRepository) AiringAnime(ctx context.Context) ([]*AnimeWithNextEpis
 	nowJST := startOfDayIn(time.Now().UTC(), tzTokyo)
 	endJST := nowJST.AddDate(0, 0, 30)
 
-	subQuery := a.db.DB.Model(&anime.AnimeEpisode{}).
+	subQuery := a.db.DB.WithContext(ctx).Model(&anime.AnimeEpisode{}).
 		Select("anime_id, MIN(aired) AS next_aired").
 		Where("aired BETWEEN ? AND ?", nowJST, endJST).
 		Group("anime_id")
 
-	err := a.db.DB.Table("anime").
+	err := a.db.DB.WithContext(ctx).Table("anime").
 		Select("anime.*"). // Only scan anime fields into AnimeWithNextEpisode
 		Joins("JOIN (?) AS e ON anime.id = e.anime_id", subQuery).
 		Where("anime.end_date IS NULL").
@@ -488,7 +488,7 @@ func (a *AnimeRepository) AiringAnime(ctx context.Context) ([]*AnimeWithNextEpis
 	// Populate the next_aired field in each AnimeWithNextEpisode
 	for i := range animes {
 		var nextEpisode anime.AnimeEpisode
-		err := a.db.DB.Model(&anime.AnimeEpisode{}).
+		err := a.db.DB.WithContext(ctx).Model(&anime.AnimeEpisode{}).
 			Where("anime_id = ? AND aired BETWEEN ? AND ?", animes[i].ID, nowJST, endJST).
 			Order("aired").
 			First(&nextEpisode).Error
@@ -532,12 +532,12 @@ func (a *AnimeRepository) AiringAnimeDays(ctx context.Context, startDate *time.T
 
 	var animes []*AnimeWithNextEpisode
 
-	subQuery := a.db.DB.Model(&anime.AnimeEpisode{}).
+	subQuery := a.db.DB.WithContext(ctx).Model(&anime.AnimeEpisode{}).
 		Select("anime_id, MIN(aired) AS next_aired").
 		Where("aired BETWEEN ? AND ?", startJST, endJST).
 		Group("anime_id")
 
-	err := a.db.DB.Table("anime").
+	err := a.db.DB.WithContext(ctx).Table("anime").
 		Select("anime.*"). // Only scan anime fields into AnimeWithNextEpisode
 		Joins("JOIN (?) AS e ON anime.id = e.anime_id", subQuery).
 		Order("e.next_aired").
@@ -550,7 +550,7 @@ func (a *AnimeRepository) AiringAnimeDays(ctx context.Context, startDate *time.T
 	// Populate the next_aired field in each AnimeWithNextEpisode
 	for i := range animes {
 		var nextEpisode anime.AnimeEpisode
-		err := a.db.DB.Model(&anime.AnimeEpisode{}).
+		err := a.db.DB.WithContext(ctx).Model(&anime.AnimeEpisode{}).
 			Where("anime_id = ? AND aired BETWEEN ? AND ?", animes[i].ID, startJST, endJST).
 			Order("aired").
 			First(&nextEpisode).Error
@@ -578,12 +578,12 @@ func (a *AnimeRepository) AiringAnimeEndDate(ctx context.Context, startDate *tim
 	// keep end as provided but in JST zone (no implicit +1 day)
 	endJST := endDate.In(tzTokyo)
 
-	subQuery := a.db.DB.Model(&anime.AnimeEpisode{}).
+	subQuery := a.db.DB.WithContext(ctx).Model(&anime.AnimeEpisode{}).
 		Select("anime_id, MIN(aired) AS next_aired").
 		Where("aired BETWEEN ? AND ?", startJST, endJST).
 		Group("anime_id")
 
-	err := a.db.DB.Table("anime").
+	err := a.db.DB.WithContext(ctx).Table("anime").
 		Select("anime.*"). // Only scan anime fields into AnimeWithNextEpisode
 		Joins("JOIN (?) AS e ON anime.id = e.anime_id", subQuery).
 		Order("e.next_aired").
@@ -596,7 +596,7 @@ func (a *AnimeRepository) AiringAnimeEndDate(ctx context.Context, startDate *tim
 	// Populate the next_aired field in each AnimeWithNextEpisode
 	for i := range animes {
 		var nextEpisode anime.AnimeEpisode
-		err := a.db.DB.Model(&anime.AnimeEpisode{}).
+		err := a.db.DB.WithContext(ctx).Model(&anime.AnimeEpisode{}).
 			Where("anime_id = ? AND aired BETWEEN ? AND ?", animes[i].ID, startJST, endJST).
 			Order("aired").
 			First(&nextEpisode).Error

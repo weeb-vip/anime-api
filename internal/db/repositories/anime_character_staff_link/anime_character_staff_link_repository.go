@@ -2,9 +2,12 @@ package anime_character_staff_link
 
 import (
 	"context"
+	"time"
 	"github.com/weeb-vip/anime-api/internal/db"
 	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_character"
 	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_staff"
+	"github.com/weeb-vip/anime-api/metrics"
+	metrics_lib "github.com/weeb-vip/go-metrics-lib"
 )
 
 type AnimeCharacterWithStaff struct {
@@ -30,6 +33,8 @@ func NewAnimeCharacterStaffLinkRepository(db *db.DB) AnimeCharacterStaffLinkRepo
 }
 
 func (a *AnimeCharacterStaffLinkRepository) FindAnimeCharacterAndStaffByAnimeId(ctx context.Context, animeId string) ([]*AnimeCharacterWithStaff, error) {
+	startTime := time.Now()
+
 	type joinResult struct {
 		CharacterID            string
 		CharacterName          string
@@ -57,7 +62,7 @@ func (a *AnimeCharacterStaffLinkRepository) FindAnimeCharacterAndStaffByAnimeId(
 
 	var rows []joinResult
 
-	err := a.db.DB.
+	err := a.db.DB.WithContext(ctx).
 		Table("anime_character_staff_link").
 		Select(`
 			anime_character.id as character_id,
@@ -89,6 +94,12 @@ func (a *AnimeCharacterStaffLinkRepository) FindAnimeCharacterAndStaffByAnimeId(
 		Scan(&rows).Error
 
 	if err != nil {
+		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
+			Service: "anime-api",
+			Table:   "anime_character_staff_link",
+			Method:  metrics_lib.DatabaseMetricMethodSelect,
+			Result:  metrics_lib.Error,
+		})
 		return nil, err
 	}
 
@@ -134,5 +145,11 @@ func (a *AnimeCharacterStaffLinkRepository) FindAnimeCharacterAndStaffByAnimeId(
 		result = append(result, char)
 	}
 
+	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
+		Service: "anime-api",
+		Table:   "anime_character_staff_link",
+		Method:  metrics_lib.DatabaseMetricMethodSelect,
+		Result:  metrics_lib.Success,
+	})
 	return result, nil
 }
