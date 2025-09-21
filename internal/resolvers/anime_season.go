@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	metrics_lib "github.com/TempMee/go-metrics-lib"
+	metrics_lib "github.com/weeb-vip/go-metrics-lib"
 	"github.com/weeb-vip/anime-api/graph/model"
 	anime_season_repo "github.com/weeb-vip/anime-api/internal/db/repositories/anime_season"
 	anime_service "github.com/weeb-vip/anime-api/internal/services/anime"

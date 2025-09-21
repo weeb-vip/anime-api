@@ -17,8 +17,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Testing
 - `go test ./...` - Run all tests
-- `go test ./metrics_lib/...` - Run tests for metrics library specifically
-- Tests are primarily in `metrics_lib/` subdirectory
+- Tests are located in the various package subdirectories
 
 ## Architecture
 
@@ -26,7 +25,7 @@ This is a GraphQL anime API built with Go, using:
 - **gqlgen** for GraphQL server generation with federation support
 - **GORM** with MySQL for database operations
 - **Cobra CLI** for command structure
-- **Custom metrics library** (`./metrics_lib`) with Datadog and Prometheus support
+- **External metrics library** (`github.com/weeb-vip/go-metrics-lib`) with Datadog and Prometheus support
 
 ### Key Structure
 - `cmd/main.go` - Application entry point
@@ -36,7 +35,6 @@ This is a GraphQL anime API built with Go, using:
 - `internal/services/` - Business logic layer
 - `internal/resolvers/` - GraphQL resolver implementations
 - `db/migrations/` - Database migration files
-- `metrics_lib/` - Custom metrics library (separate Go module)
 
 ### GraphQL Schema
 Main queries support anime search, episodes, characters/staff, and various ranking queries (newest, top rated, most popular). Schema files are in `graph/*.graphqls`.
@@ -49,12 +47,8 @@ Configuration loaded via `internal/db/config.go` with development config in `con
 
 ## Important Notes
 
-### Multi-module Structure
-This repository contains two Go modules:
-- Main API: `github.com/weeb-vip/anime-api` (root directory)  
-- Metrics library: `github.com/TempMee/go-metrics-lib` (`./metrics_lib/` directory)
-
-The metrics library is replaced locally via `go.mod` replace directive and provides Datadog and Prometheus metrics support.
+### Dependencies
+The application uses the external metrics library `github.com/weeb-vip/go-metrics-lib` which provides Datadog and Prometheus metrics support.
 
 ### Code Generation
 - GraphQL code is generated via gqlgen - modify `graph/*.graphqls` files and run `make gql`

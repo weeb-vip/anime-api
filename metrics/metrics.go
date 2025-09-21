@@ -1,8 +1,8 @@
 package metrics
 
 import (
-	metricsLib "github.com/TempMee/go-metrics-lib"
-	"github.com/TempMee/go-metrics-lib/clients/prometheus"
+	metricsLib "github.com/weeb-vip/go-metrics-lib"
+	"github.com/weeb-vip/go-metrics-lib/clients/prometheus"
 )
 
 var metricsInstance metricsLib.MetricsImpl

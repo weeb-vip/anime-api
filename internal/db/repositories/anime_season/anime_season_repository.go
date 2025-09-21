@@ -2,7 +2,7 @@ package anime_season
 
 import (
 	"context"
-	metrics_lib "github.com/TempMee/go-metrics-lib"
+	metrics_lib "github.com/weeb-vip/go-metrics-lib"
 	"github.com/weeb-vip/anime-api/internal/db"
 	"github.com/weeb-vip/anime-api/metrics"
 	"time"

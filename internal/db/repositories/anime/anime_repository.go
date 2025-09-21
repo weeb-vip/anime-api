@@ -2,7 +2,7 @@ package anime
 
 import (
 	"context"
-	metrics_lib "github.com/TempMee/go-metrics-lib"
+	metrics_lib "github.com/weeb-vip/go-metrics-lib"
 	"github.com/weeb-vip/anime-api/internal/db"
 	anime "github.com/weeb-vip/anime-api/internal/db/repositories/anime_episode"
 	"github.com/weeb-vip/anime-api/metrics"

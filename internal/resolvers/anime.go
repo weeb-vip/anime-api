@@ -3,7 +3,7 @@ package resolvers
 import (
 	"context"
 	"encoding/json"
-	metrics_lib "github.com/TempMee/go-metrics-lib"
+	metrics_lib "github.com/weeb-vip/go-metrics-lib"
 	"github.com/weeb-vip/anime-api/graph/model"
 	anime2 "github.com/weeb-vip/anime-api/internal/db/repositories/anime"
 	"github.com/weeb-vip/anime-api/internal/services/anime"
