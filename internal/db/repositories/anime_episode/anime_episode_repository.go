@@ -39,7 +39,7 @@ func (a *AnimeEpisodeRepository) Delete(ctx context.Context, episode *AnimeEpiso
 
 func (a *AnimeEpisodeRepository) FindByAnimeID(ctx context.Context, animeID string) ([]*AnimeEpisode, error) {
 	var episodes []*AnimeEpisode
-	err := a.db.DB.Where("anime_id = ?", animeID).Find(&episodes).Error
+	err := a.db.DB.WithContext(ctx).Where("anime_id = ?", animeID).Order("episode ASC").Find(&episodes).Error
 	if err != nil {
 		return nil, err
 	}
