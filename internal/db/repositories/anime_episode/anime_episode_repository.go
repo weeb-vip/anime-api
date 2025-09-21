@@ -22,7 +22,7 @@ func NewAnimeEpisodeRepository(db *db.DB) AnimeEpisodeRepositoryImpl {
 }
 
 func (a *AnimeEpisodeRepository) Upsert(ctx context.Context, episode *AnimeEpisode) error {
-	err := a.db.DB.Save(episode).Error
+	err := a.db.DB.WithContext(ctx).Save(episode).Error
 	if err != nil {
 		return err
 	}
@@ -30,7 +30,7 @@ func (a *AnimeEpisodeRepository) Upsert(ctx context.Context, episode *AnimeEpiso
 }
 
 func (a *AnimeEpisodeRepository) Delete(ctx context.Context, episode *AnimeEpisode) error {
-	err := a.db.DB.Delete(episode).Error
+	err := a.db.DB.WithContext(ctx).Delete(episode).Error
 	if err != nil {
 		return err
 	}

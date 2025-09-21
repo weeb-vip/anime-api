@@ -64,7 +64,7 @@ func (a *AnimeRepository) FindAll(ctx context.Context) ([]*Anime, error) {
 	startTime := time.Now()
 
 	var animes []*Anime
-	err := a.db.DB.Find(&animes).Error
+	err := a.db.DB.WithContext(ctx).Find(&animes).Error
 	if err != nil {
 		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
 			Service: "anime-api",
@@ -114,7 +114,7 @@ func (a *AnimeRepository) FindById(ctx context.Context, id string) (*Anime, erro
 	startTime := time.Now()
 
 	var anime Anime
-	err := a.db.DB.Where("id = ?", id).First(&anime).Error
+	err := a.db.DB.WithContext(ctx).Where("id = ?", id).First(&anime).Error
 	if err != nil {
 		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
 			Service: "anime-api",
@@ -383,7 +383,7 @@ func (a *AnimeRepository) TopRatedAnime(ctx context.Context, limit int) ([]*Anim
 
 	var animes []*Anime
 	// order by rating desc and rating does not equal N/A
-	err := a.db.DB.Where("rating != ?", "N/A").Order("rating desc").Limit(limit).Find(&animes).Error
+	err := a.db.DB.WithContext(ctx).Where("rating != ?", "N/A").Order("rating desc").Limit(limit).Find(&animes).Error
 	if err != nil {
 		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
 			Service: "anime-api",
@@ -408,7 +408,7 @@ func (a *AnimeRepository) MostPopularAnime(ctx context.Context, limit int) ([]*A
 
 	var animes []*Anime
 	// order by popularity desc and popularity does not equal N/A
-	err := a.db.DB.Where("ranking != ?", "N/A").Order("ranking asc").Limit(limit).Find(&animes).Error
+	err := a.db.DB.WithContext(ctx).Where("ranking != ?", "N/A").Order("ranking asc").Limit(limit).Find(&animes).Error
 	if err != nil {
 		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
 			Service: "anime-api",
@@ -433,7 +433,7 @@ func (a *AnimeRepository) NewestAnime(ctx context.Context, limit int) ([]*Anime,
 
 	var animes []*Anime
 	// order by start date desc where not null
-	err := a.db.DB.Where("created_at ").Order("created_at desc").Limit(limit).Find(&animes).Error
+	err := a.db.DB.WithContext(ctx).Where("created_at ").Order("created_at desc").Limit(limit).Find(&animes).Error
 	if err != nil {
 		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
 			Service: "anime-api",
@@ -503,7 +503,7 @@ func (a *AnimeRepository) SearchAnime(ctx context.Context, search string, page i
 	startTime := time.Now()
 
 	var animes []*Anime
-	err := a.db.DB.Where("title_en LIKE ? OR title_jp LIKE ? OR title_synonyms LIKE ? OR title_romaji LIKE ? OR title_kanji LIKE ?", "%"+search+"%", "%"+search+"%", "%"+search+"%", "%"+search+"%", "%"+search+"%").Limit(limit).Offset((page - 1) * limit).Find(&animes).Error
+	err := a.db.DB.WithContext(ctx).Where("title_en LIKE ? OR title_jp LIKE ? OR title_synonyms LIKE ? OR title_romaji LIKE ? OR title_kanji LIKE ?", "%"+search+"%", "%"+search+"%", "%"+search+"%", "%"+search+"%", "%"+search+"%").Limit(limit).Offset((page - 1) * limit).Find(&animes).Error
 	if err != nil {
 		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
 			Service: "anime-api",

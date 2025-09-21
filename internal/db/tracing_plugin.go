@@ -91,7 +91,8 @@ func (tp *TracingPlugin) before(db *gorm.DB, operation string) {
 	tracer := tracing.GetTracer(ctx)
 	spanName := fmt.Sprintf("GORM %s", operation)
 
-	_, span := tracer.Start(ctx, spanName,
+	// Use the existing context to create a child span
+	newCtx, span := tracer.Start(ctx, spanName,
 		trace.WithAttributes(
 			attribute.String("db.system", "mysql"),
 			attribute.String("db.operation", operation),
@@ -99,6 +100,9 @@ func (tp *TracingPlugin) before(db *gorm.DB, operation string) {
 		),
 		trace.WithSpanKind(trace.SpanKindClient),
 	)
+
+	// Update the statement context to include the new span
+	db.Statement.Context = newCtx
 
 	// Store span in DB instance for later use
 	db.Set(spanKey, span)
@@ -116,14 +120,21 @@ func (tp *TracingPlugin) after(db *gorm.DB) {
 		return
 	}
 
-	// Add SQL query as attribute
+	// Add SQL query and additional database attributes
 	if db.Statement != nil && db.Statement.SQL.String() != "" {
-		span.SetAttributes(attribute.String("db.statement", db.Statement.SQL.String()))
+		span.SetAttributes(
+			attribute.String("db.statement", db.Statement.SQL.String()),
+			attribute.String("db.name", "weeb"),
+			attribute.String("db.user", "weeb"),
+		)
 	}
 
-	// Add rows affected
+	// Add rows affected and performance metrics
 	if db.Statement != nil {
-		span.SetAttributes(attribute.Int64("db.rows_affected", db.RowsAffected))
+		span.SetAttributes(
+			attribute.Int64("db.rows_affected", db.RowsAffected),
+			attribute.String("db.operation.name", db.Statement.Table+"."+db.Statement.SQL.String()[:20]),
+		)
 	}
 
 	// Handle errors
