@@ -372,10 +372,10 @@ func NewestAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit
 func CurrentlyAiring(ctx context.Context, animeService anime.AnimeServiceImpl, input *model.CurrentlyAiringInput) ([]*model.Anime, error) {
 	startTime := time.Now()
 
-	var foundAnime []*anime2.AnimeWithNextEpisode
+	var foundAnime []*anime2.Anime
 	if input == nil {
 		var err error
-		foundAnime, err = animeService.AiringAnime(ctx, nil, nil, nil)
+		foundAnime, err = animeService.AiringAnimeWithEpisodes(ctx, nil, nil, nil)
 		if err != nil {
 			_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
 				Resolver: "CurrentlyAiring",
@@ -388,7 +388,7 @@ func CurrentlyAiring(ctx context.Context, animeService anime.AnimeServiceImpl, i
 	} else {
 		var err error
 		startDate := &input.StartDate
-		foundAnime, err = animeService.AiringAnime(ctx, startDate, input.EndDate, input.DaysInFuture)
+		foundAnime, err = animeService.AiringAnimeWithEpisodes(ctx, startDate, input.EndDate, input.DaysInFuture)
 		if err != nil {
 			_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
 				Resolver: "CurrentlyAiring",
@@ -402,7 +402,7 @@ func CurrentlyAiring(ctx context.Context, animeService anime.AnimeServiceImpl, i
 
 	var animes []*model.Anime
 	for _, animeEntity := range foundAnime {
-		anime, err := transformAnimeToGraphQLWithEpisode(*animeEntity)
+		anime, err := transformAnimeToGraphQL(*animeEntity)
 		if err != nil {
 			return nil, err
 		}

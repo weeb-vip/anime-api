@@ -17,6 +17,7 @@ type AnimeServiceImpl interface {
 	NewestAnime(ctx context.Context, limit int) ([]*anime.Anime, error)
 	NewestAnimeWithEpisodes(ctx context.Context, limit int) ([]*anime.Anime, error)
 	AiringAnime(ctx context.Context, startDate *time.Time, endDate *time.Time, days *int) ([]*anime.AnimeWithNextEpisode, error)
+	AiringAnimeWithEpisodes(ctx context.Context, startDate *time.Time, endDate *time.Time, days *int) ([]*anime.Anime, error)
 	SearchedAnime(ctx context.Context, query string, page int, limit int) ([]*anime.Anime, error)
 	SearchedAnimeWithEpisodes(ctx context.Context, query string, page int, limit int) ([]*anime.Anime, error)
 }
@@ -134,4 +135,13 @@ func (a *AnimeService) SearchedAnimeWithEpisodes(ctx context.Context, query stri
 	defer span.Finish()
 
 	return a.Repository.SearchAnimeWithEpisodes(spanCtx, query, page, limit)
+}
+
+func (a *AnimeService) AiringAnimeWithEpisodes(ctx context.Context, startDate *time.Time, endDate *time.Time, days *int) ([]*anime.Anime, error) {
+	span, spanCtx := tracer.StartSpanFromContext(ctx, "AiringAnimeWithEpisodes")
+	span.SetTag("service", "anime")
+	span.SetTag("type", "service")
+	defer span.Finish()
+
+	return a.Repository.AiringAnimeWithEpisodes(spanCtx, startDate, endDate, days)
 }

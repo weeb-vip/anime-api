@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/weeb-vip/anime-api/tracing"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
@@ -88,7 +89,13 @@ func (tp *TracingPlugin) before(db *gorm.DB, operation string) {
 		ctx = context.Background()
 	}
 
+	// Try to get tracer from context first, then fall back to global tracer
 	tracer := tracing.GetTracer(ctx)
+	if tracer == nil {
+		// Use global tracer as fallback
+		tracer = otel.Tracer("gorm")
+	}
+
 	spanName := fmt.Sprintf("GORM %s", operation)
 
 	// Use the existing context to create a child span

@@ -48,6 +48,7 @@ type AnimeRepositoryImpl interface {
 	AiringAnime(ctx context.Context) ([]*AnimeWithNextEpisode, error)
 	AiringAnimeDays(ctx context.Context, startDate *time.Time, days *int) ([]*AnimeWithNextEpisode, error)
 	AiringAnimeEndDate(ctx context.Context, startDate *time.Time, endDate *time.Time) ([]*AnimeWithNextEpisode, error)
+	AiringAnimeWithEpisodes(ctx context.Context, startDate *time.Time, endDate *time.Time, days *int) ([]*Anime, error)
 	SearchAnime(ctx context.Context, search string, page int, limit int) ([]*Anime, error)
 	SearchAnimeWithEpisodes(ctx context.Context, search string, page int, limit int) ([]*Anime, error)
 }
@@ -794,6 +795,52 @@ func (a *AnimeRepository) SearchAnimeWithEpisodes(ctx context.Context, search st
 		Method:  metrics_lib.DatabaseMetricMethodSelect,
 		Result:  metrics_lib.Success,
 	})
+	return animes, nil
+}
+
+func (a *AnimeRepository) AiringAnimeWithEpisodes(ctx context.Context, startDate *time.Time, endDate *time.Time, days *int) ([]*Anime, error) {
+	startTime := time.Now()
+
+	var animes []*Anime
+
+	query := a.db.DB.WithContext(ctx).Preload("AnimeEpisodes", func(db *gorm.DB) *gorm.DB {
+		return db.Order("episode ASC")
+	})
+
+	// Handle date filtering logic similar to the service layer
+	if startDate != nil && endDate != nil {
+		// Filter anime that have episodes airing between startDate and endDate
+		query = query.Joins("INNER JOIN episodes ON anime.id = episodes.anime_id").
+			Where("episodes.aired BETWEEN ? AND ?", *startDate, *endDate).
+			Where("anime.end_date IS NULL OR anime.end_date >= ?", startDate)
+	} else if startDate != nil && days != nil {
+		// Filter anime that have episodes airing from startDate for the next N days
+		endTime := startDate.AddDate(0, 0, *days)
+		query = query.Joins("INNER JOIN episodes ON anime.id = episodes.anime_id").
+			Where("episodes.aired BETWEEN ? AND ?", *startDate, endTime).
+			Where("anime.end_date IS NULL OR anime.end_date >= ?", startDate)
+	} else {
+		// Default: currently airing anime (next 30 days)
+		nowJST := startOfDayIn(time.Now().UTC(), tzTokyo)
+		endJST := nowJST.AddDate(0, 0, 30)
+		query = query.Joins("INNER JOIN episodes ON anime.id = episodes.anime_id").
+			Where("episodes.aired BETWEEN ? AND ?", nowJST, endJST).
+			Where("anime.end_date IS NULL")
+	}
+
+	err := query.Distinct("anime.*").Find(&animes).Error
+
+	metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
+		Service: "anime-api",
+		Table:   "anime",
+		Method:  metrics_lib.DatabaseMetricMethodSelect,
+		Result:  map[bool]string{true: metrics_lib.Success, false: metrics_lib.Error}[err == nil],
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
 	return animes, nil
 }
 
