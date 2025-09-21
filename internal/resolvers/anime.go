@@ -8,6 +8,9 @@ import (
 	anime2 "github.com/weeb-vip/anime-api/internal/db/repositories/anime"
 	"github.com/weeb-vip/anime-api/internal/services/anime"
 	"github.com/weeb-vip/anime-api/metrics"
+	"github.com/weeb-vip/anime-api/tracing"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	"time"
 )
 
@@ -188,11 +191,22 @@ func transformAnimeToGraphQLWithEpisode(animeEntity anime2.AnimeWithNextEpisode)
 }
 
 func AnimeByID(ctx context.Context, animeService anime.AnimeServiceImpl, id string) (*model.Anime, error) {
+	// Start tracing span
+	tracer := tracing.GetTracer(ctx)
+	ctx, span := tracer.Start(ctx, "AnimeByID")
+	span.SetAttributes(
+		attribute.String("anime.id", id),
+		attribute.String("resolver.name", "AnimeByID"),
+	)
+	defer span.End()
 
 	startTime := time.Now()
 
 	foundAnime, err := animeService.AnimeByID(ctx, id)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+
 		_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
 			Resolver: "AnimeByID",
 			Service:  "anime-api",
@@ -201,6 +215,16 @@ func AnimeByID(ctx context.Context, animeService anime.AnimeServiceImpl, id stri
 		})
 		return nil, err
 	}
+
+	span.SetStatus(codes.Ok, "")
+	// Add available anime attributes to span
+	if foundAnime.TitleEn != nil {
+		span.SetAttributes(attribute.String("anime.title_en", *foundAnime.TitleEn))
+	}
+	if foundAnime.TitleRomaji != nil {
+		span.SetAttributes(attribute.String("anime.title_romaji", *foundAnime.TitleRomaji))
+	}
+	span.SetAttributes(attribute.String("anime.id", foundAnime.ID))
 
 	_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
 		Resolver: "AnimeByID",

@@ -20,6 +20,11 @@ func NewDatabase(cfg config.DBConfig) *DB {
 		panic("failed to connect database")
 	}
 
+	// Add tracing plugin
+	if err := db.Use(&TracingPlugin{}); err != nil {
+		panic(fmt.Sprintf("failed to add tracing plugin: %v", err))
+	}
+
 	sqlDB, err := db.DB()
 	if err != nil {
 		panic("failed to get database connection")

@@ -4,7 +4,11 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package commands
 
 import (
+	"context"
+	"log"
+
 	"github.com/weeb-vip/anime-api/http"
+	"github.com/weeb-vip/anime-api/tracing"
 
 	"github.com/spf13/cobra"
 )
@@ -20,7 +24,24 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return http.StartServer()
+		// Initialize tracing
+		ctx := context.Background()
+		tracedCtx, err := tracing.InitTracing(ctx)
+		if err != nil {
+			log.Printf("Failed to initialize tracing: %v", err)
+			// Continue without tracing if initialization fails
+			tracedCtx = ctx
+		} else {
+			defer func() {
+				if err := tracing.Shutdown(context.Background()); err != nil {
+					log.Printf("Error shutting down tracing: %v", err)
+				}
+			}()
+			log.Println("Tracing initialized successfully")
+		}
+
+		// Start the server with traced context
+		return http.StartServerWithContext(tracedCtx)
 	},
 }
 

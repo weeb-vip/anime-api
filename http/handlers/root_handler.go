@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/weeb-vip/anime-api/config"
 	"github.com/weeb-vip/anime-api/graph"
@@ -39,6 +40,35 @@ func BuildRootHandler(conf config.Config) http.Handler {
 		AnimeCharacterService:              animeCharacterService,
 		AnimeCharacterWithStaffLinkService: animeCharacterWithStaffLinkService,
 		AnimeSeasonService:                 animeSeasonService,
+	}
+
+	cfg := generated.Config{Resolvers: resolvers, Directives: directives.GetDirectives()}
+
+	srv := handler.NewDefaultServer(generated.NewExecutableSchema(cfg))
+
+	return srv
+}
+
+func BuildRootHandlerWithContext(ctx context.Context, conf config.Config) http.Handler {
+	database := db.NewDatabase(conf.DBConfig)
+	animeRepository := anime2.NewAnimeRepository(database)
+	episodeRepository := anime3.NewAnimeEpisodeRepository(database)
+	animeService := anime.NewAnimeService(animeRepository)
+	animeEpisodeService := episodes.NewAnimeEpisodeService(episodeRepository)
+	animeCharacterRepository := anime_character.NewAnimeCharacterRepository(database)
+	animeCharacterService := anime_character2.NewAnimeCharacterService(animeCharacterRepository)
+	animeCharacterWithStaffLinkRepository := anime_character_staff_link.NewAnimeCharacterStaffLinkRepository(database)
+	animeCharacterWithStaffLinkService := anime_character_staff_link2.NewAnimeCharacterStaffLinkService(animeCharacterWithStaffLinkRepository)
+	animeSeasonRepository := anime_season.NewAnimeSeasonRepository(database)
+	animeSeasonService := anime_season_service.NewAnimeSeasonService(animeSeasonRepository)
+	resolvers := &graph.Resolver{
+		Config:                             conf,
+		AnimeService:                       animeService,
+		AnimeEpisodeService:                animeEpisodeService,
+		AnimeCharacterService:              animeCharacterService,
+		AnimeCharacterWithStaffLinkService: animeCharacterWithStaffLinkService,
+		AnimeSeasonService:                 animeSeasonService,
+		Context:                            ctx,
 	}
 
 	cfg := generated.Config{Resolvers: resolvers, Directives: directives.GetDirectives()}
