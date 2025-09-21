@@ -18,6 +18,7 @@ import (
 	anime_character_staff_link2 "github.com/weeb-vip/anime-api/internal/services/anime_character_staff_link"
 	anime_season_service "github.com/weeb-vip/anime-api/internal/services/anime_season"
 	"github.com/weeb-vip/anime-api/internal/services/episodes"
+	"github.com/weeb-vip/anime-api/http/middleware"
 	"net/http"
 )
 
@@ -45,6 +46,9 @@ func BuildRootHandler(conf config.Config) http.Handler {
 	cfg := generated.Config{Resolvers: resolvers, Directives: directives.GetDirectives()}
 
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(cfg))
+
+	// Add GraphQL tracing extension
+	srv.Use(&middleware.GraphQLTracingExtension{})
 
 	return srv
 }
@@ -74,6 +78,9 @@ func BuildRootHandlerWithContext(ctx context.Context, conf config.Config) http.H
 	cfg := generated.Config{Resolvers: resolvers, Directives: directives.GetDirectives()}
 
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(cfg))
+
+	// Add GraphQL tracing extension
+	srv.Use(&middleware.GraphQLTracingExtension{})
 
 	return srv
 }

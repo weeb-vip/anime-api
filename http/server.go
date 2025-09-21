@@ -6,6 +6,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/weeb-vip/anime-api/config"
 	"github.com/weeb-vip/anime-api/http/handlers"
+	"github.com/weeb-vip/anime-api/http/middleware"
 	"github.com/weeb-vip/anime-api/internal/logger"
 	"github.com/weeb-vip/anime-api/metrics"
 	muxtrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/gorilla/mux"
@@ -26,6 +27,10 @@ func SetupServer(cfg config.Config) *muxtrace.Router {
 func SetupServerWithContext(ctx context.Context, cfg config.Config) *muxtrace.Router {
 
 	router := muxtrace.NewRouter(muxtrace.WithServiceName(cfg.AppConfig.APPName))
+
+	// Add tracing middleware to all routes
+	router.Use(middleware.TracingMiddleware())
+
 	router.Handle("/ui/playground", playground.Handler("GraphQL playground", "/graphql")).Methods("GET")
 	router.Handle("/graphql", handlers.BuildRootHandlerWithContext(ctx, cfg)).Methods("POST")
 	router.Handle("/healthcheck", handlers.HealthCheckHandler()).Methods("GET")
