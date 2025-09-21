@@ -3,12 +3,12 @@ package resolvers
 import (
 	"context"
 	"encoding/json"
-	metrics_lib "github.com/weeb-vip/go-metrics-lib"
 	"github.com/weeb-vip/anime-api/graph/model"
 	anime2 "github.com/weeb-vip/anime-api/internal/db/repositories/anime"
 	"github.com/weeb-vip/anime-api/internal/services/anime"
 	"github.com/weeb-vip/anime-api/metrics"
 	"github.com/weeb-vip/anime-api/tracing"
+	metrics_lib "github.com/weeb-vip/go-
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"time"
@@ -65,6 +65,25 @@ func transformAnimeToGraphQL(animeEntity anime2.Anime) (*model.Anime, error) {
 		endDate = &endDateTime
 	}
 
+	// Convert preloaded episodes if they exist
+	var episodes []*model.Episode
+	if animeEntity.AnimeEpisodes != nil {
+		for _, episodeEntity := range animeEntity.AnimeEpisodes {
+			episode := &model.Episode{
+				ID:            episodeEntity.ID,
+				AnimeID:       episodeEntity.AnimeID,
+				EpisodeNumber: episodeEntity.Episode,
+				TitleEn:       episodeEntity.TitleEn,
+				TitleJp:       episodeEntity.TitleJp,
+				AirDate:       episodeEntity.Aired,
+				Synopsis:      episodeEntity.Synopsis,
+				CreatedAt:     episodeEntity.CreatedAt.Format("2006-01-02 15:04:05"),
+				UpdatedAt:     episodeEntity.UpdatedAt.Format("2006-01-02 15:04:05"),
+			}
+			episodes = append(episodes, episode)
+		}
+	}
+
 	return &model.Anime{
 		ID:            animeEntity.ID,
 		Anidbid:       animeEntity.AnidbID,
@@ -76,6 +95,7 @@ func transformAnimeToGraphQL(animeEntity anime2.Anime) (*model.Anime, error) {
 		TitleSynonyms: titleSynonyms,
 		Description:   animeEntity.Synopsis,
 		EpisodeCount:  animeEntity.Episodes,
+		Episodes:      episodes, // Add preloaded episodes
 		Duration:      animeEntity.Duration,
 		Studios:       studios,
 		Tags:          tags,
@@ -243,7 +263,8 @@ func TopRatedAnime(ctx context.Context, animeService anime.AnimeServiceImpl, lim
 		l := 10
 		limit = &l
 	}
-	foundAnime, err := animeService.TopRatedAnime(ctx, *limit)
+	// Use WithEpisodes version to preload episodes and avoid N+1 queries
+	foundAnime, err := animeService.TopRatedAnimeWithEpisodes(ctx, *limit)
 	if err != nil {
 		_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
 			Resolver: "TopRatedAnime",
@@ -280,7 +301,8 @@ func MostPopularAnime(ctx context.Context, animeService anime.AnimeServiceImpl, 
 		l := 10
 		limit = &l
 	}
-	foundAnime, err := animeService.MostPopularAnime(ctx, *limit)
+	// Use WithEpisodes version to preload episodes and avoid N+1 queries
+	foundAnime, err := animeService.MostPopularAnimeWithEpisodes(ctx, *limit)
 	if err != nil {
 		_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
 			Resolver: "MostPopularAnime",
@@ -400,7 +422,8 @@ func CurrentlyAiring(ctx context.Context, animeService anime.AnimeServiceImpl, i
 func DBSearchAnime(ctx context.Context, animeService anime.AnimeServiceImpl, query string, page int, limit int) ([]*model.Anime, error) {
 	startTime := time.Now()
 
-	foundAnime, err := animeService.SearchedAnime(ctx, query, page, limit)
+	// Use WithEpisodes version to preload episodes and avoid N+1 queries
+	foundAnime, err := animeService.SearchedAnimeWithEpisodes(ctx, query, page, limit)
 	if err != nil {
 		_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
 			Resolver: "DBSearchAnime",
@@ -429,4 +452,3 @@ func DBSearchAnime(ctx context.Context, animeService anime.AnimeServiceImpl, que
 
 	return animes, nil
 }
-

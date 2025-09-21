@@ -31,6 +31,9 @@ type Anime struct {
 	Ranking       *int         `gorm:"column:ranking;null" json:"ranking"`
 	CreatedAt     time.Time    `gorm:"column:created_at" json:"created_at"`
 	UpdatedAt     time.Time    `gorm:"column:updated_at" json:"updated_at"`
+
+	// Relations
+	AnimeEpisodes []*animeEpisode.AnimeEpisode `gorm:"foreignKey:AnimeID;references:ID" json:"anime_episodes,omitempty"`
 }
 
 // set table name

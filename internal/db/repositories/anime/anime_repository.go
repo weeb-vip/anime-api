@@ -2,10 +2,11 @@ package anime
 
 import (
 	"context"
-	metrics_lib "github.com/weeb-vip/go-metrics-lib"
 	"github.com/weeb-vip/anime-api/internal/db"
 	anime "github.com/weeb-vip/anime-api/internal/db/repositories/anime_episode"
 	"github.com/weeb-vip/anime-api/metrics"
+	metrics_lib "github.com/weeb-vip/go-metrics-lib"
+	"gorm.io/gorm"
 	"time"
 )
 
@@ -23,10 +24,15 @@ func mustLoadTZ(name string) *time.Location {
 
 type AnimeRepositoryImpl interface {
 	FindAll(ctx context.Context) ([]*Anime, error)
+	FindAllWithEpisodes(ctx context.Context) ([]*Anime, error)
 	FindById(ctx context.Context, id string) (*Anime, error)
+	FindByIdWithEpisodes(ctx context.Context, id string) (*Anime, error)
 	FindByName(ctx context.Context, name string) ([]*Anime, error)
+	FindByNameWithEpisodes(ctx context.Context, name string) ([]*Anime, error)
 	FindByType(ctx context.Context, recordType RECORD_TYPE) ([]*Anime, error)
+	FindByTypeWithEpisodes(ctx context.Context, recordType RECORD_TYPE) ([]*Anime, error)
 	FindByStatus(ctx context.Context, status string) ([]*Anime, error)
+	FindByStatusWithEpisodes(ctx context.Context, status string) ([]*Anime, error)
 	FindBySource(ctx context.Context, source string) ([]*Anime, error)
 	FindByGenre(ctx context.Context, genre string) ([]*Anime, error)
 	FindByStudio(ctx context.Context, studio string) ([]*Anime, error)
@@ -34,12 +40,16 @@ type AnimeRepositoryImpl interface {
 	FindByRating(ctx context.Context, rating string) ([]*Anime, error)
 	FindByYear(ctx context.Context, year int) ([]*Anime, error)
 	TopRatedAnime(ctx context.Context, limit int) ([]*Anime, error)
+	TopRatedAnimeWithEpisodes(ctx context.Context, limit int) ([]*Anime, error)
 	MostPopularAnime(ctx context.Context, limit int) ([]*Anime, error)
+	MostPopularAnimeWithEpisodes(ctx context.Context, limit int) ([]*Anime, error)
 	NewestAnime(ctx context.Context, limit int) ([]*Anime, error)
+	NewestAnimeWithEpisodes(ctx context.Context, limit int) ([]*Anime, error)
 	AiringAnime(ctx context.Context) ([]*AnimeWithNextEpisode, error)
 	AiringAnimeDays(ctx context.Context, startDate *time.Time, days *int) ([]*AnimeWithNextEpisode, error)
 	AiringAnimeEndDate(ctx context.Context, startDate *time.Time, endDate *time.Time) ([]*AnimeWithNextEpisode, error)
 	SearchAnime(ctx context.Context, search string, page int, limit int) ([]*Anime, error)
+	SearchAnimeWithEpisodes(ctx context.Context, search string, page int, limit int) ([]*Anime, error)
 }
 
 type AnimeRepository struct {
@@ -74,11 +84,63 @@ func (a *AnimeRepository) FindAll(ctx context.Context) ([]*Anime, error) {
 	return animes, nil
 }
 
+func (a *AnimeRepository) FindAllWithEpisodes(ctx context.Context) ([]*Anime, error) {
+	startTime := time.Now()
+
+	var animes []*Anime
+	err := a.db.DB.WithContext(ctx).Preload("AnimeEpisodes", func(db *gorm.DB) *gorm.DB {
+		return db.Order("episode ASC")
+	}).Find(&animes).Error
+	if err != nil {
+		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
+			Service: "anime-api",
+			Table:   "anime",
+			Method:  metrics_lib.DatabaseMetricMethodSelect,
+			Result:  metrics_lib.Error,
+		})
+		return nil, err
+	}
+
+	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
+		Service: "anime-api",
+		Table:   "anime",
+		Method:  metrics_lib.DatabaseMetricMethodSelect,
+		Result:  metrics_lib.Success,
+	})
+	return animes, nil
+}
+
 func (a *AnimeRepository) FindById(ctx context.Context, id string) (*Anime, error) {
 	startTime := time.Now()
 
 	var anime Anime
 	err := a.db.DB.Where("id = ?", id).First(&anime).Error
+	if err != nil {
+		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
+			Service: "anime-api",
+			Table:   "anime",
+			Method:  metrics_lib.DatabaseMetricMethodSelect,
+			Result:  metrics_lib.Error,
+		})
+		return nil, err
+	}
+
+	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
+		Service: "anime-api",
+		Table:   "anime",
+		Method:  metrics_lib.DatabaseMetricMethodSelect,
+		Result:  metrics_lib.Success,
+	})
+	return &anime, nil
+}
+
+func (a *AnimeRepository) FindByIdWithEpisodes(ctx context.Context, id string) (*Anime, error) {
+	startTime := time.Now()
+
+	var anime Anime
+	err := a.db.DB.WithContext(ctx).Preload("AnimeEpisodes", func(db *gorm.DB) *gorm.DB {
+		return db.Order("episode ASC")
+	}).Where("id = ?", id).First(&anime).Error
 	if err != nil {
 		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
 			Service: "anime-api",
@@ -316,7 +378,6 @@ func (a *AnimeRepository) FindByYear(ctx context.Context, year int) ([]*Anime, e
 	return animes, nil
 }
 
-
 func (a *AnimeRepository) TopRatedAnime(ctx context.Context, limit int) ([]*Anime, error) {
 	startTime := time.Now()
 
@@ -551,6 +612,188 @@ func (a *AnimeRepository) AiringAnimeEndDate(ctx context.Context, startDate *tim
 		Result:  metrics_lib.Success,
 	})
 
+	return animes, nil
+}
+
+func (a *AnimeRepository) FindByNameWithEpisodes(ctx context.Context, name string) ([]*Anime, error) {
+	startTime := time.Now()
+
+	var animes []*Anime
+	err := a.db.DB.WithContext(ctx).Preload("AnimeEpisodes", func(db *gorm.DB) *gorm.DB {
+		return db.Order("episode ASC")
+	}).Where("name = ?", name).Find(&animes).Error
+	if err != nil {
+		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
+			Service: "anime-api",
+			Table:   "anime",
+			Method:  metrics_lib.DatabaseMetricMethodSelect,
+			Result:  metrics_lib.Error,
+		})
+		return nil, err
+	}
+
+	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
+		Service: "anime-api",
+		Table:   "anime",
+		Method:  metrics_lib.DatabaseMetricMethodSelect,
+		Result:  metrics_lib.Success,
+	})
+	return animes, nil
+}
+
+func (a *AnimeRepository) FindByTypeWithEpisodes(ctx context.Context, recordType RECORD_TYPE) ([]*Anime, error) {
+	startTime := time.Now()
+
+	var animes []*Anime
+	err := a.db.DB.WithContext(ctx).Preload("AnimeEpisodes", func(db *gorm.DB) *gorm.DB {
+		return db.Order("episode ASC")
+	}).Where("type = ?", recordType).Find(&animes).Error
+	if err != nil {
+		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
+			Service: "anime-api",
+			Table:   "anime",
+			Method:  metrics_lib.DatabaseMetricMethodSelect,
+			Result:  metrics_lib.Error,
+		})
+		return nil, err
+	}
+
+	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
+		Service: "anime-api",
+		Table:   "anime",
+		Method:  metrics_lib.DatabaseMetricMethodSelect,
+		Result:  metrics_lib.Success,
+	})
+	return animes, nil
+}
+
+func (a *AnimeRepository) FindByStatusWithEpisodes(ctx context.Context, status string) ([]*Anime, error) {
+	startTime := time.Now()
+
+	var animes []*Anime
+	err := a.db.DB.WithContext(ctx).Preload("AnimeEpisodes", func(db *gorm.DB) *gorm.DB {
+		return db.Order("episode ASC")
+	}).Where("status = ?", status).Find(&animes).Error
+	if err != nil {
+		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
+			Service: "anime-api",
+			Table:   "anime",
+			Method:  metrics_lib.DatabaseMetricMethodSelect,
+			Result:  metrics_lib.Error,
+		})
+		return nil, err
+	}
+
+	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
+		Service: "anime-api",
+		Table:   "anime",
+		Method:  metrics_lib.DatabaseMetricMethodSelect,
+		Result:  metrics_lib.Success,
+	})
+	return animes, nil
+}
+
+func (a *AnimeRepository) TopRatedAnimeWithEpisodes(ctx context.Context, limit int) ([]*Anime, error) {
+	startTime := time.Now()
+
+	var animes []*Anime
+	err := a.db.DB.WithContext(ctx).Preload("AnimeEpisodes", func(db *gorm.DB) *gorm.DB {
+		return db.Order("episode ASC")
+	}).Where("rating != ?", "N/A").Order("rating desc").Limit(limit).Find(&animes).Error
+	if err != nil {
+		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
+			Service: "anime-api",
+			Table:   "anime",
+			Method:  metrics_lib.DatabaseMetricMethodSelect,
+			Result:  metrics_lib.Error,
+		})
+		return nil, err
+	}
+
+	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
+		Service: "anime-api",
+		Table:   "anime",
+		Method:  metrics_lib.DatabaseMetricMethodSelect,
+		Result:  metrics_lib.Success,
+	})
+	return animes, nil
+}
+
+func (a *AnimeRepository) MostPopularAnimeWithEpisodes(ctx context.Context, limit int) ([]*Anime, error) {
+	startTime := time.Now()
+
+	var animes []*Anime
+	err := a.db.DB.WithContext(ctx).Preload("AnimeEpisodes", func(db *gorm.DB) *gorm.DB {
+		return db.Order("episode ASC")
+	}).Where("ranking != ?", "N/A").Order("ranking asc").Limit(limit).Find(&animes).Error
+	if err != nil {
+		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
+			Service: "anime-api",
+			Table:   "anime",
+			Method:  metrics_lib.DatabaseMetricMethodSelect,
+			Result:  metrics_lib.Error,
+		})
+		return nil, err
+	}
+
+	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
+		Service: "anime-api",
+		Table:   "anime",
+		Method:  metrics_lib.DatabaseMetricMethodSelect,
+		Result:  metrics_lib.Success,
+	})
+	return animes, nil
+}
+
+func (a *AnimeRepository) NewestAnimeWithEpisodes(ctx context.Context, limit int) ([]*Anime, error) {
+	startTime := time.Now()
+
+	var animes []*Anime
+	err := a.db.DB.WithContext(ctx).Preload("AnimeEpisodes", func(db *gorm.DB) *gorm.DB {
+		return db.Order("episode ASC")
+	}).Where("created_at ").Order("created_at desc").Limit(limit).Find(&animes).Error
+	if err != nil {
+		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
+			Service: "anime-api",
+			Table:   "anime",
+			Method:  metrics_lib.DatabaseMetricMethodSelect,
+			Result:  metrics_lib.Error,
+		})
+		return nil, err
+	}
+
+	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
+		Service: "anime-api",
+		Table:   "anime",
+		Method:  metrics_lib.DatabaseMetricMethodSelect,
+		Result:  metrics_lib.Success,
+	})
+	return animes, nil
+}
+
+func (a *AnimeRepository) SearchAnimeWithEpisodes(ctx context.Context, search string, page int, limit int) ([]*Anime, error) {
+	startTime := time.Now()
+
+	var animes []*Anime
+	err := a.db.DB.WithContext(ctx).Preload("AnimeEpisodes", func(db *gorm.DB) *gorm.DB {
+		return db.Order("episode ASC")
+	}).Where("title_en LIKE ? OR title_jp LIKE ? OR title_synonyms LIKE ? OR title_romaji LIKE ? OR title_kanji LIKE ?", "%"+search+"%", "%"+search+"%", "%"+search+"%", "%"+search+"%", "%"+search+"%").Limit(limit).Offset((page - 1) * limit).Find(&animes).Error
+	if err != nil {
+		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
+			Service: "anime-api",
+			Table:   "anime",
+			Method:  metrics_lib.DatabaseMetricMethodSelect,
+			Result:  metrics_lib.Error,
+		})
+		return nil, err
+	}
+
+	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
+		Service: "anime-api",
+		Table:   "anime",
+		Method:  metrics_lib.DatabaseMetricMethodSelect,
+		Result:  metrics_lib.Success,
+	})
 	return animes, nil
 }
 

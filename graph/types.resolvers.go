@@ -14,6 +14,12 @@ import (
 
 // Episodes is the resolver for the episodes field.
 func (r *animeResolver) Episodes(ctx context.Context, obj *model.Anime) ([]*model.Episode, error) {
+	// Check if episodes are already in the Episodes field (preloaded)
+	if obj.Episodes != nil && len(obj.Episodes) > 0 {
+		return obj.Episodes, nil
+	}
+
+	// Fallback to individual query if not preloaded
 	animeID := obj.ID
 	return resolvers.EpisodesByAnimeID(ctx, r.AnimeEpisodeService, animeID)
 }

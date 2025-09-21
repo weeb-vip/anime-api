@@ -34,16 +34,19 @@ to quickly create a Cobra application.`,
 		ctx := context.Background()
 		tracedCtx, err := tracing.InitTracing(ctx)
 		if err != nil {
-			logger.FromCtx(ctx).Error().Err(err).Msg("Failed to initialize tracing")
+			log := logger.FromCtx(ctx)
+			log.Error().Err(err).Msg("Failed to initialize tracing")
 			// Continue without tracing if initialization fails
 			tracedCtx = ctx
 		} else {
 			defer func() {
 				if err := tracing.Shutdown(context.Background()); err != nil {
-					logger.FromCtx(tracedCtx).Error().Err(err).Msg("Error shutting down tracing")
+					log := logger.FromCtx(tracedCtx)
+					log.Error().Err(err).Msg("Error shutting down tracing")
 				}
 			}()
-			logger.FromCtx(tracedCtx).Info().Msg("Tracing initialized successfully")
+			log := logger.FromCtx(tracedCtx)
+			log.Info().Msg("Tracing initialized successfully")
 		}
 
 		// Start the server with traced context

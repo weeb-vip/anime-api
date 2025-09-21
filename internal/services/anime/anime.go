@@ -9,11 +9,16 @@ import (
 
 type AnimeServiceImpl interface {
 	AnimeByID(ctx context.Context, id string) (*anime.Anime, error)
+	AnimeByIDWithEpisodes(ctx context.Context, id string) (*anime.Anime, error)
 	TopRatedAnime(ctx context.Context, limit int) ([]*anime.Anime, error)
+	TopRatedAnimeWithEpisodes(ctx context.Context, limit int) ([]*anime.Anime, error)
 	MostPopularAnime(ctx context.Context, limit int) ([]*anime.Anime, error)
+	MostPopularAnimeWithEpisodes(ctx context.Context, limit int) ([]*anime.Anime, error)
 	NewestAnime(ctx context.Context, limit int) ([]*anime.Anime, error)
+	NewestAnimeWithEpisodes(ctx context.Context, limit int) ([]*anime.Anime, error)
 	AiringAnime(ctx context.Context, startDate *time.Time, endDate *time.Time, days *int) ([]*anime.AnimeWithNextEpisode, error)
 	SearchedAnime(ctx context.Context, query string, page int, limit int) ([]*anime.Anime, error)
+	SearchedAnimeWithEpisodes(ctx context.Context, query string, page int, limit int) ([]*anime.Anime, error)
 }
 
 type AnimeService struct {
@@ -86,3 +91,47 @@ func (a *AnimeService) SearchedAnime(ctx context.Context, query string, page int
 	return a.Repository.SearchAnime(spanCtx, query, page, limit)
 }
 
+func (a *AnimeService) AnimeByIDWithEpisodes(ctx context.Context, id string) (*anime.Anime, error) {
+	span, spanCtx := tracer.StartSpanFromContext(ctx, "AnimeByIDWithEpisodes")
+	span.SetTag("service", "anime")
+	span.SetTag("type", "service")
+	defer span.Finish()
+
+	return a.Repository.FindByIdWithEpisodes(spanCtx, id)
+}
+
+func (a *AnimeService) TopRatedAnimeWithEpisodes(ctx context.Context, limit int) ([]*anime.Anime, error) {
+	span, spanCtx := tracer.StartSpanFromContext(ctx, "TopRatedAnimeWithEpisodes")
+	span.SetTag("service", "anime")
+	span.SetTag("type", "service")
+	defer span.Finish()
+
+	return a.Repository.TopRatedAnimeWithEpisodes(spanCtx, limit)
+}
+
+func (a *AnimeService) MostPopularAnimeWithEpisodes(ctx context.Context, limit int) ([]*anime.Anime, error) {
+	span, spanCtx := tracer.StartSpanFromContext(ctx, "MostPopularAnimeWithEpisodes")
+	span.SetTag("service", "anime")
+	span.SetTag("type", "service")
+	defer span.Finish()
+
+	return a.Repository.MostPopularAnimeWithEpisodes(spanCtx, limit)
+}
+
+func (a *AnimeService) NewestAnimeWithEpisodes(ctx context.Context, limit int) ([]*anime.Anime, error) {
+	span, spanCtx := tracer.StartSpanFromContext(ctx, "NewestAnimeWithEpisodes")
+	span.SetTag("service", "anime")
+	span.SetTag("type", "service")
+	defer span.Finish()
+
+	return a.Repository.NewestAnimeWithEpisodes(spanCtx, limit)
+}
+
+func (a *AnimeService) SearchedAnimeWithEpisodes(ctx context.Context, query string, page int, limit int) ([]*anime.Anime, error) {
+	span, spanCtx := tracer.StartSpanFromContext(ctx, "SearchedAnimeWithEpisodes")
+	span.SetTag("service", "anime")
+	span.SetTag("type", "service")
+	defer span.Finish()
+
+	return a.Repository.SearchAnimeWithEpisodes(spanCtx, query, page, limit)
+}
