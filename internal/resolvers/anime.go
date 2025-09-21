@@ -8,7 +8,7 @@ import (
 	"github.com/weeb-vip/anime-api/internal/services/anime"
 	"github.com/weeb-vip/anime-api/metrics"
 	"github.com/weeb-vip/anime-api/tracing"
-	metrics_lib "github.com/weeb-vip/go-
+	metrics_lib "github.com/weeb-vip/go-metrics-lib"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"time"
