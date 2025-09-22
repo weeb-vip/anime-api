@@ -57,6 +57,7 @@ type AnimeRepositoryImpl interface {
 	FindBySeasonWithEpisodesOptimized(ctx context.Context, season string) ([]*Anime, error)
 	FindBySeasonWithIndexHints(ctx context.Context, season string) ([]*Anime, error)
 	FindBySeasonBatched(ctx context.Context, season string) ([]*Anime, error)
+	FindBySeasonAnimeOnlyOptimized(ctx context.Context, season string) ([]*Anime, error)
 }
 
 type AnimeRepository struct {

@@ -253,6 +253,45 @@ func (c *MockAnimeServiceMockRecorder) AnimeBySeasonAnimeOnlyOptimized(ctx, seas
 	return c.mock.ctrl.RecordCallWithMethodType(c.mock, "AnimeBySeasonAnimeOnlyOptimized", reflect.TypeOf((*MockAnimeService)(nil).AnimeBySeasonAnimeOnlyOptimized), ctx, season)
 }
 
+func (m *MockAnimeService) AnimeBySeasonWithIndexHints(ctx context.Context, season string) ([]*anime_repo.Anime, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AnimeBySeasonWithIndexHints", ctx, season)
+	ret0, _ := ret[0].([]*anime_repo.Anime)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+func (c *MockAnimeServiceMockRecorder) AnimeBySeasonWithIndexHints(ctx, season interface{}) *gomock.Call {
+	c.mock.ctrl.T.Helper()
+	return c.mock.ctrl.RecordCallWithMethodType(c.mock, "AnimeBySeasonWithIndexHints", reflect.TypeOf((*MockAnimeService)(nil).AnimeBySeasonWithIndexHints), ctx, season)
+}
+
+func (m *MockAnimeService) AnimeBySeasonBatched(ctx context.Context, season string) ([]*anime_repo.Anime, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AnimeBySeasonBatched", ctx, season)
+	ret0, _ := ret[0].([]*anime_repo.Anime)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+func (c *MockAnimeServiceMockRecorder) AnimeBySeasonBatched(ctx, season interface{}) *gomock.Call {
+	c.mock.ctrl.T.Helper()
+	return c.mock.ctrl.RecordCallWithMethodType(c.mock, "AnimeBySeasonBatched", reflect.TypeOf((*MockAnimeService)(nil).AnimeBySeasonBatched), ctx, season)
+}
+
+func (m *MockAnimeService) AnimeBySeasonOptimized(ctx context.Context, season string) ([]*anime_repo.Anime, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AnimeBySeasonOptimized", ctx, season)
+	ret0, _ := ret[0].([]*anime_repo.Anime)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+func (c *MockAnimeServiceMockRecorder) AnimeBySeasonOptimized(ctx, season interface{}) *gomock.Call {
+	c.mock.ctrl.T.Helper()
+	return c.mock.ctrl.RecordCallWithMethodType(c.mock, "AnimeBySeasonOptimized", reflect.TypeOf((*MockAnimeService)(nil).AnimeBySeasonOptimized), ctx, season)
+}
+
 // MockAnimeSeasonService implements the AnimeSeasonServiceImpl interface for testing
 type MockAnimeSeasonService struct {
 	ctrl     *gomock.Controller
@@ -384,9 +423,9 @@ func TestAnimeBySeasonsNoAdditionalEpisodeQueries(t *testing.T) {
 		UpdatedAt: now,
 	}
 
-	// Expect only ONE call to the optimized AnimeBySeasonWithEpisodesOptimized method
+	// Expect only ONE call to the optimized AnimeBySeasonOptimized method (without episodes)
 	mockAnimeService.EXPECT().
-		AnimeBySeasonWithEpisodesOptimized(ctx, season).
+		AnimeBySeasonOptimized(ctx, season).
 		Return([]*anime_repo.Anime{testAnime}, nil).
 		Times(1)
 
@@ -450,9 +489,9 @@ func TestAnimeBySeasonsWithEmptyEpisodesNoAdditionalQueries(t *testing.T) {
 		UpdatedAt:     now,
 	}
 
-	// Expect only ONE call to the optimized AnimeBySeasonWithEpisodesOptimized method
+	// Expect only ONE call to the optimized AnimeBySeasonOptimized method (without episodes)
 	mockAnimeService.EXPECT().
-		AnimeBySeasonWithEpisodesOptimized(ctx, season).
+		AnimeBySeasonOptimized(ctx, season).
 		Return([]*anime_repo.Anime{testAnime}, nil).
 		Times(1)
 
