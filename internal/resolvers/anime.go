@@ -3,6 +3,7 @@ package resolvers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/weeb-vip/anime-api/graph/model"
@@ -87,6 +88,13 @@ func transformAnimeToGraphQL(animeEntity anime2.Anime) (*model.Anime, error) {
 		}
 	}
 
+	// Convert numeric rating to string for GraphQL
+	var ratingStr *string
+	if animeEntity.Rating != nil {
+		ratingString := fmt.Sprintf("%.1f", *animeEntity.Rating)
+		ratingStr = &ratingString
+	}
+
 	return &model.Anime{
 		ID:            animeEntity.ID,
 		Anidbid:       animeEntity.AnidbID,
@@ -102,7 +110,7 @@ func transformAnimeToGraphQL(animeEntity anime2.Anime) (*model.Anime, error) {
 		Duration:      animeEntity.Duration,
 		Studios:       studios,
 		Tags:          tags,
-		Rating:        animeEntity.Rating,
+		Rating:        ratingStr,
 		AnimeStatus:   animeEntity.Status,
 		ImageURL:      animeEntity.ImageURL,
 		StartDate:     startDate,
@@ -184,6 +192,13 @@ func transformAnimeToGraphQLWithEpisode(animeEntity anime2.AnimeWithNextEpisode)
 		}
 	}
 
+	// Convert numeric rating to string for GraphQL
+	var ratingStr *string
+	if animeEntity.Rating != nil {
+		ratingString := fmt.Sprintf("%.1f", *animeEntity.Rating)
+		ratingStr = &ratingString
+	}
+
 	return &model.Anime{
 		ID:            animeEntity.ID,
 		Anidbid:       animeEntity.AnidbID,
@@ -198,7 +213,7 @@ func transformAnimeToGraphQLWithEpisode(animeEntity anime2.AnimeWithNextEpisode)
 		Duration:      animeEntity.Duration,
 		Studios:       studios,
 		Tags:          tags,
-		Rating:        animeEntity.Rating,
+		Rating:        ratingStr,
 		AnimeStatus:   animeEntity.Status,
 		ImageURL:      animeEntity.ImageURL,
 		StartDate:     startDate,

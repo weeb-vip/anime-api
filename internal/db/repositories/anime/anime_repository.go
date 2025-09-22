@@ -452,8 +452,8 @@ func (a *AnimeRepository) TopRatedAnime(ctx context.Context, limit int) ([]*Anim
 	startTime := time.Now()
 
 	var animes []*Anime
-	// order by rating desc and rating does not equal N/A
-	err := a.db.DB.WithContext(ctx).Where("rating != ?", "N/A").Order("rating desc").Limit(limit).Find(&animes).Error
+	// Use numeric rating for better performance - automatically excludes NULL ratings (N/A)
+	err := a.db.DB.WithContext(ctx).Where("rating IS NOT NULL").Order("rating desc, id").Limit(limit).Find(&animes).Error
 	if err != nil {
 		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
 			Service: "anime-api",
@@ -804,7 +804,7 @@ func (a *AnimeRepository) TopRatedAnimeWithEpisodes(ctx context.Context, limit i
 	var animes []*Anime
 	err := a.db.DB.WithContext(ctx).Preload("AnimeEpisodes", func(db *gorm.DB) *gorm.DB {
 		return db.Order("episode ASC")
-	}).Where("rating != ?", "N/A").Order("rating desc").Limit(limit).Find(&animes).Error
+	}).Where("rating IS NOT NULL").Order("rating desc, id").Limit(limit).Find(&animes).Error
 	if err != nil {
 		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
 			Service: "anime-api",
@@ -985,7 +985,7 @@ func (a *AnimeRepository) FindBySeasonWithEpisodes(ctx context.Context, season s
 		Source             *string    `gorm:"column:source"`
 		Licensors          *string    `gorm:"column:licensors"`
 		Studios            *string    `gorm:"column:studios"`
-		Rating             *string    `gorm:"column:rating"`
+		Rating             *float64   `gorm:"column:rating"`
 		Ranking            *int       `gorm:"column:ranking"`
 		AnimeCreatedAt     time.Time  `gorm:"column:anime_created_at"`
 		AnimeUpdatedAt     time.Time  `gorm:"column:anime_updated_at"`
