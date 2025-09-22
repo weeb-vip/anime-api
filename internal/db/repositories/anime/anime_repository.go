@@ -911,36 +911,77 @@ func (a *AnimeRepository) SearchAnimeWithEpisodes(ctx context.Context, search st
 }
 
 func (a *AnimeRepository) AiringAnimeWithEpisodes(ctx context.Context, startDate *time.Time, endDate *time.Time, days *int) ([]*Anime, error) {
-	startTime := time.Now()
+	// Generate cache key based on parameters
+	cacheKey := ""
+	if a.cache != nil {
+		if startDate != nil && endDate != nil {
+			cacheKey = fmt.Sprintf("%s:airing:start_%s:end_%s",
+				a.cache.GetKeyBuilder().AnimePattern()[:len(a.cache.GetKeyBuilder().AnimePattern())-1],
+				startDate.Format("2006-01-02"), endDate.Format("2006-01-02"))
+		} else if startDate != nil && days != nil {
+			cacheKey = fmt.Sprintf("%s:airing:start_%s:days_%d",
+				a.cache.GetKeyBuilder().AnimePattern()[:len(a.cache.GetKeyBuilder().AnimePattern())-1],
+				startDate.Format("2006-01-02"), *days)
+		} else {
+			// Default case (next 30 days from now)
+			cacheKey = fmt.Sprintf("%s:airing:default",
+				a.cache.GetKeyBuilder().AnimePattern()[:len(a.cache.GetKeyBuilder().AnimePattern())-1])
+		}
 
+		// Try cache first
+		var animeList []*Anime
+		err := a.cache.GetJSON(ctx, cacheKey, &animeList)
+		if err == nil {
+			return animeList, nil
+		}
+		// Continue to database if cache miss or error
+	}
+
+	startTime := time.Now()
 	var animes []*Anime
 
 	query := a.db.DB.WithContext(ctx).Preload("AnimeEpisodes", func(db *gorm.DB) *gorm.DB {
 		return db.Order("episode ASC")
 	})
 
-	// Handle date filtering logic similar to the service layer
+	// Use optimized subquery approach to avoid DISTINCT and improve performance
+	var subquery *gorm.DB
+
 	if startDate != nil && endDate != nil {
-		// Filter anime that have episodes airing between startDate and endDate
-		query = query.Joins("INNER JOIN episodes ON anime.id = episodes.anime_id").
-			Where("episodes.aired BETWEEN ? AND ?", *startDate, *endDate).
+		// Subquery to get unique anime IDs with episodes in date range
+		subquery = a.db.DB.Model(&animeEpisode.AnimeEpisode{}).
+			Select("DISTINCT anime_id").
+			Where("aired BETWEEN ? AND ?", *startDate, *endDate)
+
+		// Filter anime by subquery results and end_date condition
+		query = query.Where("anime.id IN (?)", subquery).
 			Where("anime.end_date IS NULL OR anime.end_date >= ?", startDate)
+
 	} else if startDate != nil && days != nil {
-		// Filter anime that have episodes airing from startDate for the next N days
+		// Subquery for days range
 		endTime := startDate.AddDate(0, 0, *days)
-		query = query.Joins("INNER JOIN episodes ON anime.id = episodes.anime_id").
-			Where("episodes.aired BETWEEN ? AND ?", *startDate, endTime).
+		subquery = a.db.DB.Model(&animeEpisode.AnimeEpisode{}).
+			Select("DISTINCT anime_id").
+			Where("aired BETWEEN ? AND ?", *startDate, endTime)
+
+		// Filter anime by subquery results and end_date condition
+		query = query.Where("anime.id IN (?)", subquery).
 			Where("anime.end_date IS NULL OR anime.end_date >= ?", startDate)
+
 	} else {
 		// Default: currently airing anime (next 30 days)
 		nowJST := startOfDayIn(time.Now().UTC(), tzTokyo)
 		endJST := nowJST.AddDate(0, 0, 30)
-		query = query.Joins("INNER JOIN episodes ON anime.id = episodes.anime_id").
-			Where("episodes.aired BETWEEN ? AND ?", nowJST, endJST).
+		subquery = a.db.DB.Model(&animeEpisode.AnimeEpisode{}).
+			Select("DISTINCT anime_id").
+			Where("aired BETWEEN ? AND ?", nowJST, endJST)
+
+		// Filter anime by subquery results (no end_date check for default case)
+		query = query.Where("anime.id IN (?)", subquery).
 			Where("anime.end_date IS NULL")
 	}
 
-	err := query.Distinct("anime.*").Find(&animes).Error
+	err := query.Find(&animes).Error
 
 	metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
 		Service: "anime-api",
@@ -952,6 +993,11 @@ func (a *AnimeRepository) AiringAnimeWithEpisodes(ctx context.Context, startDate
 
 	if err != nil {
 		return nil, err
+	}
+
+	// Store in cache if available
+	if a.cache != nil && cacheKey != "" {
+		_ = a.cache.SetJSON(ctx, cacheKey, animes, cache.AnimeDataTTL)
 	}
 
 	return animes, nil
