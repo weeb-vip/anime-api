@@ -2,6 +2,7 @@ package anime
 
 import (
 	"context"
+	"fmt"
 	"github.com/weeb-vip/anime-api/internal/cache"
 	"github.com/weeb-vip/anime-api/internal/db"
 	animeEpisode "github.com/weeb-vip/anime-api/internal/db/repositories/anime_episode"
@@ -437,6 +438,17 @@ func (a *AnimeRepository) FindByYear(ctx context.Context, year int) ([]*Anime, e
 }
 
 func (a *AnimeRepository) TopRatedAnime(ctx context.Context, limit int) ([]*Anime, error) {
+	// Try cache first if available
+	if a.cache != nil {
+		key := fmt.Sprintf("%s:top_rated:%d", a.cache.GetKeyBuilder().AnimePattern()[:len(a.cache.GetKeyBuilder().AnimePattern())-1], limit)
+		var animeList []*Anime
+		err := a.cache.GetJSON(ctx, key, &animeList)
+		if err == nil {
+			return animeList, nil
+		}
+		// Continue to database if cache miss or error
+	}
+
 	startTime := time.Now()
 
 	var animes []*Anime
@@ -460,10 +472,28 @@ func (a *AnimeRepository) TopRatedAnime(ctx context.Context, limit int) ([]*Anim
 		Result:  metrics_lib.Success,
 		Env:     metrics.GetCurrentEnv(),
 	})
+
+	// Store in cache if available
+	if a.cache != nil {
+		key := fmt.Sprintf("%s:top_rated:%d", a.cache.GetKeyBuilder().AnimePattern()[:len(a.cache.GetKeyBuilder().AnimePattern())-1], limit)
+		_ = a.cache.SetJSON(ctx, key, animes, cache.AnimeDataTTL)
+	}
+
 	return animes, nil
 }
 
 func (a *AnimeRepository) MostPopularAnime(ctx context.Context, limit int) ([]*Anime, error) {
+	// Try cache first if available
+	if a.cache != nil {
+		key := fmt.Sprintf("%s:most_popular:%d", a.cache.GetKeyBuilder().AnimePattern()[:len(a.cache.GetKeyBuilder().AnimePattern())-1], limit)
+		var animeList []*Anime
+		err := a.cache.GetJSON(ctx, key, &animeList)
+		if err == nil {
+			return animeList, nil
+		}
+		// Continue to database if cache miss or error
+	}
+
 	startTime := time.Now()
 
 	var animes []*Anime

@@ -29,9 +29,8 @@ type RedisConfig struct {
 	Port     string `default:"6379" env:"REDIS_PORT"`
 	Password string `default:"" env:"REDIS_PASSWORD"`
 	DB       int    `default:"0" env:"REDIS_DB"`
-	Enabled  bool   `default:"true" env:"CACHE_ENABLED"`
+	Enabled  bool   `default:"false" env:"CACHE_ENABLED"`
 }
-
 
 func LoadConfigOrPanic() Config {
 	var config = Config{}

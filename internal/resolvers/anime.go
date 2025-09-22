@@ -266,8 +266,8 @@ func TopRatedAnime(ctx context.Context, animeService anime.AnimeServiceImpl, lim
 		l := 10
 		limit = &l
 	}
-	// Use WithEpisodes version to preload episodes and avoid N+1 queries
-	foundAnime, err := animeService.TopRatedAnimeWithEpisodes(ctx, *limit)
+	// Get anime without episodes - episodes will be loaded on-demand via resolver
+	foundAnime, err := animeService.TopRatedAnime(ctx, *limit)
 	if err != nil {
 		metrics.GetAppMetrics().ResolverMetric(
 			float64(time.Since(startTime).Milliseconds()),
@@ -302,8 +302,8 @@ func MostPopularAnime(ctx context.Context, animeService anime.AnimeServiceImpl, 
 		l := 10
 		limit = &l
 	}
-	// Use WithEpisodes version to preload episodes and avoid N+1 queries
-	foundAnime, err := animeService.MostPopularAnimeWithEpisodes(ctx, *limit)
+	// Get anime without episodes - episodes will be loaded on-demand via resolver
+	foundAnime, err := animeService.MostPopularAnime(ctx, *limit)
 	if err != nil {
 		metrics.GetAppMetrics().ResolverMetric(
 			float64(time.Since(startTime).Milliseconds()),
@@ -338,8 +338,8 @@ func NewestAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit
 		l := 10
 		limit = &l
 	}
-	// Use WithEpisodes version to preload episodes and avoid N+1 queries
-	foundAnime, err := animeService.NewestAnimeWithEpisodes(ctx, *limit)
+	// Get anime without episodes - episodes will be loaded on-demand via resolver
+	foundAnime, err := animeService.NewestAnime(ctx, *limit)
 	if err != nil {
 		metrics.GetAppMetrics().ResolverMetric(
 			float64(time.Since(startTime).Milliseconds()),
