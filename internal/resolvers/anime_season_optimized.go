@@ -10,35 +10,12 @@ import (
 	"time"
 )
 
-// AnimeBySeasonsOptimized uses batch fetching instead of N+1 queries
+// AnimeBySeasonsOptimized uses a single SQL query with joins for maximum performance
 func AnimeBySeasonsOptimized(ctx context.Context, animeSeasonService anime_season.AnimeSeasonServiceImpl, animeService anime_service.AnimeServiceImpl, season string) ([]*model.Anime, error) {
 	startTime := time.Now()
 
-	foundSeasons, err := animeSeasonService.FindBySeason(ctx, season)
-	if err != nil {
-		_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
-			Resolver: "AnimeBySeasonsOptimized",
-			Service:  "anime-api",
-			Protocol: "graphql",
-			Result:   metrics_lib.Error,
-			Env:      metrics.GetCurrentEnv(),
-		})
-		return nil, err
-	}
-
-	// Get unique anime IDs
-	animeIDs := make([]string, 0)
-	seenIDs := make(map[string]bool)
-	for _, seasonEntity := range foundSeasons {
-		if seasonEntity.AnimeID != nil && !seenIDs[*seasonEntity.AnimeID] {
-			animeIDs = append(animeIDs, *seasonEntity.AnimeID)
-			seenIDs[*seasonEntity.AnimeID] = true
-		}
-	}
-
-	// Batch fetch all anime at once using FindByIDs (needs to be added to service/repository)
-	// For now, we'll add a new method to fetch multiple anime by IDs
-	animeList, err := animeService.AnimeByIDsWithEpisodes(ctx, animeIDs)
+	// Use the new optimized single-query method that joins all tables
+	animeList, err := animeService.AnimeBySeasonWithEpisodes(ctx, season)
 	if err != nil {
 		_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
 			Resolver: "AnimeBySeasonsOptimized",

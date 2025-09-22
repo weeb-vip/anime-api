@@ -23,6 +23,7 @@ type AnimeServiceImpl interface {
 	AiringAnimeWithEpisodes(ctx context.Context, startDate *time.Time, endDate *time.Time, days *int) ([]*anime.Anime, error)
 	SearchedAnime(ctx context.Context, query string, page int, limit int) ([]*anime.Anime, error)
 	SearchedAnimeWithEpisodes(ctx context.Context, query string, page int, limit int) ([]*anime.Anime, error)
+	AnimeBySeasonWithEpisodes(ctx context.Context, season string) ([]*anime.Anime, error)
 }
 
 type AnimeService struct {
@@ -159,4 +160,14 @@ func (a *AnimeService) AiringAnimeWithEpisodes(ctx context.Context, startDate *t
 	defer span.Finish()
 
 	return a.Repository.AiringAnimeWithEpisodes(spanCtx, startDate, endDate, days)
+}
+
+func (a *AnimeService) AnimeBySeasonWithEpisodes(ctx context.Context, season string) ([]*anime.Anime, error) {
+	span, spanCtx := tracer.StartSpanFromContext(ctx, "AnimeBySeasonWithEpisodes")
+	span.SetTag("service", "anime")
+	span.SetTag("type", "service")
+	span.SetTag("environment", tracing.GetEnvironmentTag())
+	defer span.Finish()
+
+	return a.Repository.FindBySeasonWithEpisodes(spanCtx, season)
 }

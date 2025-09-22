@@ -67,30 +67,8 @@ func AnimeSeasons(ctx context.Context, animeSeasonService anime_season.AnimeSeas
 func AnimeBySeasons(ctx context.Context, animeSeasonService anime_season.AnimeSeasonServiceImpl, animeService anime_service.AnimeServiceImpl, season string) ([]*model.Anime, error) {
 	startTime := time.Now()
 
-	foundSeasons, err := animeSeasonService.FindBySeason(ctx, season)
-	if err != nil {
-		_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
-			Resolver: "AnimeBySeasons",
-			Service:  "anime-api",
-			Protocol: "graphql",
-			Result:   metrics_lib.Error,
-			Env:      metrics.GetCurrentEnv(),
-		})
-		return nil, err
-	}
-
-	// Get unique anime IDs
-	animeIDs := make([]string, 0)
-	seenIDs := make(map[string]bool)
-	for _, seasonEntity := range foundSeasons {
-		if seasonEntity.AnimeID != nil && !seenIDs[*seasonEntity.AnimeID] {
-			animeIDs = append(animeIDs, *seasonEntity.AnimeID)
-			seenIDs[*seasonEntity.AnimeID] = true
-		}
-	}
-
-	// Batch fetch all anime at once to avoid N+1 query problem
-	animeList, err := animeService.AnimeByIDsWithEpisodes(ctx, animeIDs)
+	// Use the new optimized single-query method
+	animeList, err := animeService.AnimeBySeasonWithEpisodes(ctx, season)
 	if err != nil {
 		_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
 			Resolver: "AnimeBySeasons",
