@@ -6,6 +6,7 @@ import (
 	"github.com/weeb-vip/anime-api/config"
 	"github.com/weeb-vip/anime-api/graph"
 	"github.com/weeb-vip/anime-api/graph/generated"
+	"github.com/weeb-vip/anime-api/internal/cache"
 	"github.com/weeb-vip/anime-api/internal/db"
 	anime2 "github.com/weeb-vip/anime-api/internal/db/repositories/anime"
 	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_character"
@@ -19,13 +20,42 @@ import (
 	anime_season_service "github.com/weeb-vip/anime-api/internal/services/anime_season"
 	"github.com/weeb-vip/anime-api/internal/services/episodes"
 	"github.com/weeb-vip/anime-api/http/middleware"
+	"github.com/weeb-vip/anime-api/internal/logger"
 	"net/http"
 )
 
 func BuildRootHandler(conf config.Config) http.Handler {
 	database := db.NewDatabase(conf.DBConfig)
-	animeRepository := anime2.NewAnimeRepository(database)
-	episodeRepository := anime3.NewAnimeEpisodeRepository(database)
+
+	// Initialize cache if enabled
+	cacheInstance, err := cache.NewCache(conf)
+	if err != nil {
+		log := logger.FromCtx(context.Background())
+		log.Error().Err(err).Msg("Failed to initialize cache, continuing without caching")
+		cacheInstance = cache.NewNoOpCache()
+	}
+	cacheService := cache.NewCacheService(cacheInstance)
+
+	// Initialize repositories
+	var animeRepository anime2.AnimeRepositoryImpl
+	var episodeRepository anime3.AnimeEpisodeRepositoryImpl
+
+	if conf.RedisConfig.Enabled {
+		log := logger.FromCtx(context.Background())
+		log.Info().Msg("Cache enabled, using repositories with caching")
+
+		// Use repositories with caching when enabled
+		animeRepository = anime2.NewAnimeRepositoryWithCache(database, cacheService)
+		episodeRepository = anime3.NewAnimeEpisodeRepositoryWithCache(database, cacheService)
+	} else {
+		log := logger.FromCtx(context.Background())
+		log.Info().Msg("Cache disabled, using direct database repositories")
+
+		// Use direct repositories when caching is disabled
+		animeRepository = anime2.NewAnimeRepository(database)
+		episodeRepository = anime3.NewAnimeEpisodeRepository(database)
+	}
+
 	animeService := anime.NewAnimeService(animeRepository)
 	animeEpisodeService := episodes.NewAnimeEpisodeService(episodeRepository)
 	animeCharacterRepository := anime_character.NewAnimeCharacterRepository(database)
@@ -55,8 +85,36 @@ func BuildRootHandler(conf config.Config) http.Handler {
 
 func BuildRootHandlerWithContext(ctx context.Context, conf config.Config) http.Handler {
 	database := db.NewDatabase(conf.DBConfig)
-	animeRepository := anime2.NewAnimeRepository(database)
-	episodeRepository := anime3.NewAnimeEpisodeRepository(database)
+
+	// Initialize cache if enabled
+	cacheInstance, err := cache.NewCache(conf)
+	if err != nil {
+		log := logger.FromCtx(ctx)
+		log.Error().Err(err).Msg("Failed to initialize cache, continuing without caching")
+		cacheInstance = cache.NewNoOpCache()
+	}
+	cacheService := cache.NewCacheService(cacheInstance)
+
+	// Initialize repositories
+	var animeRepository anime2.AnimeRepositoryImpl
+	var episodeRepository anime3.AnimeEpisodeRepositoryImpl
+
+	if conf.RedisConfig.Enabled {
+		log := logger.FromCtx(ctx)
+		log.Info().Msg("Cache enabled, using repositories with caching")
+
+		// Use repositories with caching when enabled
+		animeRepository = anime2.NewAnimeRepositoryWithCache(database, cacheService)
+		episodeRepository = anime3.NewAnimeEpisodeRepositoryWithCache(database, cacheService)
+	} else {
+		log := logger.FromCtx(ctx)
+		log.Info().Msg("Cache disabled, using direct database repositories")
+
+		// Use direct repositories when caching is disabled
+		animeRepository = anime2.NewAnimeRepository(database)
+		episodeRepository = anime3.NewAnimeEpisodeRepository(database)
+	}
+
 	animeService := anime.NewAnimeService(animeRepository)
 	animeEpisodeService := episodes.NewAnimeEpisodeService(episodeRepository)
 	animeCharacterRepository := anime_character.NewAnimeCharacterRepository(database)

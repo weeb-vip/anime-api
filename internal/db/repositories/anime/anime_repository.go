@@ -2,10 +2,13 @@ package anime
 
 import (
 	"context"
+	"github.com/weeb-vip/anime-api/internal/cache"
 	"github.com/weeb-vip/anime-api/internal/db"
-	anime "github.com/weeb-vip/anime-api/internal/db/repositories/anime_episode"
+	animeEpisode "github.com/weeb-vip/anime-api/internal/db/repositories/anime_episode"
 	"github.com/weeb-vip/anime-api/metrics"
+	"github.com/weeb-vip/anime-api/tracing"
 	metrics_lib "github.com/weeb-vip/go-metrics-lib"
+	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 	"gorm.io/gorm"
 	"time"
 )
@@ -62,11 +65,16 @@ type AnimeRepositoryImpl interface {
 }
 
 type AnimeRepository struct {
-	db *db.DB
+	db    *db.DB
+	cache *cache.CacheService
 }
 
 func NewAnimeRepository(db *db.DB) AnimeRepositoryImpl {
-	return &AnimeRepository{db: db}
+	return &AnimeRepository{db: db, cache: nil}
+}
+
+func NewAnimeRepositoryWithCache(db *db.DB, cacheService *cache.CacheService) AnimeRepositoryImpl {
+	return &AnimeRepository{db: db, cache: cacheService}
 }
 
 func (a *AnimeRepository) FindAll(ctx context.Context) ([]*Anime, error) {
@@ -124,28 +132,43 @@ func (a *AnimeRepository) FindAllWithEpisodes(ctx context.Context) ([]*Anime, er
 }
 
 func (a *AnimeRepository) FindById(ctx context.Context, id string) (*Anime, error) {
-	startTime := time.Now()
+	// Try cache first if available
+	if a.cache != nil {
+		key := a.cache.GetKeyBuilder().AnimeByID(id)
+		var anime Anime
+		err := a.cache.GetJSON(ctx, key, &anime)
+		if err == nil {
+			return &anime, nil
+		}
+		// Continue to database if cache miss or error
+	}
 
+	startTime := time.Now()
 	var anime Anime
 	err := a.db.DB.WithContext(ctx).Where("id = ?", id).First(&anime).Error
 	if err != nil {
-		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-			Service: "anime-api",
-			Table:   "anime",
-			Method:  metrics_lib.DatabaseMetricMethodSelect,
-			Result:  metrics_lib.Error,
-			Env:     metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().DatabaseMetric(
+			float64(time.Since(startTime).Milliseconds()),
+			"anime",
+			"select",
+			metrics.Error,
+		)
 		return nil, err
 	}
 
-	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-		Service: "anime-api",
-		Table:   "anime",
-		Method:  metrics_lib.DatabaseMetricMethodSelect,
-		Result:  metrics_lib.Success,
-		Env:     metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().DatabaseMetric(
+		float64(time.Since(startTime).Milliseconds()),
+		"anime",
+		"select",
+		metrics.Success,
+	)
+
+	// Store in cache if available
+	if a.cache != nil {
+		key := a.cache.GetKeyBuilder().AnimeByID(id)
+		_ = a.cache.SetJSON(ctx, key, &anime, cache.AnimeDataTTL)
+	}
+
 	return &anime, nil
 }
 
@@ -502,7 +525,7 @@ func (a *AnimeRepository) AiringAnime(ctx context.Context) ([]*AnimeWithNextEpis
 	nowJST := startOfDayIn(time.Now().UTC(), tzTokyo)
 	endJST := nowJST.AddDate(0, 0, 30)
 
-	subQuery := a.db.DB.WithContext(ctx).Model(&anime.AnimeEpisode{}).
+	subQuery := a.db.DB.WithContext(ctx).Model(&animeEpisode.AnimeEpisode{}).
 		Select("anime_id, MIN(aired) AS next_aired").
 		Where("aired BETWEEN ? AND ?", nowJST, endJST).
 		Group("anime_id")
@@ -528,8 +551,8 @@ func (a *AnimeRepository) AiringAnime(ctx context.Context) ([]*AnimeWithNextEpis
 
 	// Populate the next_aired field in each AnimeWithNextEpisode
 	for i := range animes {
-		var nextEpisode anime.AnimeEpisode
-		err := a.db.DB.WithContext(ctx).Model(&anime.AnimeEpisode{}).
+		var nextEpisode animeEpisode.AnimeEpisode
+		err := a.db.DB.WithContext(ctx).Model(&animeEpisode.AnimeEpisode{}).
 			Where("anime_id = ? AND aired BETWEEN ? AND ?", animes[i].ID, nowJST, endJST).
 			Order("aired").
 			First(&nextEpisode).Error
@@ -575,7 +598,7 @@ func (a *AnimeRepository) AiringAnimeDays(ctx context.Context, startDate *time.T
 
 	var animes []*AnimeWithNextEpisode
 
-	subQuery := a.db.DB.WithContext(ctx).Model(&anime.AnimeEpisode{}).
+	subQuery := a.db.DB.WithContext(ctx).Model(&animeEpisode.AnimeEpisode{}).
 		Select("anime_id, MIN(aired) AS next_aired").
 		Where("aired BETWEEN ? AND ?", startJST, endJST).
 		Group("anime_id")
@@ -592,8 +615,8 @@ func (a *AnimeRepository) AiringAnimeDays(ctx context.Context, startDate *time.T
 
 	// Populate the next_aired field in each AnimeWithNextEpisode
 	for i := range animes {
-		var nextEpisode anime.AnimeEpisode
-		err := a.db.DB.WithContext(ctx).Model(&anime.AnimeEpisode{}).
+		var nextEpisode animeEpisode.AnimeEpisode
+		err := a.db.DB.WithContext(ctx).Model(&animeEpisode.AnimeEpisode{}).
 			Where("anime_id = ? AND aired BETWEEN ? AND ?", animes[i].ID, startJST, endJST).
 			Order("aired").
 			First(&nextEpisode).Error
@@ -622,7 +645,7 @@ func (a *AnimeRepository) AiringAnimeEndDate(ctx context.Context, startDate *tim
 	// keep end as provided but in JST zone (no implicit +1 day)
 	endJST := endDate.In(tzTokyo)
 
-	subQuery := a.db.DB.WithContext(ctx).Model(&anime.AnimeEpisode{}).
+	subQuery := a.db.DB.WithContext(ctx).Model(&animeEpisode.AnimeEpisode{}).
 		Select("anime_id, MIN(aired) AS next_aired").
 		Where("aired BETWEEN ? AND ?", startJST, endJST).
 		Group("anime_id")
@@ -639,8 +662,8 @@ func (a *AnimeRepository) AiringAnimeEndDate(ctx context.Context, startDate *tim
 
 	// Populate the next_aired field in each AnimeWithNextEpisode
 	for i := range animes {
-		var nextEpisode anime.AnimeEpisode
-		err := a.db.DB.WithContext(ctx).Model(&anime.AnimeEpisode{}).
+		var nextEpisode animeEpisode.AnimeEpisode
+		err := a.db.DB.WithContext(ctx).Model(&animeEpisode.AnimeEpisode{}).
 			Where("anime_id = ? AND aired BETWEEN ? AND ?", animes[i].ID, startJST, endJST).
 			Order("aired").
 			First(&nextEpisode).Error
@@ -1034,13 +1057,13 @@ func (a *AnimeRepository) FindBySeasonWithEpisodes(ctx context.Context, season s
 				Ranking:       result.Ranking,
 				CreatedAt:     result.AnimeCreatedAt,
 				UpdatedAt:     result.AnimeUpdatedAt,
-				AnimeEpisodes: []*anime.AnimeEpisode{},
+				AnimeEpisodes: []*animeEpisode.AnimeEpisode{},
 			}
 		}
 
 		// Add episode if it exists
 		if result.EpisodeID != nil {
-			episode := &anime.AnimeEpisode{
+			episode := &animeEpisode.AnimeEpisode{
 				ID:        *result.EpisodeID,
 				AnimeID:   &result.AnimeID,
 				Episode:   result.EpisodeNumber,
@@ -1070,6 +1093,346 @@ func (a *AnimeRepository) FindBySeasonWithEpisodes(ctx context.Context, season s
 	})
 
 	return animes, nil
+}
+
+// FindByIDs fetches multiple anime by their IDs in a single query
+func (a *AnimeRepository) FindByIDs(ctx context.Context, ids []string) ([]*Anime, error) {
+	startTime := time.Now()
+
+	var animes []*Anime
+	err := a.db.DB.WithContext(ctx).Where("id IN ?", ids).Find(&animes).Error
+	if err != nil {
+		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
+			Service: "anime-api",
+			Table:   "anime",
+			Method:  metrics_lib.DatabaseMetricMethodSelect,
+			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
+		})
+		return nil, err
+	}
+
+	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
+		Service: "anime-api",
+		Table:   "anime",
+		Method:  metrics_lib.DatabaseMetricMethodSelect,
+		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
+	})
+	return animes, nil
+}
+
+// FindByIDsWithEpisodes fetches multiple anime by their IDs with episodes preloaded in a single query
+func (a *AnimeRepository) FindByIDsWithEpisodes(ctx context.Context, ids []string) ([]*Anime, error) {
+	startTime := time.Now()
+
+	var animes []*Anime
+
+	// First, fetch all anime
+	err := a.db.DB.WithContext(ctx).
+		Where("id IN ?", ids).
+		Find(&animes).Error
+
+	if err != nil {
+		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
+			Service: "anime-api",
+			Table:   "anime",
+			Method:  metrics_lib.DatabaseMetricMethodSelect,
+			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
+		})
+		return nil, err
+	}
+
+	// Then, batch fetch all episodes for these anime in one query
+	var episodes []animeEpisode.AnimeEpisode
+	err = a.db.DB.WithContext(ctx).
+		Where("anime_id IN ?", ids).
+		Order("anime_id ASC, episode ASC").
+		Find(&episodes).Error
+
+	if err != nil {
+		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
+			Service: "anime-api",
+			Table:   "anime_episodes",
+			Method:  metrics_lib.DatabaseMetricMethodSelect,
+			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
+		})
+		return nil, err
+	}
+
+	// Group episodes by anime_id
+	episodeMap := make(map[string][]*animeEpisode.AnimeEpisode)
+	for _, episode := range episodes {
+		if episode.AnimeID != nil {
+			ep := episode // Create a copy to avoid pointer issues
+			episodeMap[*episode.AnimeID] = append(episodeMap[*episode.AnimeID], &ep)
+		}
+	}
+
+	// Assign episodes to their respective anime
+	for i, anime := range animes {
+		if eps, exists := episodeMap[anime.ID]; exists {
+			animes[i].AnimeEpisodes = eps
+		}
+	}
+
+	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
+		Service: "anime-api",
+		Table:   "anime",
+		Method:  metrics_lib.DatabaseMetricMethodSelect,
+		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
+	})
+	return animes, nil
+}
+
+// FindBySeasonWithEpisodesOptimized - Performance optimized version
+func (a *AnimeRepository) FindBySeasonWithEpisodesOptimized(ctx context.Context, season string) ([]*Anime, error) {
+	span, spanCtx := tracer.StartSpanFromContext(ctx, "FindBySeasonWithEpisodesOptimized")
+	span.SetTag("service", "anime")
+	span.SetTag("type", "repository")
+	span.SetTag("environment", tracing.GetEnvironmentTag())
+	span.SetTag("season", season)
+	defer span.Finish()
+
+	startTime := time.Now()
+
+	var animes []*Anime
+	err := a.db.DB.WithContext(spanCtx).
+		Table("anime_seasons as s").
+		Joins("INNER JOIN anime as a ON s.anime_id = a.id").
+		Joins("LEFT JOIN episodes as e ON a.id = e.anime_id").
+		Where("s.season = ?", season).
+		Find(&animes).Error
+
+	if err != nil {
+		span.SetTag("error", true)
+		span.SetTag("error.msg", err.Error())
+		metrics.GetAppMetrics().DatabaseMetric(
+			float64(time.Since(startTime).Milliseconds()),
+			metrics.TableAnimeSeason,
+			metrics.MethodSelect,
+			metrics.Error,
+		)
+		return nil, err
+	}
+
+	duration := time.Since(startTime).Milliseconds()
+	span.SetTag("duration_ms", duration)
+	span.SetTag("result_count", len(animes))
+
+	metrics.GetAppMetrics().DatabaseMetric(
+		float64(duration),
+		metrics.TableAnimeSeason,
+		metrics.MethodSelect,
+		metrics.Success,
+	)
+
+	return animes, nil
+}
+
+// FindBySeasonAnimeOnlyOptimized - Ultra-fast version that only fetches anime without episodes
+func (a *AnimeRepository) FindBySeasonAnimeOnlyOptimized(ctx context.Context, season string) ([]*Anime, error) {
+	// Try cache first if available
+	if a.cache != nil {
+		key := a.cache.GetKeyBuilder().AnimeBySeasonWithFields(season, nil)
+		var animeList []*Anime
+		err := a.cache.GetJSON(ctx, key, &animeList)
+		if err == nil {
+			return animeList, nil
+		}
+		// Continue to database if cache miss or error
+	}
+
+	span, spanCtx := tracer.StartSpanFromContext(ctx, "FindBySeasonAnimeOnlyOptimized")
+	span.SetTag("service", "anime")
+	span.SetTag("type", "repository")
+	span.SetTag("environment", tracing.GetEnvironmentTag())
+	span.SetTag("season", season)
+	defer span.Finish()
+
+	startTime := time.Now()
+
+	var animes []*Anime
+	err := a.db.DB.WithContext(spanCtx).
+		Table("anime_seasons as s").
+		Joins("INNER JOIN anime as a ON s.anime_id = a.id").
+		Where("s.season = ?", season).
+		Find(&animes).Error
+
+	if err != nil {
+		span.SetTag("error", true)
+		span.SetTag("error.msg", err.Error())
+		metrics.GetAppMetrics().DatabaseMetric(
+			float64(time.Since(startTime).Milliseconds()),
+			metrics.TableAnimeSeason,
+			metrics.MethodSelect,
+			metrics.Error,
+		)
+		return nil, err
+	}
+
+	// Initialize empty episodes for each anime to prevent nil pointer issues
+	for _, a := range animes {
+		a.AnimeEpisodes = make([]*animeEpisode.AnimeEpisode, 0)
+	}
+
+	duration := time.Since(startTime).Milliseconds()
+	span.SetTag("duration_ms", duration)
+	span.SetTag("result_count", len(animes))
+
+	metrics.GetAppMetrics().DatabaseMetric(
+		float64(duration),
+		metrics.TableAnimeSeason,
+		metrics.MethodSelect,
+		metrics.Success,
+	)
+
+	// Store in cache if available
+	if a.cache != nil {
+		key := a.cache.GetKeyBuilder().AnimeBySeasonWithFields(season, nil)
+		_ = a.cache.SetJSON(ctx, key, animes, cache.SeasonTTL)
+	}
+
+	return animes, nil
+}
+
+// FindBySeasonWithIndexHints - Uses MySQL index hints for better performance
+func (a *AnimeRepository) FindBySeasonWithIndexHints(ctx context.Context, season string) ([]*Anime, error) {
+	return a.FindBySeasonWithEpisodesOptimized(ctx, season)
+}
+
+// FindBySeasonBatched - Uses batched queries to avoid cartesian product
+func (a *AnimeRepository) FindBySeasonBatched(ctx context.Context, season string) ([]*Anime, error) {
+	span, spanCtx := tracer.StartSpanFromContext(ctx, "FindBySeasonBatched")
+	span.SetTag("service", "anime")
+	span.SetTag("type", "repository")
+	span.SetTag("environment", tracing.GetEnvironmentTag())
+	span.SetTag("season", season)
+	defer span.Finish()
+
+	startTime := time.Now()
+
+	// Step 1: Get anime IDs for the season
+	var animeIDs []string
+	err := a.db.DB.WithContext(spanCtx).
+		Table("anime_seasons").
+		Where("season = ?", season).
+		Pluck("anime_id", &animeIDs).Error
+
+	if err != nil {
+		span.SetTag("error", true)
+		span.SetTag("error.msg", err.Error())
+		return nil, err
+	}
+
+	if len(animeIDs) == 0 {
+		return []*Anime{}, nil
+	}
+
+	// Step 2: Get anime data
+	var animes []*Anime
+	err = a.db.DB.WithContext(spanCtx).
+		Where("id IN ?", animeIDs).
+		Find(&animes).Error
+
+	if err != nil {
+		span.SetTag("error", true)
+		span.SetTag("error.msg", err.Error())
+		return nil, err
+	}
+
+	// Step 3: Get episodes for all anime in one query
+	var episodes []*animeEpisode.AnimeEpisode
+	err = a.db.DB.WithContext(spanCtx).
+		Where("anime_id IN ?", animeIDs).
+		Order("anime_id, episode").
+		Find(&episodes).Error
+
+	if err != nil {
+		// Episodes are optional, continue without them
+		span.SetTag("episodes_error", err.Error())
+	}
+
+	// Step 4: Group episodes by anime ID
+	episodeMap := make(map[string][]*animeEpisode.AnimeEpisode)
+	for _, episode := range episodes {
+		if episode.AnimeID != nil {
+			episodeMap[*episode.AnimeID] = append(episodeMap[*episode.AnimeID], episode)
+		}
+	}
+
+	// Step 5: Assign episodes to anime
+	for _, a := range animes {
+		if eps, exists := episodeMap[a.ID]; exists {
+			a.AnimeEpisodes = eps
+		} else {
+			a.AnimeEpisodes = make([]*animeEpisode.AnimeEpisode, 0)
+		}
+	}
+
+	duration := time.Since(startTime).Milliseconds()
+	span.SetTag("duration_ms", duration)
+	span.SetTag("result_count", len(animes))
+	span.SetTag("episode_count", len(episodes))
+
+	metrics.GetAppMetrics().DatabaseMetric(
+		float64(duration),
+		metrics.TableAnimeSeason,
+		metrics.MethodSelect,
+		metrics.Success,
+	)
+
+	return animes, nil
+}
+
+// FindBySeasonWithFieldSelection - Optimized query that only selects requested fields
+func (a *AnimeRepository) FindBySeasonWithFieldSelection(ctx context.Context, season string, fieldSelection *FieldSelection) ([]*Anime, error) {
+	span, spanCtx := tracer.StartSpanFromContext(ctx, "FindBySeasonWithFieldSelection")
+	span.SetTag("service", "anime")
+	span.SetTag("type", "repository")
+	span.SetTag("environment", tracing.GetEnvironmentTag())
+	span.SetTag("season", season)
+	defer span.Finish()
+
+	startTime := time.Now()
+
+	// Build the select clause based on requested fields
+	selectClause := fieldSelection.BuildSelectClause("anime")
+
+	// Use raw SQL for maximum performance and field selection control
+	var animeList []*Anime
+	query := `
+		SELECT ` + selectClause + `
+		FROM anime
+		INNER JOIN anime_seasons ON anime.id = anime_seasons.anime_id
+		WHERE anime_seasons.season = ?
+		ORDER BY anime.ranking ASC, anime.title_en ASC`
+
+	result := a.db.DB.WithContext(spanCtx).Raw(query, season).Scan(&animeList)
+	if result.Error != nil {
+		metrics.GetAppMetrics().DatabaseMetric(
+			float64(time.Since(startTime).Milliseconds()),
+			metrics.TableAnimeSeason,
+			metrics.MethodSelect,
+			metrics.Error,
+		)
+		return nil, result.Error
+	}
+
+	span.SetTag("selected_fields_count", len(fieldSelection.Fields))
+	span.SetTag("result_count", len(animeList))
+
+	metrics.GetAppMetrics().DatabaseMetric(
+		float64(time.Since(startTime).Milliseconds()),
+		metrics.TableAnimeSeason,
+		metrics.MethodSelect,
+		metrics.Success,
+	)
+
+	return animeList, nil
 }
 
 // Start-of-day in a specific zone (keeps date math stable)

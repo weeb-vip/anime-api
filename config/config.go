@@ -3,8 +3,9 @@ package config
 import "github.com/jinzhu/configor"
 
 type Config struct {
-	AppConfig AppConfig `env:"APPCONFIG"`
-	DBConfig  DBConfig
+	AppConfig   AppConfig `env:"APPCONFIG"`
+	DBConfig    DBConfig
+	RedisConfig RedisConfig
 }
 
 type AppConfig struct {
@@ -21,6 +22,14 @@ type DBConfig struct {
 	Password string `required:"true" env:"DBPASSWORD" default:"mysecretpassword"`
 	Port     uint   `default:"3306" env:"DBPORT"`
 	SSLMode  string `default:"false" env:"DBSSL"`
+}
+
+type RedisConfig struct {
+	Host     string `default:"localhost" env:"REDIS_HOST"`
+	Port     string `default:"6379" env:"REDIS_PORT"`
+	Password string `default:"" env:"REDIS_PASSWORD"`
+	DB       int    `default:"0" env:"REDIS_DB"`
+	Enabled  bool   `default:"true" env:"CACHE_ENABLED"`
 }
 
 

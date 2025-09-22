@@ -45,6 +45,14 @@ Uses MySQL with GORM. Entities include anime, episodes, characters, staff, and r
 ### Configuration
 Configuration loaded via `internal/db/config.go` with development config in `config/config.dev.json`.
 
+### Caching
+- **Single repository pattern**: Repositories conditionally use caching based on configuration
+- **Environment control**: Set `CACHE_ENABLED=false` to disable caching (default: `true`)
+- **Cache TTL**: 30min for anime data, 15min for episodes, 1hr for season lists
+- **Cache coordination**: Updates to anime automatically invalidate related episode cache
+- **Graceful fallback**: When Redis is unavailable or disabled, repositories bypass cache entirely
+- **Unified interface**: Same repository interface whether caching is enabled or disabled
+
 ## Important Notes
 
 ### Dependencies
