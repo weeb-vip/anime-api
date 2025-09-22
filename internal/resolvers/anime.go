@@ -232,6 +232,7 @@ func AnimeByID(ctx context.Context, animeService anime.AnimeServiceImpl, id stri
 			Service:  "anime-api",
 			Protocol: "graphql",
 			Result:   metrics_lib.Error,
+			Env:      metrics.GetCurrentEnv(),
 		})
 		return nil, err
 	}
@@ -251,6 +252,7 @@ func AnimeByID(ctx context.Context, animeService anime.AnimeServiceImpl, id stri
 		Service:  "anime-api",
 		Protocol: "graphql",
 		Result:   metrics_lib.Success,
+		Env:      metrics.GetCurrentEnv(),
 	})
 
 	return transformAnimeToGraphQL(*foundAnime)
@@ -271,6 +273,7 @@ func TopRatedAnime(ctx context.Context, animeService anime.AnimeServiceImpl, lim
 			Service:  "anime-api",
 			Protocol: "graphql",
 			Result:   metrics_lib.Error,
+			Env:      metrics.GetCurrentEnv(),
 		})
 		return nil, err
 	}
@@ -289,6 +292,7 @@ func TopRatedAnime(ctx context.Context, animeService anime.AnimeServiceImpl, lim
 		Service:  "anime-api",
 		Protocol: "graphql",
 		Result:   metrics_lib.Success,
+		Env:      metrics.GetCurrentEnv(),
 	})
 
 	return animes, nil
@@ -309,6 +313,7 @@ func MostPopularAnime(ctx context.Context, animeService anime.AnimeServiceImpl, 
 			Service:  "anime-api",
 			Protocol: "graphql",
 			Result:   metrics_lib.Error,
+			Env:      metrics.GetCurrentEnv(),
 		})
 		return nil, err
 	}
@@ -327,6 +332,7 @@ func MostPopularAnime(ctx context.Context, animeService anime.AnimeServiceImpl, 
 		Service:  "anime-api",
 		Protocol: "graphql",
 		Result:   metrics_lib.Success,
+		Env:      metrics.GetCurrentEnv(),
 	})
 
 	return animes, nil
@@ -347,6 +353,7 @@ func NewestAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit
 			Service:  "anime-api",
 			Protocol: "graphql",
 			Result:   metrics_lib.Error,
+			Env:      metrics.GetCurrentEnv(),
 		})
 		return nil, err
 	}
@@ -365,6 +372,7 @@ func NewestAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit
 		Service:  "anime-api",
 		Protocol: "graphql",
 		Result:   metrics_lib.Success,
+		Env:      metrics.GetCurrentEnv(),
 	})
 
 	return animes, nil
@@ -383,6 +391,7 @@ func CurrentlyAiring(ctx context.Context, animeService anime.AnimeServiceImpl, i
 				Service:  "anime-api",
 				Protocol: "graphql",
 				Result:   metrics_lib.Error,
+				Env:      metrics.GetCurrentEnv(),
 			})
 			return nil, err
 		}
@@ -396,6 +405,7 @@ func CurrentlyAiring(ctx context.Context, animeService anime.AnimeServiceImpl, i
 				Service:  "anime-api",
 				Protocol: "graphql",
 				Result:   metrics_lib.Error,
+				Env:      metrics.GetCurrentEnv(),
 			})
 			return nil, err
 		}
@@ -415,6 +425,7 @@ func CurrentlyAiring(ctx context.Context, animeService anime.AnimeServiceImpl, i
 		Service:  "anime-api",
 		Protocol: "graphql",
 		Result:   metrics_lib.Success,
+		Env:      metrics.GetCurrentEnv(),
 	})
 
 	return animes, nil
@@ -431,6 +442,7 @@ func DBSearchAnime(ctx context.Context, animeService anime.AnimeServiceImpl, que
 			Service:  "anime-api",
 			Protocol: "graphql",
 			Result:   metrics_lib.Error,
+			Env:      metrics.GetCurrentEnv(),
 		})
 		return nil, err
 	}
@@ -449,6 +461,7 @@ func DBSearchAnime(ctx context.Context, animeService anime.AnimeServiceImpl, que
 		Service:  "anime-api",
 		Protocol: "graphql",
 		Result:   metrics_lib.Success,
+		Env:      metrics.GetCurrentEnv(),
 	})
 
 	return animes, nil

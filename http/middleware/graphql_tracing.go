@@ -70,12 +70,24 @@ func (e GraphQLTracingExtension) InterceptOperation(ctx context.Context, next gr
 	}
 }
 
-// InterceptField traces individual GraphQL field resolutions
+// InterceptField traces only root-level GraphQL field resolutions
+// Skips tracing for nested/scalar fields to reduce trace noise
 func (e GraphQLTracingExtension) InterceptField(ctx context.Context, next graphql.Resolver) (interface{}, error) {
 	fc := graphql.GetFieldContext(ctx)
 
+	// Only trace root-level resolvers (Query/Mutation/Subscription fields)
+	// Skip tracing for nested object fields and scalar fields
+	isRootField := fc.Field.ObjectDefinition.Name == "Query" ||
+	              fc.Field.ObjectDefinition.Name == "Mutation" ||
+	              fc.Field.ObjectDefinition.Name == "Subscription"
+
+	if !isRootField {
+		// Skip tracing for non-root fields
+		return next(ctx)
+	}
+
 	tracer := tracing.GetTracer(ctx)
-	ctx, span := tracer.Start(ctx, "GraphQL Field: "+fc.Field.Name,
+	ctx, span := tracer.Start(ctx, "GraphQL Resolver: "+fc.Field.Name,
 		trace.WithAttributes(
 			attribute.String("graphql.field.name", fc.Field.Name),
 			attribute.String("graphql.field.object", fc.Field.ObjectDefinition.Name),

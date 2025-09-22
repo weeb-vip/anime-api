@@ -12,6 +12,7 @@ type AppConfig struct {
 	APPName string `default:"anime-api"`
 	Port    int    `env:"PORT" default:"3000"`
 	Version string `default:"x.x.x" env:"VERSION"`
+	Env     string `default:"development" env:"ENV"`
 }
 
 type DBConfig struct {

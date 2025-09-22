@@ -20,6 +20,7 @@ func (a *AnimeRepository) FindByIDs(ctx context.Context, ids []string) ([]*Anime
 			Table:   "anime",
 			Method:  metrics_lib.DatabaseMetricMethodSelect,
 			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
 		})
 		return nil, err
 	}
@@ -29,6 +30,7 @@ func (a *AnimeRepository) FindByIDs(ctx context.Context, ids []string) ([]*Anime
 		Table:   "anime",
 		Method:  metrics_lib.DatabaseMetricMethodSelect,
 		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
 	})
 	return animes, nil
 }
@@ -51,6 +53,7 @@ func (a *AnimeRepository) FindByIDsWithEpisodes(ctx context.Context, ids []strin
 			Table:   "anime",
 			Method:  metrics_lib.DatabaseMetricMethodSelect,
 			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
 		})
 		return nil, err
 	}
@@ -60,6 +63,7 @@ func (a *AnimeRepository) FindByIDsWithEpisodes(ctx context.Context, ids []strin
 		Table:   "anime",
 		Method:  metrics_lib.DatabaseMetricMethodSelect,
 		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
 	})
 	return animes, nil
 }

@@ -74,6 +74,7 @@ func (a *AnimeRepository) FindAll(ctx context.Context) ([]*Anime, error) {
 			Table:   "anime",
 			Method:  metrics_lib.DatabaseMetricMethodSelect,
 			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
 		})
 		return nil, err
 	}
@@ -83,6 +84,7 @@ func (a *AnimeRepository) FindAll(ctx context.Context) ([]*Anime, error) {
 		Table:   "anime",
 		Method:  metrics_lib.DatabaseMetricMethodSelect,
 		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
 	})
 	return animes, nil
 }
@@ -100,6 +102,7 @@ func (a *AnimeRepository) FindAllWithEpisodes(ctx context.Context) ([]*Anime, er
 			Table:   "anime",
 			Method:  metrics_lib.DatabaseMetricMethodSelect,
 			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
 		})
 		return nil, err
 	}
@@ -109,6 +112,7 @@ func (a *AnimeRepository) FindAllWithEpisodes(ctx context.Context) ([]*Anime, er
 		Table:   "anime",
 		Method:  metrics_lib.DatabaseMetricMethodSelect,
 		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
 	})
 	return animes, nil
 }
@@ -124,6 +128,7 @@ func (a *AnimeRepository) FindById(ctx context.Context, id string) (*Anime, erro
 			Table:   "anime",
 			Method:  metrics_lib.DatabaseMetricMethodSelect,
 			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
 		})
 		return nil, err
 	}
@@ -133,6 +138,7 @@ func (a *AnimeRepository) FindById(ctx context.Context, id string) (*Anime, erro
 		Table:   "anime",
 		Method:  metrics_lib.DatabaseMetricMethodSelect,
 		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
 	})
 	return &anime, nil
 }
@@ -150,6 +156,7 @@ func (a *AnimeRepository) FindByIdWithEpisodes(ctx context.Context, id string) (
 			Table:   "anime",
 			Method:  metrics_lib.DatabaseMetricMethodSelect,
 			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
 		})
 		return nil, err
 	}
@@ -159,6 +166,7 @@ func (a *AnimeRepository) FindByIdWithEpisodes(ctx context.Context, id string) (
 		Table:   "anime",
 		Method:  metrics_lib.DatabaseMetricMethodSelect,
 		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
 	})
 	return &anime, nil
 }
@@ -174,6 +182,7 @@ func (a *AnimeRepository) FindByName(ctx context.Context, name string) ([]*Anime
 			Table:   "anime",
 			Method:  metrics_lib.DatabaseMetricMethodSelect,
 			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
 		})
 		return nil, err
 	}
@@ -183,6 +192,7 @@ func (a *AnimeRepository) FindByName(ctx context.Context, name string) ([]*Anime
 		Table:   "anime",
 		Method:  metrics_lib.DatabaseMetricMethodSelect,
 		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
 	})
 	return animes, nil
 }
@@ -198,6 +208,7 @@ func (a *AnimeRepository) FindByType(ctx context.Context, recordType RECORD_TYPE
 			Table:   "anime",
 			Method:  metrics_lib.DatabaseMetricMethodSelect,
 			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
 		})
 		return nil, err
 	}
@@ -207,6 +218,7 @@ func (a *AnimeRepository) FindByType(ctx context.Context, recordType RECORD_TYPE
 		Table:   "anime",
 		Method:  metrics_lib.DatabaseMetricMethodSelect,
 		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
 	})
 	return animes, nil
 }
@@ -223,6 +235,7 @@ func (a *AnimeRepository) FindByStatus(ctx context.Context, status string) ([]*A
 			Table:   "anime",
 			Method:  metrics_lib.DatabaseMetricMethodSelect,
 			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
 		})
 		return nil, err
 	}
@@ -232,6 +245,7 @@ func (a *AnimeRepository) FindByStatus(ctx context.Context, status string) ([]*A
 		Table:   "anime",
 		Method:  metrics_lib.DatabaseMetricMethodSelect,
 		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
 	})
 	return animes, nil
 }
@@ -247,6 +261,7 @@ func (a *AnimeRepository) FindBySource(ctx context.Context, source string) ([]*A
 			Table:   "anime",
 			Method:  metrics_lib.DatabaseMetricMethodSelect,
 			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
 		})
 		return nil, err
 	}
@@ -256,6 +271,7 @@ func (a *AnimeRepository) FindBySource(ctx context.Context, source string) ([]*A
 		Table:   "anime",
 		Method:  metrics_lib.DatabaseMetricMethodSelect,
 		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
 	})
 	return animes, nil
 }
@@ -271,6 +287,7 @@ func (a *AnimeRepository) FindByGenre(ctx context.Context, genre string) ([]*Ani
 			Table:   "anime",
 			Method:  metrics_lib.DatabaseMetricMethodSelect,
 			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
 		})
 		return nil, err
 	}
@@ -280,6 +297,7 @@ func (a *AnimeRepository) FindByGenre(ctx context.Context, genre string) ([]*Ani
 		Table:   "anime",
 		Method:  metrics_lib.DatabaseMetricMethodSelect,
 		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
 	})
 	return animes, nil
 }
@@ -296,6 +314,7 @@ func (a *AnimeRepository) FindByStudio(ctx context.Context, studio string) ([]*A
 			Table:   "anime",
 			Method:  metrics_lib.DatabaseMetricMethodSelect,
 			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
 		})
 		return nil, err
 	}
@@ -305,6 +324,7 @@ func (a *AnimeRepository) FindByStudio(ctx context.Context, studio string) ([]*A
 		Table:   "anime",
 		Method:  metrics_lib.DatabaseMetricMethodSelect,
 		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
 	})
 	return animes, nil
 }
@@ -320,6 +340,7 @@ func (a *AnimeRepository) FindByLicensors(ctx context.Context, licensors string)
 			Table:   "anime",
 			Method:  metrics_lib.DatabaseMetricMethodSelect,
 			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
 		})
 		return nil, err
 	}
@@ -329,6 +350,7 @@ func (a *AnimeRepository) FindByLicensors(ctx context.Context, licensors string)
 		Table:   "anime",
 		Method:  metrics_lib.DatabaseMetricMethodSelect,
 		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
 	})
 	return animes, nil
 }
@@ -344,6 +366,7 @@ func (a *AnimeRepository) FindByRating(ctx context.Context, rating string) ([]*A
 			Table:   "anime",
 			Method:  metrics_lib.DatabaseMetricMethodSelect,
 			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
 		})
 		return nil, err
 	}
@@ -353,6 +376,7 @@ func (a *AnimeRepository) FindByRating(ctx context.Context, rating string) ([]*A
 		Table:   "anime",
 		Method:  metrics_lib.DatabaseMetricMethodSelect,
 		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
 	})
 	return animes, nil
 }
@@ -368,6 +392,7 @@ func (a *AnimeRepository) FindByYear(ctx context.Context, year int) ([]*Anime, e
 			Table:   "anime",
 			Method:  metrics_lib.DatabaseMetricMethodSelect,
 			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
 		})
 		return nil, err
 	}
@@ -377,6 +402,7 @@ func (a *AnimeRepository) FindByYear(ctx context.Context, year int) ([]*Anime, e
 		Table:   "anime",
 		Method:  metrics_lib.DatabaseMetricMethodSelect,
 		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
 	})
 	return animes, nil
 }
@@ -393,6 +419,7 @@ func (a *AnimeRepository) TopRatedAnime(ctx context.Context, limit int) ([]*Anim
 			Table:   "anime",
 			Method:  metrics_lib.DatabaseMetricMethodSelect,
 			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
 		})
 		return nil, err
 	}
@@ -402,6 +429,7 @@ func (a *AnimeRepository) TopRatedAnime(ctx context.Context, limit int) ([]*Anim
 		Table:   "anime",
 		Method:  metrics_lib.DatabaseMetricMethodSelect,
 		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
 	})
 	return animes, nil
 }
@@ -418,6 +446,7 @@ func (a *AnimeRepository) MostPopularAnime(ctx context.Context, limit int) ([]*A
 			Table:   "anime",
 			Method:  metrics_lib.DatabaseMetricMethodSelect,
 			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
 		})
 		return nil, err
 	}
@@ -427,6 +456,7 @@ func (a *AnimeRepository) MostPopularAnime(ctx context.Context, limit int) ([]*A
 		Table:   "anime",
 		Method:  metrics_lib.DatabaseMetricMethodSelect,
 		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
 	})
 	return animes, nil
 }
@@ -443,6 +473,7 @@ func (a *AnimeRepository) NewestAnime(ctx context.Context, limit int) ([]*Anime,
 			Table:   "anime",
 			Method:  metrics_lib.DatabaseMetricMethodSelect,
 			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
 		})
 		return nil, err
 	}
@@ -452,6 +483,7 @@ func (a *AnimeRepository) NewestAnime(ctx context.Context, limit int) ([]*Anime,
 		Table:   "anime",
 		Method:  metrics_lib.DatabaseMetricMethodSelect,
 		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
 	})
 	return animes, nil
 }
@@ -481,6 +513,7 @@ func (a *AnimeRepository) AiringAnime(ctx context.Context) ([]*AnimeWithNextEpis
 		Table:   "anime",
 		Method:  metrics_lib.DatabaseMetricMethodSelect,
 		Result:  map[bool]string{true: metrics_lib.Success, false: metrics_lib.Error}[err == nil],
+		Env:     metrics.GetCurrentEnv(),
 	})
 
 	if err != nil {
@@ -513,6 +546,7 @@ func (a *AnimeRepository) SearchAnime(ctx context.Context, search string, page i
 			Table:   "anime",
 			Method:  metrics_lib.DatabaseMetricMethodSelect,
 			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
 		})
 		return nil, err
 	}
@@ -522,6 +556,7 @@ func (a *AnimeRepository) SearchAnime(ctx context.Context, search string, page i
 		Table:   "anime",
 		Method:  metrics_lib.DatabaseMetricMethodSelect,
 		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
 	})
 	return animes, nil
 }
@@ -567,6 +602,7 @@ func (a *AnimeRepository) AiringAnimeDays(ctx context.Context, startDate *time.T
 		Table:   "anime",
 		Method:  metrics_lib.DatabaseMetricMethodSelect,
 		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
 	})
 	return animes, nil
 }
@@ -613,6 +649,7 @@ func (a *AnimeRepository) AiringAnimeEndDate(ctx context.Context, startDate *tim
 		Table:   "anime",
 		Method:  metrics_lib.DatabaseMetricMethodSelect,
 		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
 	})
 
 	return animes, nil
@@ -631,6 +668,7 @@ func (a *AnimeRepository) FindByNameWithEpisodes(ctx context.Context, name strin
 			Table:   "anime",
 			Method:  metrics_lib.DatabaseMetricMethodSelect,
 			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
 		})
 		return nil, err
 	}
@@ -640,6 +678,7 @@ func (a *AnimeRepository) FindByNameWithEpisodes(ctx context.Context, name strin
 		Table:   "anime",
 		Method:  metrics_lib.DatabaseMetricMethodSelect,
 		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
 	})
 	return animes, nil
 }
@@ -657,6 +696,7 @@ func (a *AnimeRepository) FindByTypeWithEpisodes(ctx context.Context, recordType
 			Table:   "anime",
 			Method:  metrics_lib.DatabaseMetricMethodSelect,
 			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
 		})
 		return nil, err
 	}
@@ -666,6 +706,7 @@ func (a *AnimeRepository) FindByTypeWithEpisodes(ctx context.Context, recordType
 		Table:   "anime",
 		Method:  metrics_lib.DatabaseMetricMethodSelect,
 		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
 	})
 	return animes, nil
 }
@@ -683,6 +724,7 @@ func (a *AnimeRepository) FindByStatusWithEpisodes(ctx context.Context, status s
 			Table:   "anime",
 			Method:  metrics_lib.DatabaseMetricMethodSelect,
 			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
 		})
 		return nil, err
 	}
@@ -692,6 +734,7 @@ func (a *AnimeRepository) FindByStatusWithEpisodes(ctx context.Context, status s
 		Table:   "anime",
 		Method:  metrics_lib.DatabaseMetricMethodSelect,
 		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
 	})
 	return animes, nil
 }
@@ -709,6 +752,7 @@ func (a *AnimeRepository) TopRatedAnimeWithEpisodes(ctx context.Context, limit i
 			Table:   "anime",
 			Method:  metrics_lib.DatabaseMetricMethodSelect,
 			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
 		})
 		return nil, err
 	}
@@ -718,6 +762,7 @@ func (a *AnimeRepository) TopRatedAnimeWithEpisodes(ctx context.Context, limit i
 		Table:   "anime",
 		Method:  metrics_lib.DatabaseMetricMethodSelect,
 		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
 	})
 	return animes, nil
 }
@@ -735,6 +780,7 @@ func (a *AnimeRepository) MostPopularAnimeWithEpisodes(ctx context.Context, limi
 			Table:   "anime",
 			Method:  metrics_lib.DatabaseMetricMethodSelect,
 			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
 		})
 		return nil, err
 	}
@@ -744,6 +790,7 @@ func (a *AnimeRepository) MostPopularAnimeWithEpisodes(ctx context.Context, limi
 		Table:   "anime",
 		Method:  metrics_lib.DatabaseMetricMethodSelect,
 		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
 	})
 	return animes, nil
 }
@@ -761,6 +808,7 @@ func (a *AnimeRepository) NewestAnimeWithEpisodes(ctx context.Context, limit int
 			Table:   "anime",
 			Method:  metrics_lib.DatabaseMetricMethodSelect,
 			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
 		})
 		return nil, err
 	}
@@ -770,6 +818,7 @@ func (a *AnimeRepository) NewestAnimeWithEpisodes(ctx context.Context, limit int
 		Table:   "anime",
 		Method:  metrics_lib.DatabaseMetricMethodSelect,
 		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
 	})
 	return animes, nil
 }
@@ -787,6 +836,7 @@ func (a *AnimeRepository) SearchAnimeWithEpisodes(ctx context.Context, search st
 			Table:   "anime",
 			Method:  metrics_lib.DatabaseMetricMethodSelect,
 			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
 		})
 		return nil, err
 	}
@@ -796,6 +846,7 @@ func (a *AnimeRepository) SearchAnimeWithEpisodes(ctx context.Context, search st
 		Table:   "anime",
 		Method:  metrics_lib.DatabaseMetricMethodSelect,
 		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
 	})
 	return animes, nil
 }
@@ -837,6 +888,7 @@ func (a *AnimeRepository) AiringAnimeWithEpisodes(ctx context.Context, startDate
 		Table:   "anime",
 		Method:  metrics_lib.DatabaseMetricMethodSelect,
 		Result:  map[bool]string{true: metrics_lib.Success, false: metrics_lib.Error}[err == nil],
+		Env:     metrics.GetCurrentEnv(),
 	})
 
 	if err != nil {

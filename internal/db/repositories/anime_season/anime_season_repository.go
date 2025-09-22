@@ -35,6 +35,7 @@ func (r *AnimeSeasonRepository) FindByAnimeID(ctx context.Context, animeID strin
 			Table:   "anime_seasons",
 			Method:  metrics_lib.DatabaseMetricMethodSelect,
 			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
 		})
 		return nil, err
 	}
@@ -44,6 +45,7 @@ func (r *AnimeSeasonRepository) FindByAnimeID(ctx context.Context, animeID strin
 		Table:   "anime_seasons",
 		Method:  metrics_lib.DatabaseMetricMethodSelect,
 		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
 	})
 	return animeSeasons, nil
 }
@@ -59,6 +61,7 @@ func (r *AnimeSeasonRepository) FindBySeason(ctx context.Context, season string)
 			Table:   "anime_seasons",
 			Method:  metrics_lib.DatabaseMetricMethodSelect,
 			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
 		})
 		return nil, err
 	}
@@ -68,6 +71,7 @@ func (r *AnimeSeasonRepository) FindBySeason(ctx context.Context, season string)
 		Table:   "anime_seasons",
 		Method:  metrics_lib.DatabaseMetricMethodSelect,
 		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
 	})
 	return animeSeasons, nil
 }
@@ -82,6 +86,7 @@ func (r *AnimeSeasonRepository) Create(ctx context.Context, animeSeason *AnimeSe
 			Table:   "anime_seasons",
 			Method:  metrics_lib.DatabaseMetricMethodInsert,
 			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
 		})
 		return err
 	}
@@ -91,6 +96,7 @@ func (r *AnimeSeasonRepository) Create(ctx context.Context, animeSeason *AnimeSe
 		Table:   "anime_seasons",
 		Method:  metrics_lib.DatabaseMetricMethodInsert,
 		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
 	})
 	return nil
 }
@@ -105,6 +111,7 @@ func (r *AnimeSeasonRepository) Update(ctx context.Context, animeSeason *AnimeSe
 			Table:   "anime_seasons",
 			Method:  metrics_lib.DatabaseMetricMethodUpdate,
 			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
 		})
 		return err
 	}
@@ -114,6 +121,7 @@ func (r *AnimeSeasonRepository) Update(ctx context.Context, animeSeason *AnimeSe
 		Table:   "anime_seasons",
 		Method:  metrics_lib.DatabaseMetricMethodUpdate,
 		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
 	})
 	return nil
 }
@@ -128,6 +136,7 @@ func (r *AnimeSeasonRepository) Delete(ctx context.Context, id string) error {
 			Table:   "anime_seasons",
 			Method:  metrics_lib.DatabaseMetricMethodDelete,
 			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
 		})
 		return err
 	}
@@ -137,6 +146,7 @@ func (r *AnimeSeasonRepository) Delete(ctx context.Context, id string) error {
 		Table:   "anime_seasons",
 		Method:  metrics_lib.DatabaseMetricMethodDelete,
 		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
 	})
 	return nil
 }

@@ -14,7 +14,7 @@ require (
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/cobra v1.7.0
 	github.com/vektah/gqlparser/v2 v2.5.16
-	github.com/weeb-vip/go-metrics-lib v1.0.2
+	github.com/weeb-vip/go-metrics-lib v1.0.3
 	github.com/weeb-vip/go-tracing-lib v1.0.0
 	go.opentelemetry.io/otel v1.38.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.24.0

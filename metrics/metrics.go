@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"github.com/weeb-vip/anime-api/config"
 	metricsLib "github.com/weeb-vip/go-metrics-lib"
 	"github.com/weeb-vip/go-metrics-lib/clients/prometheus"
 )
@@ -27,7 +28,7 @@ func NewPrometheusInstance() *prometheus.PrometheusClient {
 }
 
 func initMetrics(prometheusInstance *prometheus.PrometheusClient) {
-	prometheusInstance.CreateHistogramVec("resolver_request_duration_histogram_milliseconds", "graphql resolver millisecond", []string{"service", "protocol", "resolver", "result"}, []float64{
+	prometheusInstance.CreateHistogramVec("resolver_request_duration_histogram_milliseconds", "graphql resolver millisecond", []string{"service", "protocol", "resolver", "result", "env"}, []float64{
 		// create buckets 10000 split into 10 buckets
 		100,
 		200,
@@ -41,7 +42,7 @@ func initMetrics(prometheusInstance *prometheus.PrometheusClient) {
 		1000,
 	})
 
-	prometheusInstance.CreateHistogramVec("database_query_duration_histogram_milliseconds", "database calls millisecond", []string{"service", "table", "method", "result"}, []float64{
+	prometheusInstance.CreateHistogramVec("database_query_duration_histogram_milliseconds", "database calls millisecond", []string{"service", "table", "method", "result", "env"}, []float64{
 		// create buckets 10000 split into 10 buckets
 		100,
 		200,
@@ -54,4 +55,9 @@ func initMetrics(prometheusInstance *prometheus.PrometheusClient) {
 		900,
 		1000,
 	})
+}
+
+func GetCurrentEnv() string {
+	cfg := config.LoadConfigOrPanic()
+	return cfg.AppConfig.Env
 }

@@ -99,6 +99,7 @@ func (a *AnimeCharacterStaffLinkRepository) FindAnimeCharacterAndStaffByAnimeId(
 			Table:   "anime_character_staff_link",
 			Method:  metrics_lib.DatabaseMetricMethodSelect,
 			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
 		})
 		return nil, err
 	}
@@ -150,6 +151,7 @@ func (a *AnimeCharacterStaffLinkRepository) FindAnimeCharacterAndStaffByAnimeId(
 		Table:   "anime_character_staff_link",
 		Method:  metrics_lib.DatabaseMetricMethodSelect,
 		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
 	})
 	return result, nil
 }

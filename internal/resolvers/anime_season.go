@@ -39,6 +39,7 @@ func AnimeSeasons(ctx context.Context, animeSeasonService anime_season.AnimeSeas
 			Service:  "anime-api",
 			Protocol: "graphql",
 			Result:   metrics_lib.Error,
+			Env:      metrics.GetCurrentEnv(),
 		})
 		return nil, err
 	}
@@ -57,6 +58,7 @@ func AnimeSeasons(ctx context.Context, animeSeasonService anime_season.AnimeSeas
 		Service:  "anime-api",
 		Protocol: "graphql",
 		Result:   metrics_lib.Success,
+		Env:      metrics.GetCurrentEnv(),
 	})
 
 	return seasons, nil
@@ -72,6 +74,7 @@ func AnimeBySeasons(ctx context.Context, animeSeasonService anime_season.AnimeSe
 			Service:  "anime-api",
 			Protocol: "graphql",
 			Result:   metrics_lib.Error,
+			Env:      metrics.GetCurrentEnv(),
 		})
 		return nil, err
 	}
@@ -94,6 +97,7 @@ func AnimeBySeasons(ctx context.Context, animeSeasonService anime_season.AnimeSe
 			Service:  "anime-api",
 			Protocol: "graphql",
 			Result:   metrics_lib.Error,
+			Env:      metrics.GetCurrentEnv(),
 		})
 		return nil, err
 	}
@@ -113,6 +117,7 @@ func AnimeBySeasons(ctx context.Context, animeSeasonService anime_season.AnimeSe
 		Service:  "anime-api",
 		Protocol: "graphql",
 		Result:   metrics_lib.Success,
+		Env:      metrics.GetCurrentEnv(),
 	})
 
 	return result, nil

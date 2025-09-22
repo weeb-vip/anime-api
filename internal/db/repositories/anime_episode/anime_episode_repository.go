@@ -34,6 +34,7 @@ func (a *AnimeEpisodeRepository) Upsert(ctx context.Context, episode *AnimeEpiso
 			Table:   "anime_episodes",
 			Method:  metrics_lib.DatabaseMetricMethodInsert,
 			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
 		})
 		return err
 	}
@@ -43,6 +44,7 @@ func (a *AnimeEpisodeRepository) Upsert(ctx context.Context, episode *AnimeEpiso
 		Table:   "anime_episodes",
 		Method:  metrics_lib.DatabaseMetricMethodInsert,
 		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
 	})
 	return nil
 }
@@ -57,6 +59,7 @@ func (a *AnimeEpisodeRepository) Delete(ctx context.Context, episode *AnimeEpiso
 			Table:   "anime_episodes",
 			Method:  metrics_lib.DatabaseMetricMethodDelete,
 			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
 		})
 		return err
 	}
@@ -66,6 +69,7 @@ func (a *AnimeEpisodeRepository) Delete(ctx context.Context, episode *AnimeEpiso
 		Table:   "anime_episodes",
 		Method:  metrics_lib.DatabaseMetricMethodDelete,
 		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
 	})
 	return nil
 }
@@ -81,6 +85,7 @@ func (a *AnimeEpisodeRepository) FindByAnimeID(ctx context.Context, animeID stri
 			Table:   "anime_episodes",
 			Method:  metrics_lib.DatabaseMetricMethodSelect,
 			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
 		})
 		return nil, err
 	}
@@ -90,6 +95,7 @@ func (a *AnimeEpisodeRepository) FindByAnimeID(ctx context.Context, animeID stri
 		Table:   "anime_episodes",
 		Method:  metrics_lib.DatabaseMetricMethodSelect,
 		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
 	})
 	return episodes, nil
 }

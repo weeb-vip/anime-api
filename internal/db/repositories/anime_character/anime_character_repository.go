@@ -31,6 +31,7 @@ func (a *AnimeCharacterRepository) FindAnimearacterById(ctx context.Context, id 
 			Table:   "anime_characters",
 			Method:  metrics_lib.DatabaseMetricMethodSelect,
 			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
 		})
 		return nil, err
 	}
@@ -40,6 +41,7 @@ func (a *AnimeCharacterRepository) FindAnimearacterById(ctx context.Context, id 
 		Table:   "anime_characters",
 		Method:  metrics_lib.DatabaseMetricMethodSelect,
 		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
 	})
 	return &animeCharacter, nil
 }
