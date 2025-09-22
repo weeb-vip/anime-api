@@ -1187,10 +1187,6 @@ github.com/vishvananda/netns v0.0.0-20180720170159-13995c7128cc/go.mod h1:ZjcWmF
 github.com/vishvananda/netns v0.0.0-20191106174202-0a2b9b5464df/go.mod h1:JP3t17pCcGlemwknint6hfoeCVQrEMVwxRLRjXpq+BU=
 github.com/vishvananda/netns v0.0.0-20200728191858-db3c7e526aae/go.mod h1:DD4vA1DwXk04H54A1oHXtwZmA0grkVMdPxx/VGLCah0=
 github.com/vishvananda/netns v0.0.0-20210104183010-2eb08e3e575f/go.mod h1:DD4vA1DwXk04H54A1oHXtwZmA0grkVMdPxx/VGLCah0=
-github.com/weeb-vip/go-metrics-lib v1.0.1 h1:8EwgkMkMVpkgPSga80a2wRsESwkpWqrY+CC86emNHIU=
-github.com/weeb-vip/go-metrics-lib v1.0.1/go.mod h1:GfbeDVrJrFheOFTqppj7Rnoqa9HwFazZ0EKdiUZlE64=
-github.com/weeb-vip/go-metrics-lib v1.0.2 h1:BwBZJGBb3zSXTNA4NIgrDcqXNzE2mLVLNA2GRpIm98Y=
-github.com/weeb-vip/go-metrics-lib v1.0.2/go.mod h1:GfbeDVrJrFheOFTqppj7Rnoqa9HwFazZ0EKdiUZlE64=
 github.com/weeb-vip/go-metrics-lib v1.0.3 h1:KF34m82kk0iCO4h96iO0BMGOdFe9bdtETbpL6vBU83c=
 github.com/weeb-vip/go-metrics-lib v1.0.3/go.mod h1:GfbeDVrJrFheOFTqppj7Rnoqa9HwFazZ0EKdiUZlE64=
 github.com/weeb-vip/go-tracing-lib v1.0.0 h1:COKIibl1r+NR1O5O7JmNHIKgrlRra1hFrgSTL1G57TM=

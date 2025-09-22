@@ -3,6 +3,8 @@ package resolvers
 import (
 	"context"
 	"encoding/json"
+	"time"
+
 	"github.com/weeb-vip/anime-api/graph/model"
 	anime2 "github.com/weeb-vip/anime-api/internal/db/repositories/anime"
 	"github.com/weeb-vip/anime-api/internal/services/anime"
@@ -12,7 +14,6 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
-	"time"
 )
 
 func transformAnimeToGraphQL(animeEntity anime2.Anime) (*model.Anime, error) {
@@ -69,6 +70,8 @@ func transformAnimeToGraphQL(animeEntity anime2.Anime) (*model.Anime, error) {
 	// Convert preloaded episodes if they exist
 	var episodes []*model.Episode
 	if animeEntity.AnimeEpisodes != nil {
+		// Initialize empty slice to ensure it's not nil even if no episodes
+		episodes = make([]*model.Episode, 0, len(animeEntity.AnimeEpisodes))
 		for _, episodeEntity := range animeEntity.AnimeEpisodes {
 			episode := &model.Episode{
 				ID:            episodeEntity.ID,
