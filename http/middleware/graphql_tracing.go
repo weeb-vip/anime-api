@@ -35,6 +35,7 @@ func (e GraphQLTracingExtension) InterceptOperation(ctx context.Context, next gr
 			attribute.String("graphql.document", rc.RawQuery),
 		),
 		trace.WithSpanKind(trace.SpanKindServer),
+		tracing.GetEnvironmentAttribute(),
 	)
 	defer span.End()
 
@@ -94,6 +95,7 @@ func (e GraphQLTracingExtension) InterceptField(ctx context.Context, next graphq
 			attribute.String("graphql.field.type", fc.Field.Definition.Type.String()),
 		),
 		trace.WithSpanKind(trace.SpanKindInternal),
+		tracing.GetEnvironmentAttribute(),
 	)
 	defer span.End()
 

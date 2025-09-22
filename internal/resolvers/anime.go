@@ -11,6 +11,7 @@ import (
 	metrics_lib "github.com/weeb-vip/go-metrics-lib"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 	"time"
 )
 
@@ -213,10 +214,12 @@ func transformAnimeToGraphQLWithEpisode(animeEntity anime2.AnimeWithNextEpisode)
 func AnimeByID(ctx context.Context, animeService anime.AnimeServiceImpl, id string) (*model.Anime, error) {
 	// Start tracing span
 	tracer := tracing.GetTracer(ctx)
-	ctx, span := tracer.Start(ctx, "AnimeByID")
-	span.SetAttributes(
-		attribute.String("anime.id", id),
-		attribute.String("resolver.name", "AnimeByID"),
+	ctx, span := tracer.Start(ctx, "AnimeByID",
+		trace.WithAttributes(
+			attribute.String("anime.id", id),
+			attribute.String("resolver.name", "AnimeByID"),
+		),
+		tracing.GetEnvironmentAttribute(),
 	)
 	defer span.End()
 

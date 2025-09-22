@@ -3,6 +3,7 @@ package anime_season
 import (
 	"context"
 	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_season"
+	"github.com/weeb-vip/anime-api/tracing"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 )
 
@@ -28,6 +29,7 @@ func (s *AnimeSeasonService) FindByAnimeID(ctx context.Context, animeID string) 
 	span, spanCtx := tracer.StartSpanFromContext(ctx, "FindByAnimeID")
 	span.SetTag("service", "anime_season")
 	span.SetTag("type", "service")
+	span.SetTag("environment", tracing.GetEnvironmentTag())
 	defer span.Finish()
 
 	return s.Repository.FindByAnimeID(spanCtx, animeID)
@@ -37,6 +39,7 @@ func (s *AnimeSeasonService) FindBySeason(ctx context.Context, season string) ([
 	span, spanCtx := tracer.StartSpanFromContext(ctx, "FindBySeason")
 	span.SetTag("service", "anime_season")
 	span.SetTag("type", "service")
+	span.SetTag("environment", tracing.GetEnvironmentTag())
 	defer span.Finish()
 
 	return s.Repository.FindBySeason(spanCtx, season)
@@ -46,6 +49,7 @@ func (s *AnimeSeasonService) Create(ctx context.Context, animeSeason *anime_seas
 	span, spanCtx := tracer.StartSpanFromContext(ctx, "CreateAnimeSeason")
 	span.SetTag("service", "anime_season")
 	span.SetTag("type", "service")
+	span.SetTag("environment", tracing.GetEnvironmentTag())
 	defer span.Finish()
 
 	return s.Repository.Create(spanCtx, animeSeason)
@@ -55,6 +59,7 @@ func (s *AnimeSeasonService) Update(ctx context.Context, animeSeason *anime_seas
 	span, spanCtx := tracer.StartSpanFromContext(ctx, "UpdateAnimeSeason")
 	span.SetTag("service", "anime_season")
 	span.SetTag("type", "service")
+	span.SetTag("environment", tracing.GetEnvironmentTag())
 	defer span.Finish()
 
 	return s.Repository.Update(spanCtx, animeSeason)
@@ -64,6 +69,7 @@ func (s *AnimeSeasonService) Delete(ctx context.Context, id string) error {
 	span, spanCtx := tracer.StartSpanFromContext(ctx, "DeleteAnimeSeason")
 	span.SetTag("service", "anime_season")
 	span.SetTag("type", "service")
+	span.SetTag("environment", tracing.GetEnvironmentTag())
 	defer span.Finish()
 
 	return s.Repository.Delete(spanCtx, id)

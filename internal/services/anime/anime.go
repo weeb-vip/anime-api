@@ -3,6 +3,7 @@ package anime
 import (
 	"context"
 	"github.com/weeb-vip/anime-api/internal/db/repositories/anime"
+	"github.com/weeb-vip/anime-api/tracing"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 	"time"
 )
@@ -38,6 +39,7 @@ func (a *AnimeService) AnimeByID(ctx context.Context, id string) (*anime.Anime, 
 	span, spanCtx := tracer.StartSpanFromContext(ctx, "AnimeByID")
 	span.SetTag("service", "anime")
 	span.SetTag("type", "service")
+	span.SetTag("environment", tracing.GetEnvironmentTag())
 	defer span.Finish()
 
 	return a.Repository.FindById(spanCtx, id)
@@ -47,6 +49,7 @@ func (a *AnimeService) TopRatedAnime(ctx context.Context, limit int) ([]*anime.A
 	span, spanCtx := tracer.StartSpanFromContext(ctx, "TopRatedAnime")
 	span.SetTag("service", "anime")
 	span.SetTag("type", "service")
+	span.SetTag("environment", tracing.GetEnvironmentTag())
 	defer span.Finish()
 
 	return a.Repository.TopRatedAnime(spanCtx, limit)
@@ -56,6 +59,7 @@ func (a *AnimeService) MostPopularAnime(ctx context.Context, limit int) ([]*anim
 	span, spanCtx := tracer.StartSpanFromContext(ctx, "MostPopularAnime")
 	span.SetTag("service", "anime")
 	span.SetTag("type", "service")
+	span.SetTag("environment", tracing.GetEnvironmentTag())
 	defer span.Finish()
 
 	return a.Repository.MostPopularAnime(spanCtx, limit)
@@ -65,6 +69,7 @@ func (a *AnimeService) NewestAnime(ctx context.Context, limit int) ([]*anime.Ani
 	span, spanCtx := tracer.StartSpanFromContext(ctx, "NewestAnime")
 	span.SetTag("service", "anime")
 	span.SetTag("type", "service")
+	span.SetTag("environment", tracing.GetEnvironmentTag())
 	defer span.Finish()
 
 	return a.Repository.NewestAnime(spanCtx, limit)
@@ -74,6 +79,7 @@ func (a *AnimeService) AiringAnime(ctx context.Context, startDate *time.Time, en
 	span, spanCtx := tracer.StartSpanFromContext(ctx, "AiringAnime")
 	span.SetTag("service", "anime")
 	span.SetTag("type", "service")
+	span.SetTag("environment", tracing.GetEnvironmentTag())
 	defer span.Finish()
 
 	if startDate == nil && endDate == nil && days == nil {
@@ -89,6 +95,7 @@ func (a *AnimeService) SearchedAnime(ctx context.Context, query string, page int
 	span, spanCtx := tracer.StartSpanFromContext(ctx, "SearchedAnime")
 	span.SetTag("service", "anime")
 	span.SetTag("type", "service")
+	span.SetTag("environment", tracing.GetEnvironmentTag())
 	defer span.Finish()
 
 	return a.Repository.SearchAnime(spanCtx, query, page, limit)
@@ -98,6 +105,7 @@ func (a *AnimeService) AnimeByIDWithEpisodes(ctx context.Context, id string) (*a
 	span, spanCtx := tracer.StartSpanFromContext(ctx, "AnimeByIDWithEpisodes")
 	span.SetTag("service", "anime")
 	span.SetTag("type", "service")
+	span.SetTag("environment", tracing.GetEnvironmentTag())
 	defer span.Finish()
 
 	return a.Repository.FindByIdWithEpisodes(spanCtx, id)
@@ -107,6 +115,7 @@ func (a *AnimeService) TopRatedAnimeWithEpisodes(ctx context.Context, limit int)
 	span, spanCtx := tracer.StartSpanFromContext(ctx, "TopRatedAnimeWithEpisodes")
 	span.SetTag("service", "anime")
 	span.SetTag("type", "service")
+	span.SetTag("environment", tracing.GetEnvironmentTag())
 	defer span.Finish()
 
 	return a.Repository.TopRatedAnimeWithEpisodes(spanCtx, limit)
@@ -116,6 +125,7 @@ func (a *AnimeService) MostPopularAnimeWithEpisodes(ctx context.Context, limit i
 	span, spanCtx := tracer.StartSpanFromContext(ctx, "MostPopularAnimeWithEpisodes")
 	span.SetTag("service", "anime")
 	span.SetTag("type", "service")
+	span.SetTag("environment", tracing.GetEnvironmentTag())
 	defer span.Finish()
 
 	return a.Repository.MostPopularAnimeWithEpisodes(spanCtx, limit)
@@ -125,6 +135,7 @@ func (a *AnimeService) NewestAnimeWithEpisodes(ctx context.Context, limit int) (
 	span, spanCtx := tracer.StartSpanFromContext(ctx, "NewestAnimeWithEpisodes")
 	span.SetTag("service", "anime")
 	span.SetTag("type", "service")
+	span.SetTag("environment", tracing.GetEnvironmentTag())
 	defer span.Finish()
 
 	return a.Repository.NewestAnimeWithEpisodes(spanCtx, limit)
@@ -134,6 +145,7 @@ func (a *AnimeService) SearchedAnimeWithEpisodes(ctx context.Context, query stri
 	span, spanCtx := tracer.StartSpanFromContext(ctx, "SearchedAnimeWithEpisodes")
 	span.SetTag("service", "anime")
 	span.SetTag("type", "service")
+	span.SetTag("environment", tracing.GetEnvironmentTag())
 	defer span.Finish()
 
 	return a.Repository.SearchAnimeWithEpisodes(spanCtx, query, page, limit)
@@ -143,6 +155,7 @@ func (a *AnimeService) AiringAnimeWithEpisodes(ctx context.Context, startDate *t
 	span, spanCtx := tracer.StartSpanFromContext(ctx, "AiringAnimeWithEpisodes")
 	span.SetTag("service", "anime")
 	span.SetTag("type", "service")
+	span.SetTag("environment", tracing.GetEnvironmentTag())
 	defer span.Finish()
 
 	return a.Repository.AiringAnimeWithEpisodes(spanCtx, startDate, endDate, days)

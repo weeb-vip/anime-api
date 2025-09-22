@@ -3,6 +3,7 @@ package anime
 import (
 	"context"
 	"github.com/weeb-vip/anime-api/internal/db/repositories/anime"
+	"github.com/weeb-vip/anime-api/tracing"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 )
 
@@ -11,6 +12,7 @@ func (a *AnimeService) AnimeByIDsWithEpisodes(ctx context.Context, ids []string)
 	span, spanCtx := tracer.StartSpanFromContext(ctx, "AnimeByIDsWithEpisodes")
 	span.SetTag("service", "anime")
 	span.SetTag("type", "service")
+	span.SetTag("environment", tracing.GetEnvironmentTag())
 	span.SetTag("anime.ids.count", len(ids))
 	defer span.Finish()
 
@@ -26,6 +28,7 @@ func (a *AnimeService) AnimeByIDs(ctx context.Context, ids []string) ([]*anime.A
 	span, spanCtx := tracer.StartSpanFromContext(ctx, "AnimeByIDs")
 	span.SetTag("service", "anime")
 	span.SetTag("type", "service")
+	span.SetTag("environment", tracing.GetEnvironmentTag())
 	span.SetTag("anime.ids.count", len(ids))
 	defer span.Finish()
 

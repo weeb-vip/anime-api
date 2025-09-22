@@ -33,6 +33,7 @@ func TracingMiddleware() func(http.Handler) http.Handler {
 					attribute.String("user_agent.original", r.UserAgent()),
 				),
 				trace.WithSpanKind(trace.SpanKindServer),
+				tracing.GetEnvironmentAttribute(),
 			)
 			defer span.End()
 
