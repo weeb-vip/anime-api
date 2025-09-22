@@ -339,7 +339,8 @@ func NewestAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit
 		l := 10
 		limit = &l
 	}
-	foundAnime, err := animeService.NewestAnime(ctx, *limit)
+	// Use WithEpisodes version to preload episodes and avoid N+1 queries
+	foundAnime, err := animeService.NewestAnimeWithEpisodes(ctx, *limit)
 	if err != nil {
 		_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
 			Resolver: "NewestAnime",

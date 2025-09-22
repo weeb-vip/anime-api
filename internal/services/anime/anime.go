@@ -10,6 +10,8 @@ import (
 type AnimeServiceImpl interface {
 	AnimeByID(ctx context.Context, id string) (*anime.Anime, error)
 	AnimeByIDWithEpisodes(ctx context.Context, id string) (*anime.Anime, error)
+	AnimeByIDs(ctx context.Context, ids []string) ([]*anime.Anime, error)
+	AnimeByIDsWithEpisodes(ctx context.Context, ids []string) ([]*anime.Anime, error)
 	TopRatedAnime(ctx context.Context, limit int) ([]*anime.Anime, error)
 	TopRatedAnimeWithEpisodes(ctx context.Context, limit int) ([]*anime.Anime, error)
 	MostPopularAnime(ctx context.Context, limit int) ([]*anime.Anime, error)

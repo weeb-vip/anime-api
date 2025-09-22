@@ -86,19 +86,25 @@ func AnimeBySeasons(ctx context.Context, animeSeasonService anime_season.AnimeSe
 		}
 	}
 
-	// Fetch anime data for each unique anime ID
+	// Batch fetch all anime at once to avoid N+1 query problem
+	animeList, err := animeService.AnimeByIDsWithEpisodes(ctx, animeIDs)
+	if err != nil {
+		_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
+			Resolver: "AnimeBySeasons",
+			Service:  "anime-api",
+			Protocol: "graphql",
+			Result:   metrics_lib.Error,
+		})
+		return nil, err
+	}
+
+	// Transform to GraphQL models
 	var result []*model.Anime
-	for _, animeID := range animeIDs {
-		animeEntity, err := animeService.AnimeByID(ctx, animeID)
-		if err != nil {
-			continue // Skip anime that can't be fetched
-		}
-		
+	for _, animeEntity := range animeList {
 		animeGraphQL, err := transformAnimeToGraphQL(*animeEntity)
 		if err != nil {
 			continue // Skip anime that can't be transformed
 		}
-		
 		result = append(result, animeGraphQL)
 	}
 

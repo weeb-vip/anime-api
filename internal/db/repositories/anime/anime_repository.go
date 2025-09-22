@@ -27,6 +27,8 @@ type AnimeRepositoryImpl interface {
 	FindAllWithEpisodes(ctx context.Context) ([]*Anime, error)
 	FindById(ctx context.Context, id string) (*Anime, error)
 	FindByIdWithEpisodes(ctx context.Context, id string) (*Anime, error)
+	FindByIDs(ctx context.Context, ids []string) ([]*Anime, error)
+	FindByIDsWithEpisodes(ctx context.Context, ids []string) ([]*Anime, error)
 	FindByName(ctx context.Context, name string) ([]*Anime, error)
 	FindByNameWithEpisodes(ctx context.Context, name string) ([]*Anime, error)
 	FindByType(ctx context.Context, recordType RECORD_TYPE) ([]*Anime, error)
