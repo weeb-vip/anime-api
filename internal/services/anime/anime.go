@@ -28,6 +28,7 @@ type AnimeServiceImpl interface {
 	AnimeBySeasonWithIndexHints(ctx context.Context, season string) ([]*anime.Anime, error)
 	AnimeBySeasonBatched(ctx context.Context, season string) ([]*anime.Anime, error)
 	AnimeBySeasonOptimized(ctx context.Context, season string) ([]*anime.Anime, error)
+	AnimeBySeasonWithFieldSelection(ctx context.Context, season string, fields *anime.FieldSelection) ([]*anime.Anime, error)
 }
 
 type AnimeService struct {
@@ -215,4 +216,14 @@ func (a *AnimeService) AnimeBySeasonOptimized(ctx context.Context, season string
 	defer span.Finish()
 
 	return a.Repository.FindBySeasonAnimeOnlyOptimized(spanCtx, season)
+}
+
+func (a *AnimeService) AnimeBySeasonWithFieldSelection(ctx context.Context, season string, fields *anime.FieldSelection) ([]*anime.Anime, error) {
+	span, spanCtx := tracer.StartSpanFromContext(ctx, "AnimeBySeasonWithFieldSelection")
+	span.SetTag("service", "anime")
+	span.SetTag("type", "service")
+	span.SetTag("environment", tracing.GetEnvironmentTag())
+	defer span.Finish()
+
+	return a.Repository.FindBySeasonWithFieldSelection(spanCtx, season, fields)
 }

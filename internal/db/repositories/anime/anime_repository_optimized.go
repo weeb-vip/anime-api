@@ -366,3 +366,52 @@ func (a *AnimeRepository) FindBySeasonBatched(ctx context.Context, season string
 
 	return animes, nil
 }
+
+// FindBySeasonWithFieldSelection - Optimized query that only selects requested fields
+func (a *AnimeRepository) FindBySeasonWithFieldSelection(ctx context.Context, season string, fieldSelection *FieldSelection) ([]*Anime, error) {
+	span, spanCtx := tracer.StartSpanFromContext(ctx, "FindBySeasonWithFieldSelection")
+	span.SetTag("service", "anime")
+	span.SetTag("type", "repository")
+	span.SetTag("environment", tracing.GetEnvironmentTag())
+	span.SetTag("season", season)
+	defer span.Finish()
+
+	startTime := time.Now()
+
+	// Build the select clause based on requested fields
+	selectClause := fieldSelection.BuildSelectClause("anime")
+
+	// Use raw SQL for maximum performance and field selection control
+	var animeList []*Anime
+	query := `
+		SELECT ` + selectClause + `
+		FROM anime
+		INNER JOIN anime_seasons ON anime.id = anime_seasons.anime_id
+		WHERE anime_seasons.season = ?
+		ORDER BY anime.ranking ASC, anime.title_en ASC`
+
+	result := a.db.DB.WithContext(spanCtx).Raw(query, season).Scan(&animeList)
+	if result.Error != nil {
+		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
+			Service: "anime-api",
+			Table:   "anime_seasons",
+			Method:  metrics_lib.DatabaseMetricMethodSelect,
+			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
+		})
+		return nil, result.Error
+	}
+
+	span.SetTag("selected_fields_count", len(fieldSelection.Fields))
+	span.SetTag("result_count", len(animeList))
+
+	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
+		Service: "anime-api",
+		Table:   "anime_seasons",
+		Method:  metrics_lib.DatabaseMetricMethodSelect,
+		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
+	})
+
+	return animeList, nil
+}

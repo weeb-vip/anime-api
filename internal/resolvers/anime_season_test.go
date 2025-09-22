@@ -292,6 +292,19 @@ func (c *MockAnimeServiceMockRecorder) AnimeBySeasonOptimized(ctx, season interf
 	return c.mock.ctrl.RecordCallWithMethodType(c.mock, "AnimeBySeasonOptimized", reflect.TypeOf((*MockAnimeService)(nil).AnimeBySeasonOptimized), ctx, season)
 }
 
+func (m *MockAnimeService) AnimeBySeasonWithFieldSelection(ctx context.Context, season string, fields *anime_repo.FieldSelection) ([]*anime_repo.Anime, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AnimeBySeasonWithFieldSelection", ctx, season, fields)
+	ret0, _ := ret[0].([]*anime_repo.Anime)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+func (c *MockAnimeServiceMockRecorder) AnimeBySeasonWithFieldSelection(ctx, season, fields interface{}) *gomock.Call {
+	c.mock.ctrl.T.Helper()
+	return c.mock.ctrl.RecordCallWithMethodType(c.mock, "AnimeBySeasonWithFieldSelection", reflect.TypeOf((*MockAnimeService)(nil).AnimeBySeasonWithFieldSelection), ctx, season, fields)
+}
+
 // MockAnimeSeasonService implements the AnimeSeasonServiceImpl interface for testing
 type MockAnimeSeasonService struct {
 	ctrl     *gomock.Controller

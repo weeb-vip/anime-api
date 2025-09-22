@@ -6,6 +6,7 @@ import (
 	"strings"
 	metrics_lib "github.com/weeb-vip/go-metrics-lib"
 	"github.com/weeb-vip/anime-api/graph/model"
+	anime_repo "github.com/weeb-vip/anime-api/internal/db/repositories/anime"
 	anime_season_repo "github.com/weeb-vip/anime-api/internal/db/repositories/anime_season"
 	anime_service "github.com/weeb-vip/anime-api/internal/services/anime"
 	"github.com/weeb-vip/anime-api/internal/services/anime_season"
@@ -67,9 +68,20 @@ func AnimeSeasons(ctx context.Context, animeSeasonService anime_season.AnimeSeas
 func AnimeBySeasons(ctx context.Context, animeSeasonService anime_season.AnimeSeasonServiceImpl, animeService anime_service.AnimeServiceImpl, season string) ([]*model.Anime, error) {
 	startTime := time.Now()
 
-	// Use the optimized method that only fetches anime data without episodes
-	// Episodes will be lazily loaded by the Episodes field resolver when requested
-	animeList, err := animeService.AnimeBySeasonOptimized(ctx, season)
+	// Extract field selection from GraphQL context to optimize query
+	fieldSelection := ExtractAnimeFieldSelection(ctx)
+
+	var animeList []*anime_repo.Anime
+	var err error
+
+	if fieldSelection != nil {
+		// Use field-optimized query that only selects requested fields
+		animeList, err = animeService.AnimeBySeasonWithFieldSelection(ctx, season, fieldSelection)
+	} else {
+		// Fall back to standard optimized method (no episodes)
+		animeList, err = animeService.AnimeBySeasonOptimized(ctx, season)
+	}
+
 	if err != nil {
 		_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
 			Resolver: "AnimeBySeasons",
