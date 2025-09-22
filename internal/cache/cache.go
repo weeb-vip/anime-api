@@ -3,6 +3,8 @@ package cache
 import (
 	"context"
 	"time"
+
+	"github.com/weeb-vip/anime-api/config"
 )
 
 // Cache defines the interface for caching operations
@@ -90,10 +92,19 @@ func (c *CacheKeyBuilder) AnimeByIDPattern(animeID string) string {
 	return c.prefix + ":*anime*:" + animeID + "*"
 }
 
-// Default TTL values
-const (
-	AnimeDataTTL   = 30 * time.Minute  // Anime data changes less frequently
-	EpisodeTTL     = 15 * time.Minute  // Episodes might be updated more often
-	SeasonTTL      = 1 * time.Hour     // Season listings are quite stable
-	LockTTL        = 30 * time.Second  // Cache locking TTL
-)
+// TTL helper functions that use configuration values
+func GetAnimeDataTTL(cfg config.RedisConfig) time.Duration {
+	return time.Duration(cfg.AnimeDataTTLMinutes) * time.Minute
+}
+
+func GetEpisodeTTL(cfg config.RedisConfig) time.Duration {
+	return time.Duration(cfg.EpisodeTTLMinutes) * time.Minute
+}
+
+func GetSeasonTTL(cfg config.RedisConfig) time.Duration {
+	return time.Duration(cfg.SeasonTTLMinutes) * time.Minute
+}
+
+func GetLockTTL(cfg config.RedisConfig) time.Duration {
+	return time.Duration(cfg.LockTTLSeconds) * time.Second
+}

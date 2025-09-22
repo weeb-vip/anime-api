@@ -30,6 +30,12 @@ type RedisConfig struct {
 	Password string `default:"" env:"REDIS_PASSWORD"`
 	DB       int    `default:"0" env:"REDIS_DB"`
 	Enabled  bool   `default:"false" env:"CACHE_ENABLED"`
+
+	// Cache TTL configurations (in minutes, except LockTTL which is seconds)
+	AnimeDataTTLMinutes int `default:"30" env:"CACHE_ANIME_TTL_MINUTES"`
+	EpisodeTTLMinutes   int `default:"15" env:"CACHE_EPISODE_TTL_MINUTES"`
+	SeasonTTLMinutes    int `default:"60" env:"CACHE_SEASON_TTL_MINUTES"`
+	LockTTLSeconds      int `default:"30" env:"CACHE_LOCK_TTL_SECONDS"`
 }
 
 func LoadConfigOrPanic() Config {

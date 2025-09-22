@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/weeb-vip/anime-api/config"
 	"github.com/weeb-vip/anime-api/metrics"
 )
 
@@ -13,13 +14,15 @@ import (
 type CacheService struct {
 	cache      Cache
 	keyBuilder *CacheKeyBuilder
+	config     config.RedisConfig
 }
 
 // NewCacheService creates a new cache service
-func NewCacheService(cache Cache) *CacheService {
+func NewCacheService(cache Cache, cfg config.RedisConfig) *CacheService {
 	return &CacheService{
 		cache:      cache,
 		keyBuilder: GetKeyBuilder(),
+		config:     cfg,
 	}
 }
 
@@ -155,4 +158,21 @@ func (c *CacheService) GetKeyBuilder() *CacheKeyBuilder {
 // Close closes the cache connection
 func (c *CacheService) Close() error {
 	return c.cache.Close()
+}
+
+// TTL helper methods using configuration values
+func (c *CacheService) GetAnimeDataTTL() time.Duration {
+	return GetAnimeDataTTL(c.config)
+}
+
+func (c *CacheService) GetEpisodeTTL() time.Duration {
+	return GetEpisodeTTL(c.config)
+}
+
+func (c *CacheService) GetSeasonTTL() time.Duration {
+	return GetSeasonTTL(c.config)
+}
+
+func (c *CacheService) GetLockTTL() time.Duration {
+	return GetLockTTL(c.config)
 }

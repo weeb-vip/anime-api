@@ -169,7 +169,7 @@ func (a *AnimeRepository) FindById(ctx context.Context, id string) (*Anime, erro
 	// Store in cache if available
 	if a.cache != nil {
 		key := a.cache.GetKeyBuilder().AnimeByID(id)
-		_ = a.cache.SetJSON(ctx, key, &anime, cache.AnimeDataTTL)
+		_ = a.cache.SetJSON(ctx, key, &anime, a.cache.GetAnimeDataTTL())
 	}
 
 	return &anime, nil
@@ -478,7 +478,7 @@ func (a *AnimeRepository) TopRatedAnime(ctx context.Context, limit int) ([]*Anim
 	// Store in cache if available
 	if a.cache != nil {
 		key := fmt.Sprintf("%s:top_rated:%d", a.cache.GetKeyBuilder().AnimePattern()[:len(a.cache.GetKeyBuilder().AnimePattern())-1], limit)
-		_ = a.cache.SetJSON(ctx, key, animes, cache.AnimeDataTTL)
+		_ = a.cache.SetJSON(ctx, key, animes, a.cache.GetAnimeDataTTL())
 	}
 
 	return animes, nil
@@ -924,7 +924,7 @@ func (a *AnimeRepository) SearchAnimeWithEpisodes(ctx context.Context, search st
 	// Store in cache if available
 	if a.cache != nil {
 		key := fmt.Sprintf("%s:search_episodes:%s:page_%d:limit_%d", a.cache.GetKeyBuilder().AnimePattern()[:len(a.cache.GetKeyBuilder().AnimePattern())-1], search, page, limit)
-		_ = a.cache.SetJSON(ctx, key, animes, cache.AnimeDataTTL)
+		_ = a.cache.SetJSON(ctx, key, animes, a.cache.GetAnimeDataTTL())
 	}
 
 	return animes, nil
@@ -1017,7 +1017,7 @@ func (a *AnimeRepository) AiringAnimeWithEpisodes(ctx context.Context, startDate
 
 	// Store in cache if available
 	if a.cache != nil && cacheKey != "" {
-		_ = a.cache.SetJSON(ctx, cacheKey, animes, cache.AnimeDataTTL)
+		_ = a.cache.SetJSON(ctx, cacheKey, animes, a.cache.GetAnimeDataTTL())
 	}
 
 	return animes, nil
@@ -1346,7 +1346,7 @@ func (a *AnimeRepository) FindBySeasonWithEpisodesOptimized(ctx context.Context,
 	// Store in cache if available
 	if a.cache != nil {
 		key := fmt.Sprintf("%s:season_episodes_optimized:%s", a.cache.GetKeyBuilder().AnimePattern()[:len(a.cache.GetKeyBuilder().AnimePattern())-1], season)
-		_ = a.cache.SetJSON(ctx, key, animes, cache.SeasonTTL)
+		_ = a.cache.SetJSON(ctx, key, animes, a.cache.GetSeasonTTL())
 	}
 
 	return animes, nil
@@ -1418,7 +1418,7 @@ func (a *AnimeRepository) FindBySeasonAnimeOnlyOptimized(ctx context.Context, se
 	// Store in cache if available
 	if a.cache != nil {
 		key := a.cache.GetKeyBuilder().AnimeBySeasonWithFields(season, nil)
-		_ = a.cache.SetJSON(ctx, key, animes, cache.SeasonTTL)
+		_ = a.cache.SetJSON(ctx, key, animes, a.cache.GetSeasonTTL())
 	}
 
 	return animes, nil
@@ -1595,7 +1595,7 @@ func (a *AnimeRepository) FindBySeasonWithFieldSelection(ctx context.Context, se
 			fields = append(fields, field)
 		}
 		key := a.cache.GetKeyBuilder().AnimeBySeasonWithFields(season, fields)
-		_ = a.cache.SetJSON(ctx, key, animeList, cache.SeasonTTL)
+		_ = a.cache.SetJSON(ctx, key, animeList, a.cache.GetSeasonTTL())
 	}
 
 	return animeList, nil

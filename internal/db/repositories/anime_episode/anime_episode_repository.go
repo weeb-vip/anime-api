@@ -124,7 +124,7 @@ func (a *AnimeEpisodeRepository) FindByAnimeID(ctx context.Context, animeID stri
 	// Store in cache if available
 	if a.cache != nil {
 		key := a.cache.GetKeyBuilder().EpisodesByAnimeID(animeID)
-		_ = a.cache.SetJSON(ctx, key, episodes, cache.EpisodeTTL)
+		_ = a.cache.SetJSON(ctx, key, episodes, 15*time.Minute) // TODO: Make configurable
 	}
 
 	return episodes, nil
