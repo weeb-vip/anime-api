@@ -2,9 +2,9 @@ package anime
 
 import (
 	"context"
+	anime_episode "github.com/weeb-vip/anime-api/internal/db/repositories/anime_episode"
 	"github.com/weeb-vip/anime-api/metrics"
 	metrics_lib "github.com/weeb-vip/go-metrics-lib"
-	"gorm.io/gorm"
 	"time"
 )
 
@@ -40,10 +40,9 @@ func (a *AnimeRepository) FindByIDsWithEpisodes(ctx context.Context, ids []strin
 	startTime := time.Now()
 
 	var animes []*Anime
+
+	// First, fetch all anime
 	err := a.db.DB.WithContext(ctx).
-		Preload("AnimeEpisodes", func(db *gorm.DB) *gorm.DB {
-			return db.Order("episode ASC")
-		}).
 		Where("id IN ?", ids).
 		Find(&animes).Error
 
@@ -56,6 +55,40 @@ func (a *AnimeRepository) FindByIDsWithEpisodes(ctx context.Context, ids []strin
 			Env:     metrics.GetCurrentEnv(),
 		})
 		return nil, err
+	}
+
+	// Then, batch fetch all episodes for these anime in one query
+	var episodes []anime_episode.AnimeEpisode
+	err = a.db.DB.WithContext(ctx).
+		Where("anime_id IN ?", ids).
+		Order("anime_id ASC, episode ASC").
+		Find(&episodes).Error
+
+	if err != nil {
+		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
+			Service: "anime-api",
+			Table:   "anime_episodes",
+			Method:  metrics_lib.DatabaseMetricMethodSelect,
+			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
+		})
+		return nil, err
+	}
+
+	// Group episodes by anime_id
+	episodeMap := make(map[string][]*anime_episode.AnimeEpisode)
+	for _, episode := range episodes {
+		if episode.AnimeID != nil {
+			ep := episode // Create a copy to avoid pointer issues
+			episodeMap[*episode.AnimeID] = append(episodeMap[*episode.AnimeID], &ep)
+		}
+	}
+
+	// Assign episodes to their respective anime
+	for i, anime := range animes {
+		if eps, exists := episodeMap[anime.ID]; exists {
+			animes[i].AnimeEpisodes = eps
+		}
 	}
 
 	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
