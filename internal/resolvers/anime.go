@@ -266,8 +266,22 @@ func TopRatedAnime(ctx context.Context, animeService anime.AnimeServiceImpl, lim
 		l := 10
 		limit = &l
 	}
-	// Get anime without episodes - episodes will be loaded on-demand via resolver
-	foundAnime, err := animeService.TopRatedAnime(ctx, *limit)
+
+	// Check if episodes are requested in the GraphQL query
+	fieldSelection := ExtractFieldSelection(ctx)
+	includeEpisodes := isEpisodesRequested(fieldSelection)
+
+	var foundAnime []*anime2.Anime
+	var err error
+
+	if includeEpisodes {
+		// Use optimized query with episodes preloaded to avoid N+1 queries
+		foundAnime, err = animeService.TopRatedAnimeWithEpisodes(ctx, *limit)
+	} else {
+		// Get anime without episodes - episodes will be loaded on-demand via resolver if needed
+		foundAnime, err = animeService.TopRatedAnime(ctx, *limit)
+	}
+
 	if err != nil {
 		metrics.GetAppMetrics().ResolverMetric(
 			float64(time.Since(startTime).Milliseconds()),
@@ -302,8 +316,22 @@ func MostPopularAnime(ctx context.Context, animeService anime.AnimeServiceImpl, 
 		l := 10
 		limit = &l
 	}
-	// Get anime without episodes - episodes will be loaded on-demand via resolver
-	foundAnime, err := animeService.MostPopularAnime(ctx, *limit)
+
+	// Check if episodes are requested in the GraphQL query
+	fieldSelection := ExtractFieldSelection(ctx)
+	includeEpisodes := isEpisodesRequested(fieldSelection)
+
+	var foundAnime []*anime2.Anime
+	var err error
+
+	if includeEpisodes {
+		// Use optimized query with episodes preloaded to avoid N+1 queries
+		foundAnime, err = animeService.MostPopularAnimeWithEpisodes(ctx, *limit)
+	} else {
+		// Get anime without episodes - episodes will be loaded on-demand via resolver if needed
+		foundAnime, err = animeService.MostPopularAnime(ctx, *limit)
+	}
+
 	if err != nil {
 		metrics.GetAppMetrics().ResolverMetric(
 			float64(time.Since(startTime).Milliseconds()),
@@ -338,8 +366,22 @@ func NewestAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit
 		l := 10
 		limit = &l
 	}
-	// Get anime without episodes - episodes will be loaded on-demand via resolver
-	foundAnime, err := animeService.NewestAnime(ctx, *limit)
+
+	// Check if episodes are requested in the GraphQL query
+	fieldSelection := ExtractFieldSelection(ctx)
+	includeEpisodes := isEpisodesRequested(fieldSelection)
+
+	var foundAnime []*anime2.Anime
+	var err error
+
+	if includeEpisodes {
+		// Use optimized query with episodes preloaded to avoid N+1 queries
+		foundAnime, err = animeService.NewestAnimeWithEpisodes(ctx, *limit)
+	} else {
+		// Get anime without episodes - episodes will be loaded on-demand via resolver if needed
+		foundAnime, err = animeService.NewestAnime(ctx, *limit)
+	}
+
 	if err != nil {
 		metrics.GetAppMetrics().ResolverMetric(
 			float64(time.Since(startTime).Milliseconds()),
