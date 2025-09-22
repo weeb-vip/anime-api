@@ -497,8 +497,8 @@ func (a *AnimeRepository) MostPopularAnime(ctx context.Context, limit int) ([]*A
 	startTime := time.Now()
 
 	var animes []*Anime
-	// order by popularity desc and popularity does not equal N/A
-	err := a.db.DB.WithContext(ctx).Where("ranking != ?", "N/A").Order("ranking asc").Limit(limit).Find(&animes).Error
+	// Order by ranking asc (lower ranking = more popular) - only include anime with rankings
+	err := a.db.DB.WithContext(ctx).Where("ranking IS NOT NULL").Order("ranking asc, id").Limit(limit).Find(&animes).Error
 	if err != nil {
 		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
 			Service: "anime-api",
@@ -524,8 +524,8 @@ func (a *AnimeRepository) NewestAnime(ctx context.Context, limit int) ([]*Anime,
 	startTime := time.Now()
 
 	var animes []*Anime
-	// order by start date desc where not null
-	err := a.db.DB.WithContext(ctx).Where("created_at ").Order("created_at desc").Limit(limit).Find(&animes).Error
+	// Order by created_at desc (newest first) - all anime have created_at so no WHERE needed
+	err := a.db.DB.WithContext(ctx).Order("created_at desc, id").Limit(limit).Find(&animes).Error
 	if err != nil {
 		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
 			Service: "anime-api",
@@ -832,7 +832,7 @@ func (a *AnimeRepository) MostPopularAnimeWithEpisodes(ctx context.Context, limi
 	var animes []*Anime
 	err := a.db.DB.WithContext(ctx).Preload("AnimeEpisodes", func(db *gorm.DB) *gorm.DB {
 		return db.Order("episode ASC")
-	}).Where("ranking != ?", "N/A").Order("ranking asc").Limit(limit).Find(&animes).Error
+	}).Where("ranking IS NOT NULL").Order("ranking asc, id").Limit(limit).Find(&animes).Error
 	if err != nil {
 		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
 			Service: "anime-api",
@@ -860,7 +860,7 @@ func (a *AnimeRepository) NewestAnimeWithEpisodes(ctx context.Context, limit int
 	var animes []*Anime
 	err := a.db.DB.WithContext(ctx).Preload("AnimeEpisodes", func(db *gorm.DB) *gorm.DB {
 		return db.Order("episode ASC")
-	}).Where("created_at ").Order("created_at desc").Limit(limit).Find(&animes).Error
+	}).Order("created_at desc, id").Limit(limit).Find(&animes).Error
 	if err != nil {
 		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
 			Service: "anime-api",
