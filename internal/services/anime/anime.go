@@ -4,7 +4,8 @@ import (
 	"context"
 	"github.com/weeb-vip/anime-api/internal/db/repositories/anime"
 	"github.com/weeb-vip/anime-api/tracing"
-	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	"time"
 )
 
@@ -42,13 +43,18 @@ func NewAnimeService(animeRepository anime.AnimeRepositoryImpl) AnimeServiceImpl
 }
 
 func (a *AnimeService) AnimeByID(ctx context.Context, id string) (*anime.Anime, error) {
-	span, spanCtx := tracer.StartSpanFromContext(ctx, "AnimeByID")
-	span.SetTag("service", "anime")
-	span.SetTag("type", "service")
-	span.SetTag("environment", tracing.GetEnvironmentTag())
-	defer span.Finish()
+	tracer := tracing.GetTracer(ctx)
+	ctx, span := tracer.Start(ctx, "AnimeService.AnimeByID",
+		trace.WithAttributes(
+			attribute.String("service", "anime"),
+			attribute.String("type", "service"),
+			attribute.String("anime.id", id),
+		),
+		tracing.GetEnvironmentAttribute(),
+	)
+	defer span.End()
 
-	return a.Repository.FindById(spanCtx, id)
+	return a.Repository.FindById(ctx, id)
 }
 
 func (a *AnimeService) TopRatedAnime(ctx context.Context, limit int) ([]*anime.Anime, error) {
@@ -209,21 +215,32 @@ func (a *AnimeService) AnimeBySeasonBatched(ctx context.Context, season string) 
 }
 
 func (a *AnimeService) AnimeBySeasonOptimized(ctx context.Context, season string) ([]*anime.Anime, error) {
-	span, spanCtx := tracer.StartSpanFromContext(ctx, "AnimeBySeasonOptimized")
-	span.SetTag("service", "anime")
-	span.SetTag("type", "service")
-	span.SetTag("environment", tracing.GetEnvironmentTag())
-	defer span.Finish()
+	tracer := tracing.GetTracer(ctx)
+	ctx, span := tracer.Start(ctx, "AnimeService.AnimeBySeasonOptimized",
+		trace.WithAttributes(
+			attribute.String("service", "anime"),
+			attribute.String("type", "service"),
+			attribute.String("anime.season", season),
+		),
+		tracing.GetEnvironmentAttribute(),
+	)
+	defer span.End()
 
-	return a.Repository.FindBySeasonAnimeOnlyOptimized(spanCtx, season)
+	return a.Repository.FindBySeasonAnimeOnlyOptimized(ctx, season)
 }
 
 func (a *AnimeService) AnimeBySeasonWithFieldSelection(ctx context.Context, season string, fields *anime.FieldSelection) ([]*anime.Anime, error) {
-	span, spanCtx := tracer.StartSpanFromContext(ctx, "AnimeBySeasonWithFieldSelection")
-	span.SetTag("service", "anime")
-	span.SetTag("type", "service")
-	span.SetTag("environment", tracing.GetEnvironmentTag())
-	defer span.Finish()
+	tracer := tracing.GetTracer(ctx)
+	ctx, span := tracer.Start(ctx, "AnimeService.AnimeBySeasonWithFieldSelection",
+		trace.WithAttributes(
+			attribute.String("service", "anime"),
+			attribute.String("type", "service"),
+			attribute.String("anime.season", season),
+			attribute.Int("anime.fields_count", len(fields.Fields)),
+		),
+		tracing.GetEnvironmentAttribute(),
+	)
+	defer span.End()
 
-	return a.Repository.FindBySeasonWithFieldSelection(spanCtx, season, fields)
+	return a.Repository.FindBySeasonWithFieldSelection(ctx, season, fields)
 }

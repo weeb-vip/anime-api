@@ -9,7 +9,9 @@ import (
 	"github.com/weeb-vip/anime-api/metrics"
 	"github.com/weeb-vip/anime-api/tracing"
 	metrics_lib "github.com/weeb-vip/go-metrics-lib"
-	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 	"gorm.io/gorm"
 	"time"
 )
@@ -883,6 +885,17 @@ func (a *AnimeRepository) NewestAnimeWithEpisodes(ctx context.Context, limit int
 }
 
 func (a *AnimeRepository) SearchAnimeWithEpisodes(ctx context.Context, search string, page int, limit int) ([]*Anime, error) {
+	// Try cache first if available
+	if a.cache != nil {
+		key := fmt.Sprintf("%s:search_episodes:%s:page_%d:limit_%d", a.cache.GetKeyBuilder().AnimePattern()[:len(a.cache.GetKeyBuilder().AnimePattern())-1], search, page, limit)
+		var animeList []*Anime
+		err := a.cache.GetJSON(ctx, key, &animeList)
+		if err == nil {
+			return animeList, nil
+		}
+		// Continue to database if cache miss or error
+	}
+
 	startTime := time.Now()
 
 	var animes []*Anime
@@ -907,6 +920,13 @@ func (a *AnimeRepository) SearchAnimeWithEpisodes(ctx context.Context, search st
 		Result:  metrics_lib.Success,
 		Env:     metrics.GetCurrentEnv(),
 	})
+
+	// Store in cache if available
+	if a.cache != nil {
+		key := fmt.Sprintf("%s:search_episodes:%s:page_%d:limit_%d", a.cache.GetKeyBuilder().AnimePattern()[:len(a.cache.GetKeyBuilder().AnimePattern())-1], search, page, limit)
+		_ = a.cache.SetJSON(ctx, key, animes, cache.AnimeDataTTL)
+	}
+
 	return animes, nil
 }
 
@@ -1266,17 +1286,32 @@ func (a *AnimeRepository) FindByIDsWithEpisodes(ctx context.Context, ids []strin
 
 // FindBySeasonWithEpisodesOptimized - Performance optimized version
 func (a *AnimeRepository) FindBySeasonWithEpisodesOptimized(ctx context.Context, season string) ([]*Anime, error) {
-	span, spanCtx := tracer.StartSpanFromContext(ctx, "FindBySeasonWithEpisodesOptimized")
-	span.SetTag("service", "anime")
-	span.SetTag("type", "repository")
-	span.SetTag("environment", tracing.GetEnvironmentTag())
-	span.SetTag("season", season)
-	defer span.Finish()
+	// Try cache first if available
+	if a.cache != nil {
+		key := fmt.Sprintf("%s:season_episodes_optimized:%s", a.cache.GetKeyBuilder().AnimePattern()[:len(a.cache.GetKeyBuilder().AnimePattern())-1], season)
+		var animeList []*Anime
+		err := a.cache.GetJSON(ctx, key, &animeList)
+		if err == nil {
+			return animeList, nil
+		}
+		// Continue to database if cache miss or error
+	}
+
+	tracer := tracing.GetTracer(ctx)
+	ctx, span := tracer.Start(ctx, "AnimeRepository.FindBySeasonWithEpisodesOptimized",
+		trace.WithAttributes(
+			attribute.String("service", "anime"),
+			attribute.String("type", "repository"),
+			attribute.String("anime.season", season),
+		),
+		tracing.GetEnvironmentAttribute(),
+	)
+	defer span.End()
 
 	startTime := time.Now()
 
 	var animes []*Anime
-	err := a.db.DB.WithContext(spanCtx).
+	err := a.db.DB.WithContext(ctx).
 		Table("anime_seasons as s").
 		Joins("INNER JOIN anime as a ON s.anime_id = a.id").
 		Joins("LEFT JOIN episodes as e ON a.id = e.anime_id").
@@ -1284,8 +1319,8 @@ func (a *AnimeRepository) FindBySeasonWithEpisodesOptimized(ctx context.Context,
 		Find(&animes).Error
 
 	if err != nil {
-		span.SetTag("error", true)
-		span.SetTag("error.msg", err.Error())
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		metrics.GetAppMetrics().DatabaseMetric(
 			float64(time.Since(startTime).Milliseconds()),
 			metrics.TableAnimeSeason,
@@ -1296,8 +1331,10 @@ func (a *AnimeRepository) FindBySeasonWithEpisodesOptimized(ctx context.Context,
 	}
 
 	duration := time.Since(startTime).Milliseconds()
-	span.SetTag("duration_ms", duration)
-	span.SetTag("result_count", len(animes))
+	span.SetAttributes(
+		attribute.Int64("duration_ms", duration),
+		attribute.Int("result_count", len(animes)),
+	)
 
 	metrics.GetAppMetrics().DatabaseMetric(
 		float64(duration),
@@ -1305,6 +1342,12 @@ func (a *AnimeRepository) FindBySeasonWithEpisodesOptimized(ctx context.Context,
 		metrics.MethodSelect,
 		metrics.Success,
 	)
+
+	// Store in cache if available
+	if a.cache != nil {
+		key := fmt.Sprintf("%s:season_episodes_optimized:%s", a.cache.GetKeyBuilder().AnimePattern()[:len(a.cache.GetKeyBuilder().AnimePattern())-1], season)
+		_ = a.cache.SetJSON(ctx, key, animes, cache.SeasonTTL)
+	}
 
 	return animes, nil
 }
@@ -1322,25 +1365,29 @@ func (a *AnimeRepository) FindBySeasonAnimeOnlyOptimized(ctx context.Context, se
 		// Continue to database if cache miss or error
 	}
 
-	span, spanCtx := tracer.StartSpanFromContext(ctx, "FindBySeasonAnimeOnlyOptimized")
-	span.SetTag("service", "anime")
-	span.SetTag("type", "repository")
-	span.SetTag("environment", tracing.GetEnvironmentTag())
-	span.SetTag("season", season)
-	defer span.Finish()
+	tracer := tracing.GetTracer(ctx)
+	ctx, span := tracer.Start(ctx, "AnimeRepository.FindBySeasonAnimeOnlyOptimized",
+		trace.WithAttributes(
+			attribute.String("service", "anime"),
+			attribute.String("type", "repository"),
+			attribute.String("anime.season", season),
+		),
+		tracing.GetEnvironmentAttribute(),
+	)
+	defer span.End()
 
 	startTime := time.Now()
 
 	var animes []*Anime
-	err := a.db.DB.WithContext(spanCtx).
+	err := a.db.DB.WithContext(ctx).
 		Table("anime_seasons as s").
 		Joins("INNER JOIN anime as a ON s.anime_id = a.id").
 		Where("s.season = ?", season).
 		Find(&animes).Error
 
 	if err != nil {
-		span.SetTag("error", true)
-		span.SetTag("error.msg", err.Error())
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		metrics.GetAppMetrics().DatabaseMetric(
 			float64(time.Since(startTime).Milliseconds()),
 			metrics.TableAnimeSeason,
@@ -1356,8 +1403,10 @@ func (a *AnimeRepository) FindBySeasonAnimeOnlyOptimized(ctx context.Context, se
 	}
 
 	duration := time.Since(startTime).Milliseconds()
-	span.SetTag("duration_ms", duration)
-	span.SetTag("result_count", len(animes))
+	span.SetAttributes(
+		attribute.Int64("duration_ms", duration),
+		attribute.Int("result_count", len(animes)),
+	)
 
 	metrics.GetAppMetrics().DatabaseMetric(
 		float64(duration),
@@ -1382,25 +1431,29 @@ func (a *AnimeRepository) FindBySeasonWithIndexHints(ctx context.Context, season
 
 // FindBySeasonBatched - Uses batched queries to avoid cartesian product
 func (a *AnimeRepository) FindBySeasonBatched(ctx context.Context, season string) ([]*Anime, error) {
-	span, spanCtx := tracer.StartSpanFromContext(ctx, "FindBySeasonBatched")
-	span.SetTag("service", "anime")
-	span.SetTag("type", "repository")
-	span.SetTag("environment", tracing.GetEnvironmentTag())
-	span.SetTag("season", season)
-	defer span.Finish()
+	tracer := tracing.GetTracer(ctx)
+	ctx, span := tracer.Start(ctx, "AnimeRepository.FindBySeasonBatched",
+		trace.WithAttributes(
+			attribute.String("service", "anime"),
+			attribute.String("type", "repository"),
+			attribute.String("anime.season", season),
+		),
+		tracing.GetEnvironmentAttribute(),
+	)
+	defer span.End()
 
 	startTime := time.Now()
 
 	// Step 1: Get anime IDs for the season
 	var animeIDs []string
-	err := a.db.DB.WithContext(spanCtx).
+	err := a.db.DB.WithContext(ctx).
 		Table("anime_seasons").
 		Where("season = ?", season).
 		Pluck("anime_id", &animeIDs).Error
 
 	if err != nil {
-		span.SetTag("error", true)
-		span.SetTag("error.msg", err.Error())
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 
@@ -1410,26 +1463,26 @@ func (a *AnimeRepository) FindBySeasonBatched(ctx context.Context, season string
 
 	// Step 2: Get anime data
 	var animes []*Anime
-	err = a.db.DB.WithContext(spanCtx).
+	err = a.db.DB.WithContext(ctx).
 		Where("id IN ?", animeIDs).
 		Find(&animes).Error
 
 	if err != nil {
-		span.SetTag("error", true)
-		span.SetTag("error.msg", err.Error())
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 
 	// Step 3: Get episodes for all anime in one query
 	var episodes []*animeEpisode.AnimeEpisode
-	err = a.db.DB.WithContext(spanCtx).
+	err = a.db.DB.WithContext(ctx).
 		Where("anime_id IN ?", animeIDs).
 		Order("anime_id, episode").
 		Find(&episodes).Error
 
 	if err != nil {
 		// Episodes are optional, continue without them
-		span.SetTag("episodes_error", err.Error())
+		span.SetAttributes(attribute.String("episodes_error", err.Error()))
 	}
 
 	// Step 4: Group episodes by anime ID
@@ -1450,9 +1503,11 @@ func (a *AnimeRepository) FindBySeasonBatched(ctx context.Context, season string
 	}
 
 	duration := time.Since(startTime).Milliseconds()
-	span.SetTag("duration_ms", duration)
-	span.SetTag("result_count", len(animes))
-	span.SetTag("episode_count", len(episodes))
+	span.SetAttributes(
+		attribute.Int64("duration_ms", duration),
+		attribute.Int("result_count", len(animes)),
+		attribute.Int("episode_count", len(episodes)),
+	)
 
 	metrics.GetAppMetrics().DatabaseMetric(
 		float64(duration),
@@ -1466,12 +1521,33 @@ func (a *AnimeRepository) FindBySeasonBatched(ctx context.Context, season string
 
 // FindBySeasonWithFieldSelection - Optimized query that only selects requested fields
 func (a *AnimeRepository) FindBySeasonWithFieldSelection(ctx context.Context, season string, fieldSelection *FieldSelection) ([]*Anime, error) {
-	span, spanCtx := tracer.StartSpanFromContext(ctx, "FindBySeasonWithFieldSelection")
-	span.SetTag("service", "anime")
-	span.SetTag("type", "repository")
-	span.SetTag("environment", tracing.GetEnvironmentTag())
-	span.SetTag("season", season)
-	defer span.Finish()
+	// Try cache first if available
+	if a.cache != nil {
+		// Convert map[string]bool to []string for cache key
+		var fields []string
+		for field := range fieldSelection.Fields {
+			fields = append(fields, field)
+		}
+		key := a.cache.GetKeyBuilder().AnimeBySeasonWithFields(season, fields)
+		var animeList []*Anime
+		err := a.cache.GetJSON(ctx, key, &animeList)
+		if err == nil {
+			return animeList, nil
+		}
+		// Continue to database if cache miss or error
+	}
+
+	tracer := tracing.GetTracer(ctx)
+	ctx, span := tracer.Start(ctx, "AnimeRepository.FindBySeasonWithFieldSelection",
+		trace.WithAttributes(
+			attribute.String("service", "anime"),
+			attribute.String("type", "repository"),
+			attribute.String("anime.season", season),
+			attribute.Int("anime.fields_count", len(fieldSelection.Fields)),
+		),
+		tracing.GetEnvironmentAttribute(),
+	)
+	defer span.End()
 
 	startTime := time.Now()
 
@@ -1487,7 +1563,8 @@ func (a *AnimeRepository) FindBySeasonWithFieldSelection(ctx context.Context, se
 		WHERE anime_seasons.season = ?
 		ORDER BY anime.ranking ASC, anime.title_en ASC`
 
-	result := a.db.DB.WithContext(spanCtx).Raw(query, season).Scan(&animeList)
+	span.SetAttributes(attribute.String("db.query", query))
+	result := a.db.DB.WithContext(ctx).Raw(query, season).Scan(&animeList)
 	if result.Error != nil {
 		metrics.GetAppMetrics().DatabaseMetric(
 			float64(time.Since(startTime).Milliseconds()),
@@ -1498,8 +1575,10 @@ func (a *AnimeRepository) FindBySeasonWithFieldSelection(ctx context.Context, se
 		return nil, result.Error
 	}
 
-	span.SetTag("selected_fields_count", len(fieldSelection.Fields))
-	span.SetTag("result_count", len(animeList))
+	span.SetAttributes(
+		attribute.Int("selected_fields_count", len(fieldSelection.Fields)),
+		attribute.Int("result_count", len(animeList)),
+	)
 
 	metrics.GetAppMetrics().DatabaseMetric(
 		float64(time.Since(startTime).Milliseconds()),
@@ -1507,6 +1586,17 @@ func (a *AnimeRepository) FindBySeasonWithFieldSelection(ctx context.Context, se
 		metrics.MethodSelect,
 		metrics.Success,
 	)
+
+	// Store in cache if available
+	if a.cache != nil {
+		// Convert map[string]bool to []string for cache key
+		var fields []string
+		for field := range fieldSelection.Fields {
+			fields = append(fields, field)
+		}
+		key := a.cache.GetKeyBuilder().AnimeBySeasonWithFields(season, fields)
+		_ = a.cache.SetJSON(ctx, key, animeList, cache.SeasonTTL)
+	}
 
 	return animeList, nil
 }
