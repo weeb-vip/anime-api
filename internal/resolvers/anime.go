@@ -10,7 +10,6 @@ import (
 	"github.com/weeb-vip/anime-api/internal/services/anime"
 	"github.com/weeb-vip/anime-api/metrics"
 	"github.com/weeb-vip/anime-api/tracing"
-	metrics_lib "github.com/weeb-vip/go-metrics-lib"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
@@ -233,13 +232,11 @@ func AnimeByID(ctx context.Context, animeService anime.AnimeServiceImpl, id stri
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 
-		_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
-			Resolver: "AnimeByID",
-			Service:  "anime-api",
-			Protocol: "graphql",
-			Result:   metrics_lib.Error,
-			Env:      metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().ResolverMetric(
+			float64(time.Since(startTime).Milliseconds()),
+			"AnimeByID",
+			metrics.Error,
+		)
 		return nil, err
 	}
 
@@ -253,13 +250,11 @@ func AnimeByID(ctx context.Context, animeService anime.AnimeServiceImpl, id stri
 	}
 	span.SetAttributes(attribute.String("anime.id", foundAnime.ID))
 
-	_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
-		Resolver: "AnimeByID",
-		Service:  "anime-api",
-		Protocol: "graphql",
-		Result:   metrics_lib.Success,
-		Env:      metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().ResolverMetric(
+		float64(time.Since(startTime).Milliseconds()),
+		"AnimeByID",
+		metrics.Success,
+	)
 
 	return transformAnimeToGraphQL(*foundAnime)
 }
@@ -274,13 +269,11 @@ func TopRatedAnime(ctx context.Context, animeService anime.AnimeServiceImpl, lim
 	// Use WithEpisodes version to preload episodes and avoid N+1 queries
 	foundAnime, err := animeService.TopRatedAnimeWithEpisodes(ctx, *limit)
 	if err != nil {
-		_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
-			Resolver: "TopRatedAnime",
-			Service:  "anime-api",
-			Protocol: "graphql",
-			Result:   metrics_lib.Error,
-			Env:      metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().ResolverMetric(
+			float64(time.Since(startTime).Milliseconds()),
+			"TopRatedAnime",
+			metrics.Error,
+		)
 		return nil, err
 	}
 
@@ -293,13 +286,11 @@ func TopRatedAnime(ctx context.Context, animeService anime.AnimeServiceImpl, lim
 		animes = append(animes, anime)
 	}
 
-	_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
-		Resolver: "TopRatedAnime",
-		Service:  "anime-api",
-		Protocol: "graphql",
-		Result:   metrics_lib.Success,
-		Env:      metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().ResolverMetric(
+		float64(time.Since(startTime).Milliseconds()),
+		"TopRatedAnime",
+		metrics.Success,
+	)
 
 	return animes, nil
 }
@@ -314,13 +305,11 @@ func MostPopularAnime(ctx context.Context, animeService anime.AnimeServiceImpl, 
 	// Use WithEpisodes version to preload episodes and avoid N+1 queries
 	foundAnime, err := animeService.MostPopularAnimeWithEpisodes(ctx, *limit)
 	if err != nil {
-		_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
-			Resolver: "MostPopularAnime",
-			Service:  "anime-api",
-			Protocol: "graphql",
-			Result:   metrics_lib.Error,
-			Env:      metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().ResolverMetric(
+			float64(time.Since(startTime).Milliseconds()),
+			"MostPopularAnime",
+			metrics.Error,
+		)
 		return nil, err
 	}
 
@@ -333,13 +322,11 @@ func MostPopularAnime(ctx context.Context, animeService anime.AnimeServiceImpl, 
 		animes = append(animes, anime)
 	}
 
-	_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
-		Resolver: "MostPopularAnime",
-		Service:  "anime-api",
-		Protocol: "graphql",
-		Result:   metrics_lib.Success,
-		Env:      metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().ResolverMetric(
+		float64(time.Since(startTime).Milliseconds()),
+		"MostPopularAnime",
+		metrics.Success,
+	)
 
 	return animes, nil
 }
@@ -354,13 +341,11 @@ func NewestAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit
 	// Use WithEpisodes version to preload episodes and avoid N+1 queries
 	foundAnime, err := animeService.NewestAnimeWithEpisodes(ctx, *limit)
 	if err != nil {
-		_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
-			Resolver: "NewestAnime",
-			Service:  "anime-api",
-			Protocol: "graphql",
-			Result:   metrics_lib.Error,
-			Env:      metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().ResolverMetric(
+			float64(time.Since(startTime).Milliseconds()),
+			"NewestAnime",
+			metrics.Error,
+		)
 		return nil, err
 	}
 
@@ -373,13 +358,11 @@ func NewestAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit
 		animes = append(animes, anime)
 	}
 
-	_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
-		Resolver: "NewestAnime",
-		Service:  "anime-api",
-		Protocol: "graphql",
-		Result:   metrics_lib.Success,
-		Env:      metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().ResolverMetric(
+		float64(time.Since(startTime).Milliseconds()),
+		"NewestAnime",
+		metrics.Success,
+	)
 
 	return animes, nil
 }
@@ -392,13 +375,11 @@ func CurrentlyAiring(ctx context.Context, animeService anime.AnimeServiceImpl, i
 		var err error
 		foundAnime, err = animeService.AiringAnimeWithEpisodes(ctx, nil, nil, nil)
 		if err != nil {
-			_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
-				Resolver: "CurrentlyAiring",
-				Service:  "anime-api",
-				Protocol: "graphql",
-				Result:   metrics_lib.Error,
-				Env:      metrics.GetCurrentEnv(),
-			})
+			metrics.GetAppMetrics().ResolverMetric(
+				float64(time.Since(startTime).Milliseconds()),
+				"CurrentlyAiring",
+				metrics.Error,
+			)
 			return nil, err
 		}
 	} else {
@@ -406,13 +387,11 @@ func CurrentlyAiring(ctx context.Context, animeService anime.AnimeServiceImpl, i
 		startDate := &input.StartDate
 		foundAnime, err = animeService.AiringAnimeWithEpisodes(ctx, startDate, input.EndDate, input.DaysInFuture)
 		if err != nil {
-			_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
-				Resolver: "CurrentlyAiring",
-				Service:  "anime-api",
-				Protocol: "graphql",
-				Result:   metrics_lib.Error,
-				Env:      metrics.GetCurrentEnv(),
-			})
+			metrics.GetAppMetrics().ResolverMetric(
+				float64(time.Since(startTime).Milliseconds()),
+				"CurrentlyAiring",
+				metrics.Error,
+			)
 			return nil, err
 		}
 	}
@@ -426,13 +405,11 @@ func CurrentlyAiring(ctx context.Context, animeService anime.AnimeServiceImpl, i
 		animes = append(animes, anime)
 	}
 
-	_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
-		Resolver: "CurrentlyAiring",
-		Service:  "anime-api",
-		Protocol: "graphql",
-		Result:   metrics_lib.Success,
-		Env:      metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().ResolverMetric(
+		float64(time.Since(startTime).Milliseconds()),
+		"CurrentlyAiring",
+		metrics.Success,
+	)
 
 	return animes, nil
 }
@@ -443,13 +420,11 @@ func DBSearchAnime(ctx context.Context, animeService anime.AnimeServiceImpl, que
 	// Use WithEpisodes version to preload episodes and avoid N+1 queries
 	foundAnime, err := animeService.SearchedAnimeWithEpisodes(ctx, query, page, limit)
 	if err != nil {
-		_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
-			Resolver: "DBSearchAnime",
-			Service:  "anime-api",
-			Protocol: "graphql",
-			Result:   metrics_lib.Error,
-			Env:      metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().ResolverMetric(
+			float64(time.Since(startTime).Milliseconds()),
+			"DBSearchAnime",
+			metrics.Error,
+		)
 		return nil, err
 	}
 
@@ -462,13 +437,11 @@ func DBSearchAnime(ctx context.Context, animeService anime.AnimeServiceImpl, que
 		animes = append(animes, anime)
 	}
 
-	_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
-		Resolver: "DBSearchAnime",
-		Service:  "anime-api",
-		Protocol: "graphql",
-		Result:   metrics_lib.Success,
-		Env:      metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().ResolverMetric(
+		float64(time.Since(startTime).Milliseconds()),
+		"DBSearchAnime",
+		metrics.Success,
+	)
 
 	return animes, nil
 }

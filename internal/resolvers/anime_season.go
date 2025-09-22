@@ -4,14 +4,14 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	metrics_lib "github.com/weeb-vip/go-metrics-lib"
+	"time"
+
 	"github.com/weeb-vip/anime-api/graph/model"
 	anime_repo "github.com/weeb-vip/anime-api/internal/db/repositories/anime"
 	anime_season_repo "github.com/weeb-vip/anime-api/internal/db/repositories/anime_season"
 	anime_service "github.com/weeb-vip/anime-api/internal/services/anime"
 	"github.com/weeb-vip/anime-api/internal/services/anime_season"
 	"github.com/weeb-vip/anime-api/metrics"
-	"time"
 )
 
 func transformAnimeSeasonToGraphQL(animeSeasonEntity anime_season_repo.AnimeSeason) (*model.AnimeSeason, error) {
@@ -35,13 +35,11 @@ func AnimeSeasons(ctx context.Context, animeSeasonService anime_season.AnimeSeas
 
 	foundSeasons, err := animeSeasonService.FindByAnimeID(ctx, animeID)
 	if err != nil {
-		_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
-			Resolver: "AnimeSeasons",
-			Service:  "anime-api",
-			Protocol: "graphql",
-			Result:   metrics_lib.Error,
-			Env:      metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().ResolverMetric(
+			float64(time.Since(startTime).Milliseconds()),
+			"AnimeSeasons",
+			metrics.Error,
+		)
 		return nil, err
 	}
 
@@ -54,13 +52,11 @@ func AnimeSeasons(ctx context.Context, animeSeasonService anime_season.AnimeSeas
 		seasons = append(seasons, season)
 	}
 
-	_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
-		Resolver: "AnimeSeasons",
-		Service:  "anime-api",
-		Protocol: "graphql",
-		Result:   metrics_lib.Success,
-		Env:      metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().ResolverMetric(
+		float64(time.Since(startTime).Milliseconds()),
+		"AnimeSeasons",
+		metrics.Success,
+	)
 
 	return seasons, nil
 }
@@ -83,13 +79,11 @@ func AnimeBySeasons(ctx context.Context, animeSeasonService anime_season.AnimeSe
 	}
 
 	if err != nil {
-		_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
-			Resolver: "AnimeBySeasons",
-			Service:  "anime-api",
-			Protocol: "graphql",
-			Result:   metrics_lib.Error,
-			Env:      metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().ResolverMetric(
+			float64(time.Since(startTime).Milliseconds()),
+			"AnimeBySeasons",
+			metrics.Error,
+		)
 		return nil, err
 	}
 
@@ -103,13 +97,11 @@ func AnimeBySeasons(ctx context.Context, animeSeasonService anime_season.AnimeSe
 		result = append(result, animeGraphQL)
 	}
 
-	_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
-		Resolver: "AnimeBySeasons",
-		Service:  "anime-api",
-		Protocol: "graphql",
-		Result:   metrics_lib.Success,
-		Env:      metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().ResolverMetric(
+		float64(time.Since(startTime).Milliseconds()),
+		"AnimeBySeasons",
+		metrics.Success,
+	)
 
 	return result, nil
 }

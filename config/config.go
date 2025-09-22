@@ -3,9 +3,8 @@ package config
 import "github.com/jinzhu/configor"
 
 type Config struct {
-	AppConfig     AppConfig `env:"APPCONFIG"`
-	DBConfig      DBConfig
-	DataDogConfig DataDogConfig
+	AppConfig AppConfig `env:"APPCONFIG"`
+	DBConfig  DBConfig
 }
 
 type AppConfig struct {
@@ -24,10 +23,6 @@ type DBConfig struct {
 	SSLMode  string `default:"false" env:"DBSSL"`
 }
 
-type DataDogConfig struct {
-	DD_AGENT_HOST string `env:"DD_AGENT_HOST" default:"localhost"`
-	DD_AGENT_PORT int    `env:"DD_AGENT_PORT" default:"8125"`
-}
 
 func LoadConfigOrPanic() Config {
 	var config = Config{}
