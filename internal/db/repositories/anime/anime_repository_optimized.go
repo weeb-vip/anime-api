@@ -268,3 +268,101 @@ func (a *AnimeRepository) FindBySeasonAnimeOnlyOptimized(ctx context.Context, se
 
 	return animes, nil
 }
+// FindBySeasonWithIndexHints - Uses MySQL index hints for better performance
+func (a *AnimeRepository) FindBySeasonWithIndexHints(ctx context.Context, season string) ([]*Anime, error) {
+	span, spanCtx := tracer.StartSpanFromContext(ctx, "FindBySeasonWithIndexHints")
+	span.SetTag("service", "anime")
+	span.SetTag("type", "repository")
+	span.SetTag("environment", tracing.GetEnvironmentTag())
+	span.SetTag("season", season)
+	defer span.Finish()
+
+	// Use the optimized method but with index hints if needed
+	// For now, delegate to the optimized method
+	return a.FindBySeasonWithEpisodesOptimized(spanCtx, season)
+}
+
+// FindBySeasonBatched - Uses batched queries to avoid cartesian product
+func (a *AnimeRepository) FindBySeasonBatched(ctx context.Context, season string) ([]*Anime, error) {
+	span, spanCtx := tracer.StartSpanFromContext(ctx, "FindBySeasonBatched")
+	span.SetTag("service", "anime")
+	span.SetTag("type", "repository")
+	span.SetTag("environment", tracing.GetEnvironmentTag())
+	span.SetTag("season", season)
+	defer span.Finish()
+
+	startTime := time.Now()
+
+	// Step 1: Get anime IDs for the season (very fast with proper index)
+	var animeIDs []string
+	err := a.db.DB.WithContext(spanCtx).
+		Table("anime_seasons").
+		Where("season = ?", season).
+		Pluck("anime_id", &animeIDs).Error
+
+	if err != nil {
+		span.SetTag("error", true)
+		span.SetTag("error.msg", err.Error())
+		return nil, err
+	}
+
+	if len(animeIDs) == 0 {
+		return []*Anime{}, nil
+	}
+
+	// Step 2: Get anime data (fast - direct lookup by IDs)
+	var animes []*Anime
+	err = a.db.DB.WithContext(spanCtx).
+		Where("id IN ?", animeIDs).
+		Find(&animes).Error
+
+	if err != nil {
+		span.SetTag("error", true)
+		span.SetTag("error.msg", err.Error())
+		return nil, err
+	}
+
+	// Step 3: Get episodes for all anime in one query (fast with proper indexing)
+	var episodes []*animeEpisode.AnimeEpisode
+	err = a.db.DB.WithContext(spanCtx).
+		Where("anime_id IN ?", animeIDs).
+		Order("anime_id, episode").
+		Find(&episodes).Error
+
+	if err != nil {
+		// Episodes are optional, continue without them
+		span.SetTag("episodes_error", err.Error())
+	}
+
+	// Step 4: Group episodes by anime ID
+	episodeMap := make(map[string][]*animeEpisode.AnimeEpisode)
+	for _, episode := range episodes {
+		if episode.AnimeID != nil {
+			episodeMap[*episode.AnimeID] = append(episodeMap[*episode.AnimeID], episode)
+		}
+	}
+
+	// Step 5: Assign episodes to anime
+	for _, anime := range animes {
+		if eps, exists := episodeMap[anime.ID]; exists {
+			anime.AnimeEpisodes = eps
+		} else {
+			anime.AnimeEpisodes = make([]*animeEpisode.AnimeEpisode, 0)
+		}
+	}
+
+	duration := time.Since(startTime).Milliseconds()
+	span.SetTag("duration_ms", duration)
+	span.SetTag("result_count", len(animes))
+	span.SetTag("episode_count", len(episodes))
+
+	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(duration), metrics_lib.DatabaseMetricLabels{
+		Service: "anime-api",
+		Table:   "anime_seasons",
+		Method:  metrics_lib.DatabaseMetricMethodSelect,
+		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
+	})
+
+	return animes, nil
+}

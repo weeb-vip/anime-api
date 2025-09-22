@@ -67,7 +67,7 @@ func AnimeSeasons(ctx context.Context, animeSeasonService anime_season.AnimeSeas
 func AnimeBySeasons(ctx context.Context, animeSeasonService anime_season.AnimeSeasonServiceImpl, animeService anime_service.AnimeServiceImpl, season string) ([]*model.Anime, error) {
 	startTime := time.Now()
 
-	// Use the ultra-optimized method for maximum performance
+	// Use the optimized method with proper database indexes
 	animeList, err := animeService.AnimeBySeasonWithEpisodesOptimized(ctx, season)
 	if err != nil {
 		_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
