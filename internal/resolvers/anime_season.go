@@ -67,8 +67,8 @@ func AnimeSeasons(ctx context.Context, animeSeasonService anime_season.AnimeSeas
 func AnimeBySeasons(ctx context.Context, animeSeasonService anime_season.AnimeSeasonServiceImpl, animeService anime_service.AnimeServiceImpl, season string) ([]*model.Anime, error) {
 	startTime := time.Now()
 
-	// Use the new optimized single-query method
-	animeList, err := animeService.AnimeBySeasonWithEpisodes(ctx, season)
+	// Use the ultra-optimized method for maximum performance
+	animeList, err := animeService.AnimeBySeasonWithEpisodesOptimized(ctx, season)
 	if err != nil {
 		_ = metrics.NewMetricsInstance().ResolverMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.ResolverMetricLabels{
 			Resolver: "AnimeBySeasons",
@@ -80,8 +80,8 @@ func AnimeBySeasons(ctx context.Context, animeSeasonService anime_season.AnimeSe
 		return nil, err
 	}
 
-	// Transform to GraphQL models
-	var result []*model.Anime
+	// Transform to GraphQL models - pre-allocate for performance
+	result := make([]*model.Anime, 0, len(animeList))
 	for _, animeEntity := range animeList {
 		animeGraphQL, err := transformAnimeToGraphQL(*animeEntity)
 		if err != nil {

@@ -24,6 +24,8 @@ type AnimeServiceImpl interface {
 	SearchedAnime(ctx context.Context, query string, page int, limit int) ([]*anime.Anime, error)
 	SearchedAnimeWithEpisodes(ctx context.Context, query string, page int, limit int) ([]*anime.Anime, error)
 	AnimeBySeasonWithEpisodes(ctx context.Context, season string) ([]*anime.Anime, error)
+	AnimeBySeasonWithEpisodesOptimized(ctx context.Context, season string) ([]*anime.Anime, error)
+	AnimeBySeasonAnimeOnlyOptimized(ctx context.Context, season string) ([]*anime.Anime, error)
 }
 
 type AnimeService struct {
@@ -170,4 +172,24 @@ func (a *AnimeService) AnimeBySeasonWithEpisodes(ctx context.Context, season str
 	defer span.Finish()
 
 	return a.Repository.FindBySeasonWithEpisodes(spanCtx, season)
+}
+
+func (a *AnimeService) AnimeBySeasonWithEpisodesOptimized(ctx context.Context, season string) ([]*anime.Anime, error) {
+	span, spanCtx := tracer.StartSpanFromContext(ctx, "AnimeBySeasonWithEpisodesOptimized")
+	span.SetTag("service", "anime")
+	span.SetTag("type", "service")
+	span.SetTag("environment", tracing.GetEnvironmentTag())
+	defer span.Finish()
+
+	return a.Repository.FindBySeasonWithEpisodesOptimized(spanCtx, season)
+}
+
+func (a *AnimeService) AnimeBySeasonAnimeOnlyOptimized(ctx context.Context, season string) ([]*anime.Anime, error) {
+	span, spanCtx := tracer.StartSpanFromContext(ctx, "AnimeBySeasonAnimeOnlyOptimized")
+	span.SetTag("service", "anime")
+	span.SetTag("type", "service")
+	span.SetTag("environment", tracing.GetEnvironmentTag())
+	defer span.Finish()
+
+	return a.Repository.FindBySeasonAnimeOnlyOptimized(spanCtx, season)
 }
