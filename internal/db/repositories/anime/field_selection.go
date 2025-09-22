@@ -35,8 +35,8 @@ func (fs *FieldSelection) BuildSelectClause(tableName string) string {
 	// Map GraphQL field names to database column names
 	fieldMapping := map[string]string{
 		"id":            "id",
-		"anidbid":       "anidb_id",
-		"thetvdbid":     "the_tvdb_id",
+		"anidbid":       "anidbid",
+		"thetvdbid":     "thetvdbid",
 		"titleEn":       "title_en",
 		"titleJp":       "title_jp",
 		"titleRomaji":   "title_romaji",
