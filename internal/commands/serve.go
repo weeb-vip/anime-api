@@ -6,6 +6,7 @@ package commands
 import (
 	"context"
 
+	"github.com/weeb-vip/anime-api/config"
 	"github.com/weeb-vip/anime-api/http"
 	"github.com/weeb-vip/anime-api/internal/logger"
 	"github.com/weeb-vip/anime-api/tracing"
@@ -24,10 +25,14 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// Initialize logger
+		// Load config to get environment
+		cfg := config.LoadConfigOrPanic()
+
+		// Initialize logger with environment
 		logger.Logger(
 			logger.WithServerName("anime-api"),
 			logger.WithVersion("1.0.0"),
+			logger.WithEnvironment(cfg.AppConfig.Env),
 		)
 
 		// Initialize tracing
