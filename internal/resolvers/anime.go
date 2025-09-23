@@ -242,7 +242,21 @@ func AnimeByID(ctx context.Context, animeService anime.AnimeServiceImpl, id stri
 
 	startTime := time.Now()
 
-	foundAnime, err := animeService.AnimeByID(ctx, id)
+	// Check if episodes are requested in the GraphQL query
+	fieldSelection := ExtractFieldSelection(ctx)
+	includeEpisodes := isEpisodesRequested(fieldSelection)
+
+	var foundAnime *anime2.Anime
+	var err error
+
+	if includeEpisodes {
+		// Use optimized query with episodes preloaded to avoid N+1 queries
+		foundAnime, err = animeService.AnimeByIDWithEpisodes(ctx, id)
+	} else {
+		// Get anime without episodes - episodes will be loaded on-demand via resolver if needed
+		foundAnime, err = animeService.AnimeByID(ctx, id)
+	}
+
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())

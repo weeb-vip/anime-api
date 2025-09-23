@@ -34,7 +34,7 @@ func BuildRootHandler(conf config.Config) http.Handler {
 		log.Error().Err(err).Msg("Failed to initialize cache, continuing without caching")
 		cacheInstance = cache.NewNoOpCache()
 	}
-	cacheService := cache.NewCacheService(cacheInstance)
+	cacheService := cache.NewCacheService(cacheInstance, conf.RedisConfig)
 
 	// Initialize repositories
 	var animeRepository anime2.AnimeRepositoryImpl
@@ -93,7 +93,7 @@ func BuildRootHandlerWithContext(ctx context.Context, conf config.Config) http.H
 		log.Error().Err(err).Msg("Failed to initialize cache, continuing without caching")
 		cacheInstance = cache.NewNoOpCache()
 	}
-	cacheService := cache.NewCacheService(cacheInstance)
+	cacheService := cache.NewCacheService(cacheInstance, conf.RedisConfig)
 
 	// Initialize repositories
 	var animeRepository anime2.AnimeRepositoryImpl

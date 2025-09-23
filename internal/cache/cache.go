@@ -46,6 +46,11 @@ func (c *CacheKeyBuilder) AnimeByID(id string) string {
 	return c.prefix + ":anime:id:" + id
 }
 
+// AnimeWithEpisodesByID builds cache key for anime with episodes by ID
+func (c *CacheKeyBuilder) AnimeWithEpisodesByID(id string) string {
+	return c.prefix + ":anime:id:" + id + ":with-episodes"
+}
+
 // AnimeBySeasonPattern builds cache key pattern for anime by season
 func (c *CacheKeyBuilder) AnimeBySeasonPattern(season string) string {
 	return c.prefix + ":anime:season:" + season + ":*"

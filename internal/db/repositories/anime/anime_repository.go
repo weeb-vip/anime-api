@@ -176,6 +176,17 @@ func (a *AnimeRepository) FindById(ctx context.Context, id string) (*Anime, erro
 }
 
 func (a *AnimeRepository) FindByIdWithEpisodes(ctx context.Context, id string) (*Anime, error) {
+	// Try cache first if available
+	if a.cache != nil {
+		key := a.cache.GetKeyBuilder().AnimeWithEpisodesByID(id)
+		var anime Anime
+		err := a.cache.GetJSON(ctx, key, &anime)
+		if err == nil {
+			return &anime, nil
+		}
+		// Continue to database if cache miss or error
+	}
+
 	startTime := time.Now()
 
 	var anime Anime
@@ -200,6 +211,13 @@ func (a *AnimeRepository) FindByIdWithEpisodes(ctx context.Context, id string) (
 		Result:  metrics_lib.Success,
 		Env:     metrics.GetCurrentEnv(),
 	})
+
+	// Store in cache if available
+	if a.cache != nil {
+		key := a.cache.GetKeyBuilder().AnimeWithEpisodesByID(id)
+		_ = a.cache.SetJSON(ctx, key, &anime, a.cache.GetAnimeDataTTL())
+	}
+
 	return &anime, nil
 }
 
