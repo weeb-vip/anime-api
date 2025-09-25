@@ -40,8 +40,10 @@ func BuildRootHandler(conf config.Config) http.Handler {
 	var animeRepository anime2.AnimeRepositoryImpl
 	var episodeRepository anime3.AnimeEpisodeRepositoryImpl
 
+	log := logger.FromCtx(context.Background())
+	log.Info().Bool("cache_enabled", conf.RedisConfig.Enabled).Msg("Cache configuration status")
+
 	if conf.RedisConfig.Enabled {
-		log := logger.FromCtx(context.Background())
 		log.Info().Msg("Cache enabled, using repositories with caching")
 
 		// Use repositories with caching when enabled
@@ -99,8 +101,10 @@ func BuildRootHandlerWithContext(ctx context.Context, conf config.Config) http.H
 	var animeRepository anime2.AnimeRepositoryImpl
 	var episodeRepository anime3.AnimeEpisodeRepositoryImpl
 
+	log := logger.FromCtx(ctx)
+	log.Info().Bool("cache_enabled", conf.RedisConfig.Enabled).Msg("Cache configuration status")
+
 	if conf.RedisConfig.Enabled {
-		log := logger.FromCtx(ctx)
 		log.Info().Msg("Cache enabled, using repositories with caching")
 
 		// Use repositories with caching when enabled

@@ -1415,10 +1415,8 @@ func (a *AnimeRepository) FindBySeasonAnimeOnlyOptimized(ctx context.Context, se
 		return nil, err
 	}
 
-	// Initialize empty episodes for each anime to prevent nil pointer issues
-	for _, a := range animes {
-		a.AnimeEpisodes = make([]*animeEpisode.AnimeEpisode, 0)
-	}
+	// Don't initialize episodes - let them be nil when not requested
+	// This allows GraphQL to only include episodes field when explicitly queried
 
 	duration := time.Since(startTime).Milliseconds()
 	span.SetAttributes(
