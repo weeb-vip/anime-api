@@ -13,9 +13,16 @@ import (
 )
 
 // GzipMiddleware handles both request decompression and response compression
+// Excludes certain endpoints like /metrics that should not be compressed
 func GzipMiddleware() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Skip compression for metrics endpoint and other endpoints that shouldn't be compressed
+			if shouldSkipCompression(r.URL.Path) {
+				next.ServeHTTP(w, r)
+				return
+			}
+
 			ctx := r.Context()
 			log := logger.FromCtx(ctx)
 
@@ -88,6 +95,22 @@ func GzipMiddleware() func(http.Handler) http.Handler {
 			next.ServeHTTP(gzipResponseWriter, r)
 		})
 	}
+}
+
+// shouldSkipCompression determines if a given path should skip gzip compression
+func shouldSkipCompression(path string) bool {
+	// List of paths that should not be compressed
+	skipPaths := []string{
+		"/metrics",      // Prometheus metrics endpoint
+		"/healthcheck",  // Health check endpoint (optional, but often expected to be uncompressed)
+	}
+
+	for _, skipPath := range skipPaths {
+		if path == skipPath {
+			return true
+		}
+	}
+	return false
 }
 
 // gzipResponseWriter wraps http.ResponseWriter to provide gzip compression

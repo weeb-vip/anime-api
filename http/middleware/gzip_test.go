@@ -130,4 +130,71 @@ func TestGzipMiddleware(t *testing.T) {
 			t.Errorf("Expected status 400, got: %d", recorder.Code)
 		}
 	})
+
+	t.Run("Metrics endpoint should not be compressed", func(t *testing.T) {
+		testHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte("# HELP some_metric A test metric\n# TYPE some_metric counter\nsome_metric 42\n"))
+		})
+
+		handler := GzipMiddleware()(testHandler)
+
+		req := httptest.NewRequest("GET", "/metrics", nil)
+		req.Header.Set("Accept-Encoding", "gzip")
+
+		recorder := httptest.NewRecorder()
+		handler.ServeHTTP(recorder, req)
+
+		// Metrics endpoint should NOT be compressed even with Accept-Encoding: gzip
+		if recorder.Header().Get("Content-Encoding") == "gzip" {
+			t.Error("/metrics endpoint should not be compressed")
+		}
+
+		expected := "# HELP some_metric A test metric\n# TYPE some_metric counter\nsome_metric 42\n"
+		if recorder.Body.String() != expected {
+			t.Errorf("Expected: %s, got: %s", expected, recorder.Body.String())
+		}
+	})
+
+	t.Run("Healthcheck endpoint should not be compressed", func(t *testing.T) {
+		testHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte(`{"status":"healthy"}`))
+		})
+
+		handler := GzipMiddleware()(testHandler)
+
+		req := httptest.NewRequest("GET", "/healthcheck", nil)
+		req.Header.Set("Accept-Encoding", "gzip")
+
+		recorder := httptest.NewRecorder()
+		handler.ServeHTTP(recorder, req)
+
+		// Healthcheck endpoint should NOT be compressed
+		if recorder.Header().Get("Content-Encoding") == "gzip" {
+			t.Error("/healthcheck endpoint should not be compressed")
+		}
+
+		expected := `{"status":"healthy"}`
+		if recorder.Body.String() != expected {
+			t.Errorf("Expected: %s, got: %s", expected, recorder.Body.String())
+		}
+	})
+
+	t.Run("GraphQL endpoint should still be compressed", func(t *testing.T) {
+		testHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte(`{"data":{"anime":[{"title":"Test Anime","episodes":12}]}}`))
+		})
+
+		handler := GzipMiddleware()(testHandler)
+
+		req := httptest.NewRequest("POST", "/graphql", nil)
+		req.Header.Set("Accept-Encoding", "gzip")
+
+		recorder := httptest.NewRecorder()
+		handler.ServeHTTP(recorder, req)
+
+		// GraphQL endpoint should still be compressed
+		if recorder.Header().Get("Content-Encoding") != "gzip" {
+			t.Error("/graphql endpoint should be compressed")
+		}
+	})
 }
