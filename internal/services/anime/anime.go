@@ -30,7 +30,7 @@ type AnimeServiceImpl interface {
 	AnimeBySeasonWithIndexHints(ctx context.Context, season string) ([]*anime.Anime, error)
 	AnimeBySeasonBatched(ctx context.Context, season string) ([]*anime.Anime, error)
 	AnimeBySeasonOptimized(ctx context.Context, season string) ([]*anime.Anime, error)
-	AnimeBySeasonWithFieldSelection(ctx context.Context, season string, fields *anime.FieldSelection) ([]*anime.Anime, error)
+	AnimeBySeasonWithFieldSelection(ctx context.Context, season string, fields *anime.FieldSelection, limit int) ([]*anime.Anime, error)
 }
 
 type AnimeService struct {
@@ -223,7 +223,7 @@ func (a *AnimeService) AnimeBySeasonOptimized(ctx context.Context, season string
 	return a.Repository.FindBySeasonAnimeOnlyOptimized(ctx, season)
 }
 
-func (a *AnimeService) AnimeBySeasonWithFieldSelection(ctx context.Context, season string, fields *anime.FieldSelection) ([]*anime.Anime, error) {
+func (a *AnimeService) AnimeBySeasonWithFieldSelection(ctx context.Context, season string, fields *anime.FieldSelection, limit int) ([]*anime.Anime, error) {
 	tracer := tracing.GetTracer(ctx)
 	ctx, span := tracer.Start(ctx, "AnimeService.AnimeBySeasonWithFieldSelection",
 		trace.WithAttributes(
@@ -231,10 +231,11 @@ func (a *AnimeService) AnimeBySeasonWithFieldSelection(ctx context.Context, seas
 			attribute.String("type", "service"),
 			attribute.String("anime.season", season),
 			attribute.Int("anime.fields_count", len(fields.Fields)),
+			attribute.Int("anime.limit", limit),
 		),
 		tracing.GetEnvironmentAttribute(),
 	)
 	defer span.End()
 
-	return a.Repository.FindBySeasonWithFieldSelection(ctx, season, fields)
+	return a.Repository.FindBySeasonWithFieldSelection(ctx, season, fields, limit)
 }

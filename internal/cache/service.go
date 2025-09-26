@@ -121,36 +121,29 @@ func (c *CacheService) GetJSON(ctx context.Context, key string, dest interface{}
 
 // SetJSON marshals and stores JSON data in cache
 func (c *CacheService) SetJSON(ctx context.Context, key string, value interface{}, ttl time.Duration) error {
-	startTime := time.Now()
-
 	data, err := json.Marshal(value)
 	if err != nil {
-		metrics.GetAppMetrics().DatabaseMetric(
-			float64(time.Since(startTime).Milliseconds()),
-			"cache",
-			"set",
-			metrics.Error,
-		)
 		return fmt.Errorf("cache marshal error: %w", err)
 	}
 
-	err = c.cache.Set(ctx, key, data, ttl)
-	if err != nil {
+	// Run cache set asynchronously - fire and forget
+	go func() {
+		startTime := time.Now()
+		err := c.cache.Set(context.Background(), key, data, ttl)
+
+		result := metrics.Success
+		if err != nil {
+			result = metrics.Error
+		}
+
 		metrics.GetAppMetrics().DatabaseMetric(
 			float64(time.Since(startTime).Milliseconds()),
 			"cache",
 			"set",
-			metrics.Error,
+			result,
 		)
-		return err
-	}
+	}()
 
-	metrics.GetAppMetrics().DatabaseMetric(
-		float64(time.Since(startTime).Milliseconds()),
-		"cache",
-		"set",
-		metrics.Success,
-	)
 	return nil
 }
 

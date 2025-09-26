@@ -66,7 +66,7 @@ type AnimeRepositoryImpl interface {
 	FindBySeasonWithIndexHints(ctx context.Context, season string) ([]*Anime, error)
 	FindBySeasonBatched(ctx context.Context, season string) ([]*Anime, error)
 	FindBySeasonAnimeOnlyOptimized(ctx context.Context, season string) ([]*Anime, error)
-	FindBySeasonWithFieldSelection(ctx context.Context, season string, fields *FieldSelection) ([]*Anime, error)
+	FindBySeasonWithFieldSelection(ctx context.Context, season string, fields *FieldSelection, limit int) ([]*Anime, error)
 }
 
 type AnimeRepository struct {
@@ -1649,7 +1649,7 @@ func (a *AnimeRepository) FindBySeasonBatched(ctx context.Context, season string
 }
 
 // FindBySeasonWithFieldSelection - Optimized query that only selects requested fields
-func (a *AnimeRepository) FindBySeasonWithFieldSelection(ctx context.Context, season string, fieldSelection *FieldSelection) ([]*Anime, error) {
+func (a *AnimeRepository) FindBySeasonWithFieldSelection(ctx context.Context, season string, fieldSelection *FieldSelection, limit int) ([]*Anime, error) {
 	tracer := tracing.GetTracer(ctx)
 
 	// Try cache first if available
@@ -1687,6 +1687,10 @@ func (a *AnimeRepository) FindBySeasonWithFieldSelection(ctx context.Context, se
 		)
 
 		if err == nil {
+			// Apply limit to cached results if specified
+			if limit > 0 && len(animeList) > limit {
+				animeList = animeList[:limit]
+			}
 			cacheSpan.SetAttributes(
 				attribute.String("cache.result", "hit"),
 				attribute.Int("cache.items_returned", len(animeList)),
@@ -1713,6 +1717,7 @@ func (a *AnimeRepository) FindBySeasonWithFieldSelection(ctx context.Context, se
 			attribute.String("type", "repository"),
 			attribute.String("anime.season", season),
 			attribute.Int("anime.fields_count", len(fieldSelection.Fields)),
+			attribute.Int("anime.limit", limit),
 		),
 		tracing.GetEnvironmentAttribute(),
 	)
@@ -1730,10 +1735,11 @@ func (a *AnimeRepository) FindBySeasonWithFieldSelection(ctx context.Context, se
 		FROM anime
 		INNER JOIN anime_seasons ON anime.id = anime_seasons.anime_id
 		WHERE anime_seasons.season = ?
-		ORDER BY anime.ranking ASC, anime.title_en ASC`
+		ORDER BY anime.ranking ASC, anime.title_en ASC
+		LIMIT ?`
 
 	span.SetAttributes(attribute.String("db.query", query))
-	result := a.db.DB.WithContext(ctx).Raw(query, season).Scan(&animeList)
+	result := a.db.DB.WithContext(ctx).Raw(query, season, limit).Scan(&animeList)
 	if result.Error != nil {
 		metrics.GetAppMetrics().DatabaseMetric(
 			float64(time.Since(startTime).Milliseconds()),

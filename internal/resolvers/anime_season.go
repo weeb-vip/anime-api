@@ -71,8 +71,8 @@ func AnimeBySeasons(ctx context.Context, animeSeasonService anime_season.AnimeSe
 	var err error
 
 	if fieldSelection != nil {
-		// Use field-optimized query that only selects requested fields
-		animeList, err = animeService.AnimeBySeasonWithFieldSelection(ctx, season, fieldSelection)
+		// Use field-optimized query that only selects requested fields, limited to top 10
+		animeList, err = animeService.AnimeBySeasonWithFieldSelection(ctx, season, fieldSelection, 10)
 	} else {
 		// Fall back to standard optimized method (no episodes)
 		animeList, err = animeService.AnimeBySeasonOptimized(ctx, season)

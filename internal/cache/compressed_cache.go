@@ -146,84 +146,86 @@ func (c *CompressedCacheService) GetJSON(ctx context.Context, key string, dest i
 
 // SetJSON compresses and stores JSON data in cache
 func (c *CompressedCacheService) SetJSON(ctx context.Context, key string, value interface{}, ttl time.Duration) error {
-	tracer := tracing.GetTracer(ctx)
-	ctx, span := tracer.Start(ctx, "CompressedCache.SetJSON",
-		trace.WithAttributes(
-			attribute.String("cache.operation", "set_compressed"),
-			attribute.String("cache.key", key),
-		),
-		trace.WithSpanKind(trace.SpanKindInternal),
-		tracing.GetEnvironmentAttribute(),
-	)
-	defer span.End()
-
-	startTime := time.Now()
-
 	// Marshal to JSON (using goccy/go-json for maximum performance)
 	jsonData, err := json.Marshal(value)
 	if err != nil {
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
 		return fmt.Errorf("failed to marshal JSON: %w", err)
 	}
 
-	originalSize := len(jsonData)
-	span.SetAttributes(attribute.Int("cache.original_size_bytes", originalSize))
-
-	var dataToStore []byte
-	shouldCompress := originalSize > c.compressionThreshold
-
-	if shouldCompress {
-		// Compress the data
-		_, compressSpan := tracer.Start(ctx, "CompressedCache.Compress",
+	// Run compression and cache set asynchronously - fire and forget
+	go func() {
+		tracer := tracing.GetTracer(context.Background())
+		asyncCtx, span := tracer.Start(context.Background(), "CompressedCache.SetJSON",
+			trace.WithAttributes(
+				attribute.String("cache.operation", "set_compressed"),
+				attribute.String("cache.key", key),
+			),
 			trace.WithSpanKind(trace.SpanKindInternal),
+			tracing.GetEnvironmentAttribute(),
 		)
+		defer span.End()
 
-		var buf bytes.Buffer
-		writer := gzip.NewWriter(&buf)
-		_, err = writer.Write(jsonData)
-		if err != nil {
-			compressSpan.RecordError(err)
+		startTime := time.Now()
+		originalSize := len(jsonData)
+		span.SetAttributes(attribute.Int("cache.original_size_bytes", originalSize))
+
+		var dataToStore []byte
+		shouldCompress := originalSize > c.compressionThreshold
+
+		if shouldCompress {
+			// Compress the data
+			_, compressSpan := tracer.Start(asyncCtx, "CompressedCache.Compress",
+				trace.WithSpanKind(trace.SpanKindInternal),
+			)
+
+			var buf bytes.Buffer
+			writer := gzip.NewWriter(&buf)
+			_, err = writer.Write(jsonData)
+			if err != nil {
+				compressSpan.RecordError(err)
+				compressSpan.End()
+				span.RecordError(err)
+				span.SetStatus(codes.Error, err.Error())
+				return
+			}
+			writer.Close()
+
+			dataToStore = buf.Bytes()
+			compressedSize := len(dataToStore)
+
+			compressSpan.SetAttributes(
+				attribute.Int("cache.compressed_size_bytes", compressedSize),
+				attribute.Float64("cache.compression_ratio", float64(compressedSize)/float64(originalSize)),
+				attribute.Float64("cache.space_saved_percent", (1.0-float64(compressedSize)/float64(originalSize))*100),
+			)
+			compressSpan.SetStatus(codes.Ok, "compression successful")
 			compressSpan.End()
-			return fmt.Errorf("failed to compress data: %w", err)
+
+			span.SetAttributes(
+				attribute.Bool("cache.was_compressed", true),
+				attribute.Int("cache.compressed_size_bytes", compressedSize),
+				attribute.Float64("cache.compression_ratio", float64(compressedSize)/float64(originalSize)),
+			)
+		} else {
+			// Don't compress small values
+			dataToStore = jsonData
+			span.SetAttributes(attribute.Bool("cache.was_compressed", false))
 		}
-		writer.Close()
 
-		dataToStore = buf.Bytes()
-		compressedSize := len(dataToStore)
-
-		compressSpan.SetAttributes(
-			attribute.Int("cache.compressed_size_bytes", compressedSize),
-			attribute.Float64("cache.compression_ratio", float64(compressedSize)/float64(originalSize)),
-			attribute.Float64("cache.space_saved_percent", (1.0-float64(compressedSize)/float64(originalSize))*100),
-		)
-		compressSpan.SetStatus(codes.Ok, "compression successful")
-		compressSpan.End()
+		// Store in cache
+		err = c.cache.Set(asyncCtx, key, dataToStore, ttl)
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+			return
+		}
 
 		span.SetAttributes(
-			attribute.Bool("cache.was_compressed", true),
-			attribute.Int("cache.compressed_size_bytes", compressedSize),
-			attribute.Float64("cache.compression_ratio", float64(compressedSize)/float64(originalSize)),
+			attribute.String("cache.result", "success"),
+			attribute.Int64("cache.duration_ms", time.Since(startTime).Milliseconds()),
 		)
-	} else {
-		// Don't compress small values
-		dataToStore = jsonData
-		span.SetAttributes(attribute.Bool("cache.was_compressed", false))
-	}
-
-	// Store in cache
-	err = c.cache.Set(ctx, key, dataToStore, ttl)
-	if err != nil {
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
-		return err
-	}
-
-	span.SetAttributes(
-		attribute.String("cache.result", "success"),
-		attribute.Int64("cache.duration_ms", time.Since(startTime).Milliseconds()),
-	)
-	span.SetStatus(codes.Ok, "cache set with compression")
+		span.SetStatus(codes.Ok, "cache set with compression")
+	}()
 
 	return nil
 }

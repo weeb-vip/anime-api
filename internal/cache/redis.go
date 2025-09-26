@@ -60,21 +60,11 @@ func NewRedisCache(cfg config.RedisConfig) (*RedisCache, error) {
 // Get retrieves a value from Redis
 func (r *RedisCache) Get(ctx context.Context, key string) ([]byte, error) {
 	tracer := tracing.GetTracer(ctx)
-
-	// Get connection pool stats before operation
-	poolStats := r.client.PoolStats()
-
 	ctx, span := tracer.Start(ctx, "Redis.Get",
 		trace.WithAttributes(
 			attribute.String("cache.operation", "get"),
 			attribute.String("cache.key", key),
 			attribute.String("cache.backend", "redis"),
-			attribute.Int("redis.pool.hits", int(poolStats.Hits)),
-			attribute.Int("redis.pool.misses", int(poolStats.Misses)),
-			attribute.Int("redis.pool.timeouts", int(poolStats.Timeouts)),
-			attribute.Int("redis.pool.total_conns", int(poolStats.TotalConns)),
-			attribute.Int("redis.pool.idle_conns", int(poolStats.IdleConns)),
-			attribute.Int("redis.pool.stale_conns", int(poolStats.StaleConns)),
 		),
 		tracing.GetEnvironmentAttribute(),
 	)
@@ -108,10 +98,6 @@ func (r *RedisCache) Get(ctx context.Context, key string) ([]byte, error) {
 // Set stores a value in Redis with TTL
 func (r *RedisCache) Set(ctx context.Context, key string, value []byte, ttl time.Duration) error {
 	tracer := tracing.GetTracer(ctx)
-
-	// Get connection pool stats before operation
-	poolStats := r.client.PoolStats()
-
 	ctx, span := tracer.Start(ctx, "Redis.Set",
 		trace.WithAttributes(
 			attribute.String("cache.operation", "set"),
@@ -119,12 +105,6 @@ func (r *RedisCache) Set(ctx context.Context, key string, value []byte, ttl time
 			attribute.String("cache.backend", "redis"),
 			attribute.Int("cache.ttl_seconds", int(ttl.Seconds())),
 			attribute.Int("cache.size_bytes", len(value)),
-			attribute.Int("redis.pool.hits", int(poolStats.Hits)),
-			attribute.Int("redis.pool.misses", int(poolStats.Misses)),
-			attribute.Int("redis.pool.timeouts", int(poolStats.Timeouts)),
-			attribute.Int("redis.pool.total_conns", int(poolStats.TotalConns)),
-			attribute.Int("redis.pool.idle_conns", int(poolStats.IdleConns)),
-			attribute.Int("redis.pool.stale_conns", int(poolStats.StaleConns)),
 		),
 		tracing.GetEnvironmentAttribute(),
 	)
