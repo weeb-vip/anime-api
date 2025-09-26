@@ -467,14 +467,31 @@ func CurrentlyAiring(ctx context.Context, animeService anime.AnimeServiceImpl, i
 		}
 	}
 
+	// Add tracing for data transformation
+	tracer := tracing.GetTracer(ctx)
+	_, transformSpan := tracer.Start(ctx, "CurrentlyAiring.DataTransformation",
+		trace.WithAttributes(
+			attribute.Int("entities.count", len(foundAnime)),
+			attribute.String("operation", "transform_to_graphql"),
+		),
+		trace.WithSpanKind(trace.SpanKindInternal),
+		tracing.GetEnvironmentAttribute(),
+	)
+	defer transformSpan.End()
+
 	var animes []*model.Anime
 	for _, animeEntity := range foundAnime {
 		anime, err := transformAnimeToGraphQL(*animeEntity)
 		if err != nil {
+			transformSpan.RecordError(err)
+			transformSpan.SetStatus(codes.Error, err.Error())
 			return nil, err
 		}
 		animes = append(animes, anime)
 	}
+
+	transformSpan.SetAttributes(attribute.Int("results.count", len(animes)))
+	transformSpan.SetStatus(codes.Ok, "transformation completed")
 
 	metrics.GetAppMetrics().ResolverMetric(
 		float64(time.Since(startTime).Milliseconds()),

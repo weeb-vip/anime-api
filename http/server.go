@@ -16,6 +16,10 @@ import (
 func SetupServer(cfg config.Config) *muxtrace.Router {
 
 	router := muxtrace.NewRouter()
+
+	// Add gzip compression middleware
+	router.Use(middleware.GzipMiddleware())
+
 	router.Handle("/ui/playground", playground.Handler("GraphQL playground", "/graphql")).Methods("GET")
 	router.Handle("/graphql", handlers.BuildRootHandler(cfg)).Methods("POST")
 	router.Handle("/healthcheck", handlers.HealthCheckHandler()).Methods("GET")
@@ -28,7 +32,8 @@ func SetupServerWithContext(ctx context.Context, cfg config.Config) *muxtrace.Ro
 
 	router := muxtrace.NewRouter(muxtrace.WithServiceName(cfg.AppConfig.APPName))
 
-	// Add tracing middleware to all routes
+	// Add middleware to all routes
+	router.Use(middleware.GzipMiddleware())
 	router.Use(middleware.TracingMiddleware())
 
 	router.Handle("/ui/playground", playground.Handler("GraphQL playground", "/graphql")).Methods("GET")

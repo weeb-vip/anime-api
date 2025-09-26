@@ -949,9 +949,28 @@ func (a *AnimeRepository) SearchAnimeWithEpisodes(ctx context.Context, search st
 }
 
 func (a *AnimeRepository) AiringAnimeWithEpisodes(ctx context.Context, startDate *time.Time, endDate *time.Time, days *int) ([]*Anime, error) {
+	tracer := tracing.GetTracer(ctx)
+	ctx, span := tracer.Start(ctx, "AnimeRepository.AiringAnimeWithEpisodes",
+		trace.WithAttributes(
+			attribute.String("repository", "anime"),
+			attribute.String("method", "AiringAnimeWithEpisodes"),
+		),
+		trace.WithSpanKind(trace.SpanKindInternal),
+		tracing.GetEnvironmentAttribute(),
+	)
+	defer span.End()
+
 	// Generate cache key based on parameters
 	cacheKey := ""
 	if a.cache != nil {
+		// Add cache key generation tracing
+		_, cacheKeySpan := tracer.Start(ctx, "AnimeRepository.GenerateCacheKey",
+			trace.WithAttributes(
+				attribute.String("cache.operation", "key_generation"),
+			),
+			trace.WithSpanKind(trace.SpanKindInternal),
+		)
+
 		if startDate != nil && endDate != nil {
 			cacheKey = fmt.Sprintf("%s:airing:start_%s:end_%s",
 				a.cache.GetKeyBuilder().AnimePattern()[:len(a.cache.GetKeyBuilder().AnimePattern())-1],
@@ -966,14 +985,46 @@ func (a *AnimeRepository) AiringAnimeWithEpisodes(ctx context.Context, startDate
 				a.cache.GetKeyBuilder().AnimePattern()[:len(a.cache.GetKeyBuilder().AnimePattern())-1])
 		}
 
-		// Try cache first
+		cacheKeySpan.SetAttributes(attribute.String("cache.key", cacheKey))
+		cacheKeySpan.End()
+
+		// Try cache first with tracing
+		_, cacheGetSpan := tracer.Start(ctx, "AnimeRepository.CacheGet",
+			trace.WithAttributes(
+				attribute.String("cache.operation", "get"),
+				attribute.String("cache.key", cacheKey),
+			),
+			trace.WithSpanKind(trace.SpanKindInternal),
+		)
+
 		var animeList []*Anime
 		err := a.cache.GetJSON(ctx, cacheKey, &animeList)
 		if err == nil {
+			cacheGetSpan.SetAttributes(
+				attribute.String("cache.result", "hit"),
+				attribute.Int("cache.items_count", len(animeList)),
+			)
+			cacheGetSpan.SetStatus(codes.Ok, "cache hit")
+			cacheGetSpan.End()
+			span.SetAttributes(attribute.String("data_source", "cache"))
 			return animeList, nil
 		}
+
+		cacheGetSpan.SetAttributes(attribute.String("cache.result", "miss"))
+		cacheGetSpan.RecordError(err)
+		cacheGetSpan.SetStatus(codes.Error, "cache miss: "+err.Error())
+		cacheGetSpan.End()
 		// Continue to database if cache miss or error
 	}
+
+	// Add database query tracing
+	_, dbQuerySpan := tracer.Start(ctx, "AnimeRepository.DatabaseQuery",
+		trace.WithAttributes(
+			attribute.String("db.operation", "select_with_episodes"),
+			attribute.String("query.type", "airing_anime"),
+		),
+		trace.WithSpanKind(trace.SpanKindInternal),
+	)
 
 	startTime := time.Now()
 	var animes []*Anime
@@ -1029,13 +1080,42 @@ func (a *AnimeRepository) AiringAnimeWithEpisodes(ctx context.Context, startDate
 		Env:     metrics.GetCurrentEnv(),
 	})
 
+	// Complete database query tracing
+	dbQuerySpan.SetAttributes(
+		attribute.Int("db.rows_returned", len(animes)),
+		attribute.Int64("db.duration_ms", time.Since(startTime).Milliseconds()),
+	)
+
 	if err != nil {
+		dbQuerySpan.RecordError(err)
+		dbQuerySpan.SetStatus(codes.Error, err.Error())
+		dbQuerySpan.End()
 		return nil, err
 	}
 
-	// Store in cache if available
+	dbQuerySpan.SetStatus(codes.Ok, "query completed")
+	dbQuerySpan.End()
+	span.SetAttributes(attribute.String("data_source", "database"))
+
+	// Store in cache if available with tracing
 	if a.cache != nil && cacheKey != "" {
-		_ = a.cache.SetJSON(ctx, cacheKey, animes, a.cache.GetAnimeDataTTL())
+		_, cacheSetSpan := tracer.Start(ctx, "AnimeRepository.CacheSet",
+			trace.WithAttributes(
+				attribute.String("cache.operation", "set"),
+				attribute.String("cache.key", cacheKey),
+				attribute.Int("cache.items_count", len(animes)),
+			),
+			trace.WithSpanKind(trace.SpanKindInternal),
+		)
+
+		err := a.cache.SetJSON(ctx, cacheKey, animes, a.cache.GetAnimeDataTTL())
+		if err != nil {
+			cacheSetSpan.RecordError(err)
+			cacheSetSpan.SetStatus(codes.Error, "cache set failed: "+err.Error())
+		} else {
+			cacheSetSpan.SetStatus(codes.Ok, "cache set successful")
+		}
+		cacheSetSpan.End()
 	}
 
 	return animes, nil
