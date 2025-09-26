@@ -2,7 +2,9 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
+	"time"
 
 	"github.com/weeb-vip/anime-api/tracing"
 	"go.opentelemetry.io/otel"
@@ -22,7 +24,8 @@ const (
 	callbackBeforeDelete = "tracing:before_delete"
 	callbackAfterDelete  = "tracing:after_delete"
 
-	spanKey = "gorm:span"
+	spanKey               = "gorm:span"
+	connectionStartTimeKey = "gorm:connection_start_time"
 )
 
 type TracingPlugin struct{}
@@ -89,6 +92,10 @@ func (tp *TracingPlugin) before(db *gorm.DB, operation string) {
 		ctx = context.Background()
 	}
 
+	// Record connection acquisition start time
+	connectionStartTime := time.Now()
+	db.Set(connectionStartTimeKey, connectionStartTime)
+
 	// Try to get tracer from context first, then fall back to global tracer
 	tracer := tracing.GetTracer(ctx)
 	if tracer == nil {
@@ -98,12 +105,23 @@ func (tp *TracingPlugin) before(db *gorm.DB, operation string) {
 
 	spanName := fmt.Sprintf("GORM %s", operation)
 
+	// Get connection pool stats for tracing
+	sqlDB, err := db.DB()
+	var poolStats sql.DBStats
+	if err == nil {
+		poolStats = sqlDB.Stats()
+	}
+
 	// Use the existing context to create a child span
 	newCtx, span := tracer.Start(ctx, spanName,
 		trace.WithAttributes(
 			attribute.String("db.system", "mysql"),
 			attribute.String("db.operation", operation),
 			attribute.String("db.table", db.Statement.Table),
+			attribute.Int("db.connection_pool.max_open", poolStats.MaxOpenConnections),
+			attribute.Int("db.connection_pool.open", poolStats.OpenConnections),
+			attribute.Int("db.connection_pool.in_use", poolStats.InUse),
+			attribute.Int("db.connection_pool.idle", poolStats.Idle),
 		),
 		trace.WithSpanKind(trace.SpanKindClient),
 		tracing.GetEnvironmentAttribute(),
@@ -126,6 +144,29 @@ func (tp *TracingPlugin) after(db *gorm.DB) {
 	span, ok := value.(trace.Span)
 	if !ok {
 		return
+	}
+
+	// Calculate connection acquisition time
+	if startTimeValue, exists := db.Get(connectionStartTimeKey); exists {
+		if startTime, ok := startTimeValue.(time.Time); ok {
+			connectionDuration := time.Since(startTime)
+			span.SetAttributes(
+				attribute.Int64("db.connection_acquisition_duration_ms", connectionDuration.Milliseconds()),
+			)
+		}
+	}
+
+	// Get current connection pool stats
+	sqlDB, err := db.DB()
+	if err == nil {
+		poolStats := sqlDB.Stats()
+		span.SetAttributes(
+			attribute.Int64("db.connection_pool.wait_count", poolStats.WaitCount),
+			attribute.Int64("db.connection_pool.wait_duration_ms", poolStats.WaitDuration.Milliseconds()),
+			attribute.Int64("db.connection_pool.max_idle_closed", poolStats.MaxIdleClosed),
+			attribute.Int64("db.connection_pool.max_idle_time_closed", poolStats.MaxIdleTimeClosed),
+			attribute.Int64("db.connection_pool.max_lifetime_closed", poolStats.MaxLifetimeClosed),
+		)
 	}
 
 	// Add SQL query and additional database attributes

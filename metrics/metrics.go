@@ -55,6 +55,15 @@ func initMetrics(prometheusInstance *prometheus.PrometheusClient) {
 		900,
 		1000,
 	})
+
+	// Database connection pool metrics
+	prometheusInstance.CreateGaugeVec("database_connection_pool_open_connections", "Number of open database connections", []string{"service", "env"})
+	prometheusInstance.CreateGaugeVec("database_connection_pool_in_use_connections", "Number of database connections in use", []string{"service", "env"})
+	prometheusInstance.CreateGaugeVec("database_connection_pool_idle_connections", "Number of idle database connections", []string{"service", "env"})
+	prometheusInstance.CreateCounterVec("database_connection_pool_wait_total", "Total number of connection waits", []string{"service", "env"})
+	prometheusInstance.CreateHistogramVec("database_connection_acquisition_duration_milliseconds", "Time to acquire database connection", []string{"service", "env"}, []float64{
+		1, 5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000,
+	})
 }
 
 func GetCurrentEnv() string {

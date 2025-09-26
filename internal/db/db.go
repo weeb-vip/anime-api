@@ -2,10 +2,12 @@ package db
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/weeb-vip/anime-api/config"
+	"github.com/weeb-vip/anime-api/metrics"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"time"
 )
 
 type DB struct {
@@ -47,6 +49,11 @@ func NewDatabase(cfg config.DBConfig) *DB {
 	// Set maximum idle time for a connection
 	// This helps clean up idle connections
 	sqlDB.SetConnMaxIdleTime(90 * time.Second)
+
+	// Initialize connection pool metrics collection
+	poolMetrics := metrics.NewConnectionPoolMetrics(db)
+	// Start collecting metrics every 30 seconds
+	poolMetrics.StartPeriodicCollection(30 * time.Second)
 
 	return &DB{DB: db}
 }
