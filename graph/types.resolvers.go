@@ -7,6 +7,7 @@ package graph
 import (
 	"context"
 
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/weeb-vip/anime-api/graph/generated"
 	"github.com/weeb-vip/anime-api/graph/model"
 	"github.com/weeb-vip/anime-api/internal/resolvers"
@@ -20,7 +21,12 @@ func (r *animeResolver) Episodes(ctx context.Context, obj *model.Anime) ([]*mode
 		return obj.Episodes, nil
 	}
 
-	// Fallback to individual query if not preloaded
+	// Check if this is coming from a seasonal anime query - return empty array to avoid N+1 queries
+	if isSeasonalAnimeQuery(ctx) {
+		return []*model.Episode{}, nil
+	}
+
+	// Fallback to individual query if not preloaded and not from seasonal query
 	animeID := obj.ID
 	return resolvers.EpisodesByAnimeID(ctx, r.AnimeEpisodeService, animeID)
 }
@@ -63,3 +69,21 @@ func (r *Resolver) UserAnime() generated.UserAnimeResolver { return &userAnimeRe
 type animeResolver struct{ *Resolver }
 type apiInfoResolver struct{ *Resolver }
 type userAnimeResolver struct{ *Resolver }
+
+// isSeasonalAnimeQuery checks if the current context is from a seasonal anime query
+func isSeasonalAnimeQuery(ctx context.Context) bool {
+	fc := graphql.GetFieldContext(ctx)
+	if fc == nil {
+		return false
+	}
+
+	// Traverse up the field context to find the root field
+	current := fc
+	for current.Parent != nil {
+		current = current.Parent
+	}
+
+	// Check if the root field is one of the seasonal anime queries
+	rootField := current.Field.Name
+	return rootField == "animeBySeasons" || rootField == "animeBySeasonAndYear"
+}
