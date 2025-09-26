@@ -45,7 +45,7 @@ func BuildRootHandler(conf config.Config) http.Handler {
 	} else {
 		log.Info().Msg("Cache disabled by configuration")
 	}
-	cacheService := cache.NewCacheService(cacheInstance, conf.RedisConfig)
+	cacheService := cache.NewUltraOptimizedCacheService(cacheInstance, conf.RedisConfig)
 
 	// Initialize repositories
 	var animeRepository anime2.AnimeRepositoryImpl
@@ -57,8 +57,8 @@ func BuildRootHandler(conf config.Config) http.Handler {
 		log.Info().Msg("Cache enabled, using repositories with caching")
 
 		// Use repositories with caching when enabled
-		animeRepository = anime2.NewAnimeRepositoryWithCache(database, cacheService)
-		episodeRepository = anime3.NewAnimeEpisodeRepositoryWithCache(database, cacheService)
+		animeRepository = anime2.NewAnimeRepositoryWithCache(database, cacheService.CompressedCacheService.CacheService)
+		episodeRepository = anime3.NewAnimeEpisodeRepositoryWithCache(database, cacheService.CompressedCacheService.CacheService)
 	} else {
 		log.Info().Msg("Cache disabled, using direct database repositories")
 
@@ -104,7 +104,7 @@ func BuildRootHandlerWithContext(ctx context.Context, conf config.Config) http.H
 		log.Error().Err(err).Msg("Failed to initialize cache, continuing without caching")
 		cacheInstance = cache.NewNoOpCache()
 	}
-	cacheService := cache.NewCacheService(cacheInstance, conf.RedisConfig)
+	cacheService := cache.NewUltraOptimizedCacheService(cacheInstance, conf.RedisConfig)
 
 	// Initialize repositories
 	var animeRepository anime2.AnimeRepositoryImpl
@@ -117,8 +117,8 @@ func BuildRootHandlerWithContext(ctx context.Context, conf config.Config) http.H
 		log.Info().Msg("Cache enabled, using repositories with caching")
 
 		// Use repositories with caching when enabled
-		animeRepository = anime2.NewAnimeRepositoryWithCache(database, cacheService)
-		episodeRepository = anime3.NewAnimeEpisodeRepositoryWithCache(database, cacheService)
+		animeRepository = anime2.NewAnimeRepositoryWithCache(database, cacheService.CompressedCacheService.CacheService)
+		episodeRepository = anime3.NewAnimeEpisodeRepositoryWithCache(database, cacheService.CompressedCacheService.CacheService)
 	} else {
 		log.Info().Msg("Cache disabled, using direct database repositories")
 
