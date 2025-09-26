@@ -28,11 +28,22 @@ func BuildRootHandler(conf config.Config) http.Handler {
 	database := db.NewDatabase(conf.DBConfig)
 
 	// Initialize cache if enabled
+	log := logger.FromCtx(context.Background())
+	log.Info().
+		Bool("redis_enabled", conf.RedisConfig.Enabled).
+		Str("redis_host", conf.RedisConfig.Host).
+		Str("redis_port", conf.RedisConfig.Port).
+		Int("redis_db", conf.RedisConfig.DB).
+		Msg("Cache configuration")
+
 	cacheInstance, err := cache.NewCache(conf)
 	if err != nil {
-		log := logger.FromCtx(context.Background())
 		log.Error().Err(err).Msg("Failed to initialize cache, continuing without caching")
 		cacheInstance = cache.NewNoOpCache()
+	} else if conf.RedisConfig.Enabled {
+		log.Info().Msg("Redis cache successfully initialized")
+	} else {
+		log.Info().Msg("Cache disabled by configuration")
 	}
 	cacheService := cache.NewCacheService(cacheInstance, conf.RedisConfig)
 
@@ -40,7 +51,6 @@ func BuildRootHandler(conf config.Config) http.Handler {
 	var animeRepository anime2.AnimeRepositoryImpl
 	var episodeRepository anime3.AnimeEpisodeRepositoryImpl
 
-	log := logger.FromCtx(context.Background())
 	log.Info().Bool("cache_enabled", conf.RedisConfig.Enabled).Msg("Cache configuration status")
 
 	if conf.RedisConfig.Enabled {
@@ -50,7 +60,6 @@ func BuildRootHandler(conf config.Config) http.Handler {
 		animeRepository = anime2.NewAnimeRepositoryWithCache(database, cacheService)
 		episodeRepository = anime3.NewAnimeEpisodeRepositoryWithCache(database, cacheService)
 	} else {
-		log := logger.FromCtx(context.Background())
 		log.Info().Msg("Cache disabled, using direct database repositories")
 
 		// Use direct repositories when caching is disabled
@@ -111,7 +120,6 @@ func BuildRootHandlerWithContext(ctx context.Context, conf config.Config) http.H
 		animeRepository = anime2.NewAnimeRepositoryWithCache(database, cacheService)
 		episodeRepository = anime3.NewAnimeEpisodeRepositoryWithCache(database, cacheService)
 	} else {
-		log := logger.FromCtx(ctx)
 		log.Info().Msg("Cache disabled, using direct database repositories")
 
 		// Use direct repositories when caching is disabled

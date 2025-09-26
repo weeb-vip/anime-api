@@ -31,6 +31,19 @@ type RedisConfig struct {
 	DB       int    `default:"0" env:"REDIS_DB"`
 	Enabled  bool   `default:"false" env:"CACHE_ENABLED"`
 
+	// Connection Pool Configuration
+	MaxRetries      int `default:"3" env:"REDIS_MAX_RETRIES"`
+	PoolSize        int `default:"10" env:"REDIS_POOL_SIZE"`
+	MinIdleConns    int `default:"2" env:"REDIS_MIN_IDLE_CONNS"`
+	MaxIdleConns    int `default:"5" env:"REDIS_MAX_IDLE_CONNS"`
+	ConnMaxLifetime int `default:"300" env:"REDIS_CONN_MAX_LIFETIME"` // seconds
+	ConnMaxIdleTime int `default:"60" env:"REDIS_CONN_MAX_IDLE_TIME"` // seconds
+
+	// Timeout configurations (in milliseconds)
+	DialTimeoutMs  int `default:"5000" env:"REDIS_DIAL_TIMEOUT_MS"`
+	ReadTimeoutMs  int `default:"3000" env:"REDIS_READ_TIMEOUT_MS"`
+	WriteTimeoutMs int `default:"3000" env:"REDIS_WRITE_TIMEOUT_MS"`
+
 	// Cache TTL configurations (in minutes, except LockTTL which is seconds)
 	AnimeDataTTLMinutes int `default:"30" env:"CACHE_ANIME_TTL_MINUTES"`
 	EpisodeTTLMinutes   int `default:"15" env:"CACHE_EPISODE_TTL_MINUTES"`

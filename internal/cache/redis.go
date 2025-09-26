@@ -19,16 +19,32 @@ type RedisCache struct {
 	keyBuilder *CacheKeyBuilder
 }
 
-// NewRedisCache creates a new Redis cache instance
+// NewRedisCache creates a new Redis cache instance with optimized connection pooling
 func NewRedisCache(cfg config.RedisConfig) (*RedisCache, error) {
 	client := redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%s", cfg.Host, cfg.Port),
 		Password: cfg.Password,
 		DB:       cfg.DB,
+
+		// Connection Pool Configuration
+		MaxRetries:      cfg.MaxRetries,
+		PoolSize:        cfg.PoolSize,        // Maximum number of socket connections
+		MinIdleConns:    cfg.MinIdleConns,    // Minimum number of idle connections
+		MaxIdleConns:    cfg.MaxIdleConns,    // Maximum number of idle connections
+		ConnMaxLifetime: time.Duration(cfg.ConnMaxLifetime) * time.Second, // Connection age at which client retires
+		ConnMaxIdleTime: time.Duration(cfg.ConnMaxIdleTime) * time.Second, // Close idle connections after this time
+
+		// Timeout configurations for faster failure detection
+		DialTimeout:  time.Duration(cfg.DialTimeoutMs) * time.Millisecond,
+		ReadTimeout:  time.Duration(cfg.ReadTimeoutMs) * time.Millisecond,
+		WriteTimeout: time.Duration(cfg.WriteTimeoutMs) * time.Millisecond,
+
+		// Enable connection pooling stats for monitoring
+		PoolTimeout: 4 * time.Second, // Amount of time client waits for connection if all are busy
 	})
 
-	// Test connection
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	// Test connection with shorter timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
 	if err := client.Ping(ctx).Err(); err != nil {
@@ -44,11 +60,21 @@ func NewRedisCache(cfg config.RedisConfig) (*RedisCache, error) {
 // Get retrieves a value from Redis
 func (r *RedisCache) Get(ctx context.Context, key string) ([]byte, error) {
 	tracer := tracing.GetTracer(ctx)
+
+	// Get connection pool stats before operation
+	poolStats := r.client.PoolStats()
+
 	ctx, span := tracer.Start(ctx, "Redis.Get",
 		trace.WithAttributes(
 			attribute.String("cache.operation", "get"),
 			attribute.String("cache.key", key),
 			attribute.String("cache.backend", "redis"),
+			attribute.Int("redis.pool.hits", int(poolStats.Hits)),
+			attribute.Int("redis.pool.misses", int(poolStats.Misses)),
+			attribute.Int("redis.pool.timeouts", int(poolStats.Timeouts)),
+			attribute.Int("redis.pool.total_conns", int(poolStats.TotalConns)),
+			attribute.Int("redis.pool.idle_conns", int(poolStats.IdleConns)),
+			attribute.Int("redis.pool.stale_conns", int(poolStats.StaleConns)),
 		),
 		tracing.GetEnvironmentAttribute(),
 	)
@@ -82,6 +108,10 @@ func (r *RedisCache) Get(ctx context.Context, key string) ([]byte, error) {
 // Set stores a value in Redis with TTL
 func (r *RedisCache) Set(ctx context.Context, key string, value []byte, ttl time.Duration) error {
 	tracer := tracing.GetTracer(ctx)
+
+	// Get connection pool stats before operation
+	poolStats := r.client.PoolStats()
+
 	ctx, span := tracer.Start(ctx, "Redis.Set",
 		trace.WithAttributes(
 			attribute.String("cache.operation", "set"),
@@ -89,6 +119,12 @@ func (r *RedisCache) Set(ctx context.Context, key string, value []byte, ttl time
 			attribute.String("cache.backend", "redis"),
 			attribute.Int("cache.ttl_seconds", int(ttl.Seconds())),
 			attribute.Int("cache.size_bytes", len(value)),
+			attribute.Int("redis.pool.hits", int(poolStats.Hits)),
+			attribute.Int("redis.pool.misses", int(poolStats.Misses)),
+			attribute.Int("redis.pool.timeouts", int(poolStats.Timeouts)),
+			attribute.Int("redis.pool.total_conns", int(poolStats.TotalConns)),
+			attribute.Int("redis.pool.idle_conns", int(poolStats.IdleConns)),
+			attribute.Int("redis.pool.stale_conns", int(poolStats.StaleConns)),
 		),
 		tracing.GetEnvironmentAttribute(),
 	)

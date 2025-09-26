@@ -64,6 +64,14 @@ func initMetrics(prometheusInstance *prometheus.PrometheusClient) {
 	prometheusInstance.CreateHistogramVec("database_connection_acquisition_duration_milliseconds", "Time to acquire database connection", []string{"service", "env"}, []float64{
 		1, 5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000,
 	})
+
+	// Redis connection pool metrics
+	prometheusInstance.CreateGaugeVec("redis_connection_pool_hits_total", "Number of times connection pool hit", []string{"service", "env"})
+	prometheusInstance.CreateGaugeVec("redis_connection_pool_misses_total", "Number of times connection pool missed", []string{"service", "env"})
+	prometheusInstance.CreateGaugeVec("redis_connection_pool_timeouts_total", "Number of connection pool timeouts", []string{"service", "env"})
+	prometheusInstance.CreateGaugeVec("redis_connection_pool_total_connections", "Total number of connections in pool", []string{"service", "env"})
+	prometheusInstance.CreateGaugeVec("redis_connection_pool_idle_connections", "Number of idle connections in pool", []string{"service", "env"})
+	prometheusInstance.CreateGaugeVec("redis_connection_pool_stale_connections", "Number of stale connections in pool", []string{"service", "env"})
 }
 
 func GetCurrentEnv() string {

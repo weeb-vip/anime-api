@@ -3,9 +3,12 @@ package anime
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/weeb-vip/anime-api/internal/cache"
 	"github.com/weeb-vip/anime-api/internal/db"
 	animeEpisode "github.com/weeb-vip/anime-api/internal/db/repositories/anime_episode"
+	"github.com/weeb-vip/anime-api/internal/logger"
 	"github.com/weeb-vip/anime-api/metrics"
 	"github.com/weeb-vip/anime-api/tracing"
 	metrics_lib "github.com/weeb-vip/go-metrics-lib"
@@ -13,7 +16,6 @@ import (
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 	"gorm.io/gorm"
-	"time"
 )
 
 type RECORD_TYPE string
@@ -1007,6 +1009,14 @@ func (a *AnimeRepository) AiringAnimeWithEpisodes(ctx context.Context, startDate
 			cacheGetSpan.SetStatus(codes.Ok, "cache hit")
 			cacheGetSpan.End()
 			span.SetAttributes(attribute.String("data_source", "cache"))
+
+			// Debug logging for cache hits
+			log := logger.FromCtx(ctx)
+			log.Info().
+				Str("cache_key", cacheKey).
+				Int("items_count", len(animeList)).
+				Msg("Cache HIT for AiringAnimeWithEpisodes")
+
 			return animeList, nil
 		}
 
@@ -1014,6 +1024,14 @@ func (a *AnimeRepository) AiringAnimeWithEpisodes(ctx context.Context, startDate
 		cacheGetSpan.RecordError(err)
 		cacheGetSpan.SetStatus(codes.Error, "cache miss: "+err.Error())
 		cacheGetSpan.End()
+
+		// Debug logging for cache misses
+		log := logger.FromCtx(ctx)
+		log.Info().
+			Str("cache_key", cacheKey).
+			Err(err).
+			Msg("Cache MISS for AiringAnimeWithEpisodes")
+
 		// Continue to database if cache miss or error
 	}
 
@@ -1112,8 +1130,23 @@ func (a *AnimeRepository) AiringAnimeWithEpisodes(ctx context.Context, startDate
 		if err != nil {
 			cacheSetSpan.RecordError(err)
 			cacheSetSpan.SetStatus(codes.Error, "cache set failed: "+err.Error())
+
+			// Debug logging for cache set failures
+			log := logger.FromCtx(ctx)
+			log.Error().
+				Str("cache_key", cacheKey).
+				Int("items_count", len(animes)).
+				Err(err).
+				Msg("Failed to SET cache for AiringAnimeWithEpisodes")
 		} else {
 			cacheSetSpan.SetStatus(codes.Ok, "cache set successful")
+
+			// Debug logging for successful cache sets
+			log := logger.FromCtx(ctx)
+			log.Info().
+				Str("cache_key", cacheKey).
+				Int("items_count", len(animes)).
+				Msg("Successfully SET cache for AiringAnimeWithEpisodes")
 		}
 		cacheSetSpan.End()
 	}

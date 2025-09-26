@@ -5,5 +5,25 @@
     "password": "mysecretpassword",
     "database": "anime",
     "port": 15306
+  },
+  "redisconfig": {
+    "host": "127.0.0.1",
+    "port": "6379",
+    "password": "",
+    "db": 0,
+    "enabled": true,
+    "maxretries": 3,
+    "poolsize": 10,
+    "minidleconns": 3,
+    "maxidleconns": 6,
+    "connmaxlifetime": 300,
+    "connmaxidletime": 60,
+    "dialtimeoutms": 2000,
+    "readtimeoutms": 1000,
+    "writetimeoutms": 1000,
+    "animedatattlminutes": 30,
+    "episodettlminutes": 15,
+    "seasonttlminutes": 60,
+    "lockttlseconds": 30
   }
 }
