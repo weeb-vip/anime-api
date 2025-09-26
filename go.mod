@@ -8,9 +8,11 @@ require (
 	github.com/99designs/gqlgen v0.17.37
 	github.com/DataDog/datadog-go/v5 v5.6.0
 	github.com/go-sql-driver/mysql v1.7.1
+	github.com/goccy/go-json v0.10.5
 	github.com/golang-migrate/migrate/v4 v4.15.2
 	github.com/golang/mock v1.7.0-rc.1
 	github.com/jinzhu/configor v1.2.1
+	github.com/redis/go-redis/v9 v9.14.0
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/cobra v1.7.0
 	github.com/vektah/gqlparser/v2 v2.5.16
@@ -73,7 +75,6 @@ require (
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.62.0 // indirect
 	github.com/prometheus/procfs v0.16.1 // indirect
-	github.com/redis/go-redis/v9 v9.14.0 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/secure-systems-lab/go-securesystemslib v0.9.0 // indirect

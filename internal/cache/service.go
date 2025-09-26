@@ -2,7 +2,6 @@ package cache
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -12,6 +11,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
+	"github.com/goccy/go-json"
 )
 
 // CacheService provides high-level caching operations with JSON serialization
@@ -21,7 +21,7 @@ type CacheService struct {
 	config     config.RedisConfig
 }
 
-// NewCacheService creates a new cache service
+// NewCacheService creates a new cache service with high-performance JSON
 func NewCacheService(cache Cache, cfg config.RedisConfig) *CacheService {
 	return &CacheService{
 		cache:      cache,
@@ -80,7 +80,7 @@ func (c *CacheService) GetJSON(ctx context.Context, key string, dest interface{}
 		return err
 	}
 
-	// Phase 2: JSON Unmarshaling
+	// Phase 2: JSON Unmarshaling (using goccy/go-json for maximum performance)
 	unmarshalStartTime := time.Now()
 	err = json.Unmarshal(data, dest)
 	unmarshalEndTime := time.Now()

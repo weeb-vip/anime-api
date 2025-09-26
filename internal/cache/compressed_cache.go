@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"time"
@@ -14,6 +13,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
+	"github.com/goccy/go-json"
 )
 
 // CompressedCacheService wraps CacheService with compression for large values
@@ -22,7 +22,7 @@ type CompressedCacheService struct {
 	compressionThreshold int // Compress values larger than this (bytes)
 }
 
-// NewCompressedCacheService creates a cache service with compression
+// NewCompressedCacheService creates a cache service with compression and high-performance JSON
 func NewCompressedCacheService(cache Cache, cfg config.RedisConfig) *CompressedCacheService {
 	return &CompressedCacheService{
 		CacheService:         NewCacheService(cache, cfg),
@@ -114,7 +114,7 @@ func (c *CompressedCacheService) GetJSON(ctx context.Context, key string, dest i
 		span.SetAttributes(attribute.Bool("cache.was_compressed", false))
 	}
 
-	// Unmarshal JSON
+	// Unmarshal JSON (using goccy/go-json for maximum performance)
 	unmarshalStartTime := time.Now()
 	err = json.Unmarshal(jsonData, dest)
 	unmarshalEndTime := time.Now()
@@ -159,7 +159,7 @@ func (c *CompressedCacheService) SetJSON(ctx context.Context, key string, value 
 
 	startTime := time.Now()
 
-	// Marshal to JSON
+	// Marshal to JSON (using goccy/go-json for maximum performance)
 	jsonData, err := json.Marshal(value)
 	if err != nil {
 		span.RecordError(err)
