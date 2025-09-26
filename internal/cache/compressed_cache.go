@@ -68,6 +68,7 @@ func (c *CompressedCacheService) GetJSON(ctx context.Context, key string, dest i
 	var jsonData []byte
 	if len(data) >= 2 && data[0] == 0x1f && data[1] == 0x8b {
 		// Data is compressed, decompress it
+		decompressStartTime := time.Now()
 		_, decompressSpan := tracer.Start(ctx, "CompressedCache.Decompress",
 			trace.WithSpanKind(trace.SpanKindInternal),
 		)
@@ -81,8 +82,15 @@ func (c *CompressedCacheService) GetJSON(ctx context.Context, key string, dest i
 		defer reader.Close()
 
 		jsonData, err = io.ReadAll(reader)
+		decompressEndTime := time.Now()
+		decompressDuration := decompressEndTime.Sub(decompressStartTime)
+
 		if err != nil {
 			decompressSpan.RecordError(err)
+			decompressSpan.SetAttributes(
+				attribute.Int64("cache.decompress_duration_us", decompressDuration.Microseconds()),
+				attribute.Int64("cache.decompress_duration_ms", decompressDuration.Milliseconds()),
+			)
 			decompressSpan.End()
 			return fmt.Errorf("failed to decompress data: %w", err)
 		}
@@ -90,6 +98,8 @@ func (c *CompressedCacheService) GetJSON(ctx context.Context, key string, dest i
 		decompressSpan.SetAttributes(
 			attribute.Int("cache.decompressed_size_bytes", len(jsonData)),
 			attribute.Float64("cache.compression_ratio", float64(len(data))/float64(len(jsonData))),
+			attribute.Int64("cache.decompress_duration_us", decompressDuration.Microseconds()),
+			attribute.Int64("cache.decompress_duration_ms", decompressDuration.Milliseconds()),
 		)
 		decompressSpan.SetStatus(codes.Ok, "decompression successful")
 		decompressSpan.End()
