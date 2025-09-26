@@ -1650,23 +1650,63 @@ func (a *AnimeRepository) FindBySeasonBatched(ctx context.Context, season string
 
 // FindBySeasonWithFieldSelection - Optimized query that only selects requested fields
 func (a *AnimeRepository) FindBySeasonWithFieldSelection(ctx context.Context, season string, fieldSelection *FieldSelection) ([]*Anime, error) {
+	tracer := tracing.GetTracer(ctx)
+
 	// Try cache first if available
 	if a.cache != nil {
+		ctx, cacheSpan := tracer.Start(ctx, "AnimeRepository.CacheGet",
+			trace.WithAttributes(
+				attribute.String("cache.operation", "get"),
+				attribute.String("cache.layer", "repository"),
+				attribute.String("anime.season", season),
+				attribute.Int("cache.field_count", len(fieldSelection.Fields)),
+			),
+			trace.WithSpanKind(trace.SpanKindInternal),
+			tracing.GetEnvironmentAttribute(),
+		)
+
 		// Convert map[string]bool to []string for cache key
 		var fields []string
 		for field := range fieldSelection.Fields {
 			fields = append(fields, field)
 		}
 		key := a.cache.GetKeyBuilder().AnimeBySeasonWithFields(season, fields)
+		cacheSpan.SetAttributes(
+			attribute.String("cache.key", key),
+			attribute.StringSlice("cache.fields", fields),
+		)
+
+		cacheStartTime := time.Now()
 		var animeList []*Anime
 		err := a.cache.GetJSON(ctx, key, &animeList)
+		cacheDuration := time.Since(cacheStartTime)
+
+		cacheSpan.SetAttributes(
+			attribute.Int64("cache.duration_us", cacheDuration.Microseconds()),
+			attribute.Int64("cache.duration_ms", cacheDuration.Milliseconds()),
+		)
+
 		if err == nil {
+			cacheSpan.SetAttributes(
+				attribute.String("cache.result", "hit"),
+				attribute.Int("cache.items_returned", len(animeList)),
+			)
+			cacheSpan.SetStatus(codes.Ok, "cache hit")
+			cacheSpan.End()
 			return animeList, nil
+		} else {
+			cacheSpan.SetAttributes(attribute.String("cache.result", "miss"))
+			if err != cache.ErrCacheMiss {
+				cacheSpan.RecordError(err)
+				cacheSpan.SetStatus(codes.Error, err.Error())
+			} else {
+				cacheSpan.SetStatus(codes.Ok, "cache miss")
+			}
+			cacheSpan.End()
 		}
 		// Continue to database if cache miss or error
 	}
 
-	tracer := tracing.GetTracer(ctx)
 	ctx, span := tracer.Start(ctx, "AnimeRepository.FindBySeasonWithFieldSelection",
 		trace.WithAttributes(
 			attribute.String("service", "anime"),

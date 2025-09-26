@@ -37,6 +37,7 @@ func (c *CompressedCacheService) GetJSON(ctx context.Context, key string, dest i
 		trace.WithAttributes(
 			attribute.String("cache.operation", "get_compressed"),
 			attribute.String("cache.key", key),
+			attribute.String("cache.layer", "compressed"),
 		),
 		trace.WithSpanKind(trace.SpanKindInternal),
 		tracing.GetEnvironmentAttribute(),
@@ -45,8 +46,16 @@ func (c *CompressedCacheService) GetJSON(ctx context.Context, key string, dest i
 
 	startTime := time.Now()
 
-	// Get raw data from cache
+	// Get raw data from cache (Redis operation)
+	redisStartTime := time.Now()
 	data, err := c.cache.Get(ctx, key)
+	redisEndTime := time.Now()
+	redisDuration := redisEndTime.Sub(redisStartTime)
+
+	span.SetAttributes(
+		attribute.Int64("cache.redis_duration_us", redisDuration.Microseconds()),
+		attribute.Int64("cache.redis_duration_ms", redisDuration.Milliseconds()),
+	)
 	if err != nil {
 		return err
 	}
@@ -96,16 +105,29 @@ func (c *CompressedCacheService) GetJSON(ctx context.Context, key string, dest i
 	}
 
 	// Unmarshal JSON
+	unmarshalStartTime := time.Now()
 	err = json.Unmarshal(jsonData, dest)
+	unmarshalEndTime := time.Now()
+	unmarshalDuration := unmarshalEndTime.Sub(unmarshalStartTime)
+
+	span.SetAttributes(
+		attribute.Int64("cache.unmarshal_duration_us", unmarshalDuration.Microseconds()),
+		attribute.Int64("cache.unmarshal_duration_ms", unmarshalDuration.Milliseconds()),
+		attribute.Int("cache.json_size_bytes", len(jsonData)),
+	)
+
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
+		span.SetAttributes(attribute.String("cache.result", "unmarshal_error"))
 		return fmt.Errorf("failed to unmarshal JSON: %w", err)
 	}
 
+	totalDuration := time.Since(startTime)
 	span.SetAttributes(
 		attribute.String("cache.result", "hit"),
-		attribute.Int64("cache.duration_ms", time.Since(startTime).Milliseconds()),
+		attribute.Int64("cache.total_duration_us", totalDuration.Microseconds()),
+		attribute.Int64("cache.total_duration_ms", totalDuration.Milliseconds()),
 	)
 	span.SetStatus(codes.Ok, "cache hit with decompression")
 

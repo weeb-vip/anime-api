@@ -8,6 +8,10 @@ import (
 
 	"github.com/weeb-vip/anime-api/config"
 	"github.com/weeb-vip/anime-api/metrics"
+	"github.com/weeb-vip/anime-api/tracing"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // CacheService provides high-level caching operations with JSON serialization
@@ -28,11 +32,36 @@ func NewCacheService(cache Cache, cfg config.RedisConfig) *CacheService {
 
 // GetJSON retrieves and unmarshals JSON data from cache
 func (c *CacheService) GetJSON(ctx context.Context, key string, dest interface{}) error {
+	tracer := tracing.GetTracer(ctx)
+	ctx, span := tracer.Start(ctx, "CacheService.GetJSON",
+		trace.WithAttributes(
+			attribute.String("cache.operation", "get_json"),
+			attribute.String("cache.key", key),
+			attribute.String("cache.layer", "service"),
+		),
+		trace.WithSpanKind(trace.SpanKindInternal),
+		tracing.GetEnvironmentAttribute(),
+	)
+	defer span.End()
+
 	startTime := time.Now()
 
+	// Phase 1: Redis Get Operation
+	redisStartTime := time.Now()
 	data, err := c.cache.Get(ctx, key)
+	redisEndTime := time.Now()
+	redisDuration := redisEndTime.Sub(redisStartTime)
+
+	span.SetAttributes(
+		attribute.Int64("cache.redis_duration_us", redisDuration.Microseconds()),
+		attribute.Int("cache.data_size_bytes", len(data)),
+	)
+
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		if err == ErrCacheMiss {
+			span.SetAttributes(attribute.String("cache.result", "miss"))
 			metrics.GetAppMetrics().DatabaseMetric(
 				float64(time.Since(startTime).Milliseconds()),
 				"cache",
@@ -40,6 +69,7 @@ func (c *CacheService) GetJSON(ctx context.Context, key string, dest interface{}
 				"miss",
 			)
 		} else {
+			span.SetAttributes(attribute.String("cache.result", "error"))
 			metrics.GetAppMetrics().DatabaseMetric(
 				float64(time.Since(startTime).Milliseconds()),
 				"cache",
@@ -50,8 +80,21 @@ func (c *CacheService) GetJSON(ctx context.Context, key string, dest interface{}
 		return err
 	}
 
+	// Phase 2: JSON Unmarshaling
+	unmarshalStartTime := time.Now()
 	err = json.Unmarshal(data, dest)
+	unmarshalEndTime := time.Now()
+	unmarshalDuration := unmarshalEndTime.Sub(unmarshalStartTime)
+
+	span.SetAttributes(
+		attribute.Int64("cache.unmarshal_duration_us", unmarshalDuration.Microseconds()),
+		attribute.Int64("cache.total_duration_us", time.Since(startTime).Microseconds()),
+	)
+
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, fmt.Sprintf("unmarshal error: %v", err))
+		span.SetAttributes(attribute.String("cache.result", "unmarshal_error"))
 		metrics.GetAppMetrics().DatabaseMetric(
 			float64(time.Since(startTime).Milliseconds()),
 			"cache",
@@ -60,6 +103,12 @@ func (c *CacheService) GetJSON(ctx context.Context, key string, dest interface{}
 		)
 		return fmt.Errorf("cache unmarshal error: %w", err)
 	}
+
+	span.SetAttributes(
+		attribute.String("cache.result", "hit"),
+		attribute.Bool("cache.success", true),
+	)
+	span.SetStatus(codes.Ok, "cache hit")
 
 	metrics.GetAppMetrics().DatabaseMetric(
 		float64(time.Since(startTime).Milliseconds()),
