@@ -150,6 +150,7 @@ type ComplexityRoot struct {
 
 	Episode struct {
 		AirDate       func(childComplexity int) int
+		AirTime       func(childComplexity int) int
 		AnimeID       func(childComplexity int) int
 		CreatedAt     func(childComplexity int) int
 		EpisodeNumber func(childComplexity int) int
@@ -768,6 +769,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Episode.AirDate(childComplexity), true
 
+	case "Episode.airTime":
+		if e.complexity.Episode.AirTime == nil {
+			break
+		}
+
+		return e.complexity.Episode.AirTime(childComplexity), true
+
 	case "Episode.animeId":
 		if e.complexity.Episode.AnimeID == nil {
 			break
@@ -1273,6 +1281,8 @@ type Episode @key(fields: "animeId") {
     synopsis: String
     "Episode air date"
     airDate: Time
+    "Calculated air time with timezone conversion"
+    airTime: Time
 
     createdAt: String!
     updatedAt: String!
@@ -2431,6 +2441,8 @@ func (ec *executionContext) fieldContext_Anime_episodes(ctx context.Context, fie
 				return ec.fieldContext_Episode_synopsis(ctx, field)
 			case "airDate":
 				return ec.fieldContext_Episode_airDate(ctx, field)
+			case "airTime":
+				return ec.fieldContext_Episode_airTime(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Episode_createdAt(ctx, field)
 			case "updatedAt":
@@ -2967,6 +2979,8 @@ func (ec *executionContext) fieldContext_Anime_nextEpisode(ctx context.Context, 
 				return ec.fieldContext_Episode_synopsis(ctx, field)
 			case "airDate":
 				return ec.fieldContext_Episode_airDate(ctx, field)
+			case "airTime":
+				return ec.fieldContext_Episode_airTime(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Episode_createdAt(ctx, field)
 			case "updatedAt":
@@ -5085,6 +5099,8 @@ func (ec *executionContext) fieldContext_Entity_findEpisodeByAnimeID(ctx context
 				return ec.fieldContext_Episode_synopsis(ctx, field)
 			case "airDate":
 				return ec.fieldContext_Episode_airDate(ctx, field)
+			case "airTime":
+				return ec.fieldContext_Episode_airTime(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Episode_createdAt(ctx, field)
 			case "updatedAt":
@@ -5446,6 +5462,47 @@ func (ec *executionContext) _Episode_airDate(ctx context.Context, field graphql.
 }
 
 func (ec *executionContext) fieldContext_Episode_airDate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Episode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Episode_airTime(ctx context.Context, field graphql.CollectedField, obj *model.Episode) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Episode_airTime(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AirTime, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Episode_airTime(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Episode",
 		Field:      field,
@@ -6192,6 +6249,8 @@ func (ec *executionContext) fieldContext_Query_episode(ctx context.Context, fiel
 				return ec.fieldContext_Episode_synopsis(ctx, field)
 			case "airDate":
 				return ec.fieldContext_Episode_airDate(ctx, field)
+			case "airTime":
+				return ec.fieldContext_Episode_airTime(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Episode_createdAt(ctx, field)
 			case "updatedAt":
@@ -6264,6 +6323,8 @@ func (ec *executionContext) fieldContext_Query_episodesByAnimeId(ctx context.Con
 				return ec.fieldContext_Episode_synopsis(ctx, field)
 			case "airDate":
 				return ec.fieldContext_Episode_airDate(ctx, field)
+			case "airTime":
+				return ec.fieldContext_Episode_airTime(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Episode_createdAt(ctx, field)
 			case "updatedAt":
@@ -9727,6 +9788,8 @@ func (ec *executionContext) _Episode(ctx context.Context, sel ast.SelectionSet, 
 			out.Values[i] = ec._Episode_synopsis(ctx, field, obj)
 		case "airDate":
 			out.Values[i] = ec._Episode_airDate(ctx, field, obj)
+		case "airTime":
+			out.Values[i] = ec._Episode_airTime(ctx, field, obj)
 		case "createdAt":
 			out.Values[i] = ec._Episode_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

@@ -210,7 +210,9 @@ type Episode struct {
 	// Episode synopsis
 	Synopsis *string `json:"synopsis,omitempty"`
 	// Episode air date
-	AirDate   *time.Time `json:"airDate,omitempty"`
+	AirDate *time.Time `json:"airDate,omitempty"`
+	// Calculated air time with timezone conversion
+	AirTime   *time.Time `json:"airTime,omitempty"`
 	CreatedAt string     `json:"createdAt"`
 	UpdatedAt string     `json:"updatedAt"`
 }

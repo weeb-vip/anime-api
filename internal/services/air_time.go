@@ -33,9 +33,10 @@ type AirTimeDisplayInfo struct {
 	Variant string // countdown, scheduled, aired, airing
 }
 
-// parseAirTime parses broadcast time and creates accurate air time
+// ParseAirTime parses broadcast time and creates accurate air time in UTC
 // Based on the frontend airTimeUtils.js parseAirTime function
-func parseAirTime(airDate *time.Time, broadcast *string) *time.Time {
+// Returns time in UTC timezone for consistent API responses
+func ParseAirTime(airDate *time.Time, broadcast *string) *time.Time {
 	if airDate == nil || broadcast == nil {
 		return airDate
 	}
@@ -142,7 +143,7 @@ func isCurrentlyAiring(airDate *time.Time, broadcast *string, durationMinutes in
 		return false
 	}
 
-	airTime := parseAirTime(airDate, broadcast)
+	airTime := ParseAirTime(airDate, broadcast)
 	if airTime == nil {
 		return false
 	}
@@ -162,7 +163,7 @@ func hasAlreadyAired(airDate *time.Time, broadcast *string, durationMinutes int,
 		return false
 	}
 
-	airTime := parseAirTime(airDate, broadcast)
+	airTime := ParseAirTime(airDate, broadcast)
 	if airTime == nil {
 		return false
 	}
@@ -183,7 +184,7 @@ func calculateCountdown(airDate *time.Time, broadcast *string, durationMinutes i
 		return ""
 	}
 
-	airTime := parseAirTime(airDate, broadcast)
+	airTime := ParseAirTime(airDate, broadcast)
 	if airTime == nil {
 		return ""
 	}
@@ -235,7 +236,7 @@ func findNextEpisode(episodes []*model.Episode, broadcast *string, currentTime t
 
 	for _, episode := range episodes {
 		if episode.AirDate != nil {
-			airTime := parseAirTime(episode.AirDate, broadcast)
+			airTime := ParseAirTime(episode.AirDate, broadcast)
 			if airTime != nil {
 				// Return episode if it's in the future or aired in the last 24 hours
 				timeDiff := currentTime.UnixMilli() - airTime.UnixMilli()
@@ -288,7 +289,7 @@ func GetAirTimeDisplay(airDate *time.Time, broadcast *string, duration *string, 
 		}
 	}
 
-	airTime := parseAirTime(airDate, broadcast)
+	airTime := ParseAirTime(airDate, broadcast)
 	if airTime == nil {
 		return nil
 	}
@@ -436,6 +437,14 @@ func ProcessCurrentlyAiring(animes []*model.Anime, limit int, currentTime time.T
 	// Convert back to []*model.Anime
 	var finalResult []*model.Anime
 	for _, processedItem := range result {
+		// Calculate the air time with timezone conversion
+		var airTime *time.Time
+		if processedItem.NextEpisode.AirDate != nil {
+			// Use the broadcast info from the anime to calculate the proper air time
+			calculatedAirTime := ParseAirTime(processedItem.NextEpisode.AirDate, processedItem.Anime.Broadcast)
+			airTime = calculatedAirTime
+		}
+
 		// Update the anime with the next episode information
 		processedItem.Anime.NextEpisode = &model.Episode{
 			ID:            processedItem.NextEpisode.ID,
@@ -444,6 +453,7 @@ func ProcessCurrentlyAiring(animes []*model.Anime, limit int, currentTime time.T
 			TitleEn:       processedItem.NextEpisode.TitleEn,
 			TitleJp:       processedItem.NextEpisode.TitleJp,
 			AirDate:       processedItem.NextEpisode.AirDate,
+			AirTime:       airTime,
 			Synopsis:      processedItem.NextEpisode.Synopsis,
 			CreatedAt:     time.Now().Format("2006-01-02 15:04:05"),
 			UpdatedAt:     time.Now().Format("2006-01-02 15:04:05"),

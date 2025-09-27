@@ -101,6 +101,17 @@ func TestProcessCurrentlyAiring(t *testing.T) {
 		t.Errorf("Expected third result to be Anime 2, got %s", result[2].ID)
 	}
 
+	// Test that airTime is populated in UTC
+	for _, anime := range result {
+		if anime.NextEpisode != nil && anime.NextEpisode.AirTime != nil {
+			// airTime should be in UTC
+			if anime.NextEpisode.AirTime.Location() != time.UTC {
+				t.Errorf("Expected airTime to be in UTC, got %s", anime.NextEpisode.AirTime.Location())
+			}
+			t.Logf("Anime %s: airDate=%v, airTime=%v (UTC)", anime.ID, anime.NextEpisode.AirDate, anime.NextEpisode.AirTime)
+		}
+	}
+
 	// Test with limit of 2
 	limitedResult := ProcessCurrentlyAiring(animes, 2, now)
 	if len(limitedResult) != 2 {
@@ -113,7 +124,7 @@ func TestParseAirTime(t *testing.T) {
 	airDate := time.Date(2023, 12, 15, 0, 0, 0, 0, time.UTC)
 	broadcast := "Fridays at 01:30 (JST)"
 
-	result := parseAirTime(&airDate, &broadcast)
+	result := ParseAirTime(&airDate, &broadcast)
 	if result == nil {
 		t.Error("Expected non-nil result")
 		return

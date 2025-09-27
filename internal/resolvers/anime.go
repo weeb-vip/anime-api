@@ -74,6 +74,12 @@ func transformAnimeToGraphQL(animeEntity anime2.Anime) (*model.Anime, error) {
 		// Initialize empty slice to ensure it's not nil even if no episodes
 		episodes = make([]*model.Episode, 0, len(animeEntity.AnimeEpisodes))
 		for _, episodeEntity := range animeEntity.AnimeEpisodes {
+			// Calculate air time with timezone conversion if broadcast info is available
+			var airTime *time.Time
+			if episodeEntity.Aired != nil && animeEntity.Broadcast != nil {
+				airTime = services.ParseAirTime(episodeEntity.Aired, animeEntity.Broadcast)
+			}
+
 			episode := &model.Episode{
 				ID:            episodeEntity.ID,
 				AnimeID:       episodeEntity.AnimeID,
@@ -81,6 +87,7 @@ func transformAnimeToGraphQL(animeEntity anime2.Anime) (*model.Anime, error) {
 				TitleEn:       episodeEntity.TitleEn,
 				TitleJp:       episodeEntity.TitleJp,
 				AirDate:       episodeEntity.Aired,
+				AirTime:       airTime,
 				Synopsis:      episodeEntity.Synopsis,
 				CreatedAt:     episodeEntity.CreatedAt.Format("2006-01-02 15:04:05"),
 				UpdatedAt:     episodeEntity.UpdatedAt.Format("2006-01-02 15:04:05"),
@@ -180,6 +187,13 @@ func transformAnimeToGraphQLWithEpisode(animeEntity anime2.AnimeWithNextEpisode)
 
 	if animeEntity.NextEpisode != nil {
 		nextEpisodeEntity := animeEntity.NextEpisode
+
+		// Calculate air time with timezone conversion if broadcast info is available
+		var airTime *time.Time
+		if nextEpisodeEntity.Aired != nil && animeEntity.Broadcast != nil {
+			airTime = services.ParseAirTime(nextEpisodeEntity.Aired, animeEntity.Broadcast)
+		}
+
 		nextEpisode = &model.Episode{
 			ID:            nextEpisodeEntity.ID,
 			AnimeID:       nextEpisodeEntity.AnimeID,
@@ -187,6 +201,7 @@ func transformAnimeToGraphQLWithEpisode(animeEntity anime2.AnimeWithNextEpisode)
 			TitleEn:       nextEpisodeEntity.TitleEn,
 			TitleJp:       nextEpisodeEntity.TitleJp,
 			AirDate:       nextEpisodeEntity.Aired,
+			AirTime:       airTime,
 			Synopsis:      nextEpisodeEntity.Synopsis,
 			CreatedAt:     nextEpisodeEntity.CreatedAt.Format("2006-01-02 15:04:05"),
 			UpdatedAt:     nextEpisodeEntity.UpdatedAt.Format("2006-01-02 15:04:05"),

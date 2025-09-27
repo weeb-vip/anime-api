@@ -108,6 +108,8 @@ type Episode @key(fields: "animeId") {
     synopsis: String
     "Episode air date"
     airDate: Time
+    "Calculated air time with timezone conversion"
+    airTime: Time
 
     createdAt: String!
     updatedAt: String!
