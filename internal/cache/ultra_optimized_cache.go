@@ -73,6 +73,11 @@ func (u *UltraOptimizedCacheService) ultraOptimize(ctx context.Context, key stri
 		val = val.Elem()
 	}
 
+	// Special handling for time types - don't optimize them
+	if val.Type().String() == "time.Time" {
+		return value, false
+	}
+
 	if val.Kind() == reflect.Slice {
 		// For slices (like anime lists), optimize each item
 		return u.optimizeSlice(ctx, key, val, ttl), false
@@ -134,7 +139,17 @@ func (u *UltraOptimizedCacheService) optimizeStruct(ctx context.Context, key str
 		if newVal.Field(i).CanSet() {
 			optimizedField, _ := u.ultraOptimize(ctx, key, field.Interface(), ttl)
 			if optimizedField != nil {
-				newVal.Field(i).Set(reflect.ValueOf(optimizedField))
+				optimizedVal := reflect.ValueOf(optimizedField)
+				fieldType := newVal.Field(i).Type()
+
+				// Handle type mismatches, especially for time types
+				if optimizedVal.Type() != fieldType {
+					// Skip optimization if types don't match to avoid panics
+					// This commonly happens with time.Time vs *time.Time
+					continue
+				}
+
+				newVal.Field(i).Set(optimizedVal)
 			}
 		}
 	}

@@ -1,10 +1,10 @@
 {
   "dbconfig": {
     "host": "localhost",
-    "user": "user",
+    "user": "weeb",
     "password": "mysecretpassword",
-    "database": "anime",
-    "port": 15306
+    "database": "weeb",
+    "port": 3306
   },
   "redisconfig": {
     "host": "127.0.0.1",
