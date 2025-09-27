@@ -68,9 +68,19 @@ func (u *UltraOptimizedCacheService) SetJSON(ctx context.Context, key string, va
 
 // ultraOptimize performs maximum optimization including episode separation
 func (u *UltraOptimizedCacheService) ultraOptimize(ctx context.Context, key string, value interface{}, ttl time.Duration) (interface{}, bool) {
+	// Handle nil interface values
+	if value == nil {
+		return value, false
+	}
+
 	val := reflect.ValueOf(value)
 	if val.Kind() == reflect.Ptr {
 		val = val.Elem()
+	}
+
+	// Check for zero/invalid value after pointer dereferencing
+	if !val.IsValid() {
+		return value, false
 	}
 
 	// Special handling for time types - don't optimize them
@@ -92,13 +102,24 @@ func (u *UltraOptimizedCacheService) ultraOptimize(ctx context.Context, key stri
 
 // optimizeSlice optimizes each item in a slice
 func (u *UltraOptimizedCacheService) optimizeSlice(ctx context.Context, key string, val reflect.Value, ttl time.Duration) interface{} {
+	// Check if slice value is valid
+	if !val.IsValid() || val.Kind() != reflect.Slice {
+		return val.Interface()
+	}
+
 	optimizedSlice := reflect.MakeSlice(val.Type(), val.Len(), val.Cap())
 
 	for i := 0; i < val.Len(); i++ {
 		item := val.Index(i)
+		if !item.IsValid() {
+			continue
+		}
 		optimizedItem, _ := u.ultraOptimize(ctx, key, item.Interface(), ttl)
 		if optimizedItem != nil {
-			optimizedSlice.Index(i).Set(reflect.ValueOf(optimizedItem))
+			optimizedValue := reflect.ValueOf(optimizedItem)
+			if optimizedValue.IsValid() && optimizedValue.Type().AssignableTo(optimizedSlice.Index(i).Type()) {
+				optimizedSlice.Index(i).Set(optimizedValue)
+			}
 		}
 	}
 
@@ -107,6 +128,11 @@ func (u *UltraOptimizedCacheService) optimizeSlice(ctx context.Context, key stri
 
 // optimizeStruct optimizes struct fields and handles episode separation
 func (u *UltraOptimizedCacheService) optimizeStruct(ctx context.Context, key string, val reflect.Value, ttl time.Duration) (interface{}, bool) {
+	// Check if struct value is valid
+	if !val.IsValid() || val.Kind() != reflect.Struct {
+		return val.Interface(), false
+	}
+
 	typ := val.Type()
 	typeName := typ.Name()
 	episodesSeparated := false
@@ -118,6 +144,11 @@ func (u *UltraOptimizedCacheService) optimizeStruct(ctx context.Context, key str
 		field := val.Field(i)
 		fieldType := typ.Field(i)
 		fieldName := fieldType.Name
+
+		// Skip invalid fields
+		if !field.IsValid() {
+			continue
+		}
 
 		// Handle episodes field specially
 		if fieldName == "AnimeEpisodes" || fieldName == "Episodes" {
@@ -140,6 +171,10 @@ func (u *UltraOptimizedCacheService) optimizeStruct(ctx context.Context, key str
 			optimizedField, _ := u.ultraOptimize(ctx, key, field.Interface(), ttl)
 			if optimizedField != nil {
 				optimizedVal := reflect.ValueOf(optimizedField)
+				// Validate the optimized value
+				if !optimizedVal.IsValid() {
+					continue
+				}
 				fieldType := newVal.Field(i).Type()
 
 				// Handle type mismatches, especially for time types
