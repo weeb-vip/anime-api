@@ -58,18 +58,25 @@ func (c *CacheService) GetJSON(ctx context.Context, key string, dest interface{}
 	)
 
 	if err != nil {
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
 		if err == ErrCacheMiss {
-			span.SetAttributes(attribute.String("cache.result", "miss"))
+			span.SetAttributes(
+				attribute.Bool("cache.hit", false),
+				attribute.String("cache.result", "miss"),
+			)
+			span.SetStatus(codes.Ok, "cache miss")
 			metrics.GetAppMetrics().DatabaseMetric(
 				float64(time.Since(startTime).Milliseconds()),
 				"cache",
 				"get",
-				"miss",
+				metrics.Success,
 			)
 		} else {
-			span.SetAttributes(attribute.String("cache.result", "error"))
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+			span.SetAttributes(
+				attribute.Bool("cache.hit", false),
+				attribute.String("cache.result", "error"),
+			)
 			metrics.GetAppMetrics().DatabaseMetric(
 				float64(time.Since(startTime).Milliseconds()),
 				"cache",
@@ -105,6 +112,7 @@ func (c *CacheService) GetJSON(ctx context.Context, key string, dest interface{}
 	}
 
 	span.SetAttributes(
+		attribute.Bool("cache.hit", true),
 		attribute.String("cache.result", "hit"),
 		attribute.Bool("cache.success", true),
 	)

@@ -166,7 +166,7 @@ type ComplexityRoot struct {
 		AnimeBySeasonAndYear        func(childComplexity int, seasonName string, year int) int
 		AnimeBySeasons              func(childComplexity int, season string) int
 		CharactersAndStaffByAnimeID func(childComplexity int, animeID string) int
-		CurrentlyAiring             func(childComplexity int, input *model.CurrentlyAiringInput) int
+		CurrentlyAiring             func(childComplexity int, input *model.CurrentlyAiringInput, limit *int) int
 		DbSearch                    func(childComplexity int, searchQuery model.AnimeSearchInput) int
 		Episode                     func(childComplexity int, id string) int
 		EpisodesByAnimeID           func(childComplexity int, animeID string) int
@@ -211,7 +211,7 @@ type QueryResolver interface {
 	MostPopularAnime(ctx context.Context, limit *int) ([]*model.Anime, error)
 	Episode(ctx context.Context, id string) (*model.Episode, error)
 	EpisodesByAnimeID(ctx context.Context, animeID string) ([]*model.Episode, error)
-	CurrentlyAiring(ctx context.Context, input *model.CurrentlyAiringInput) ([]*model.Anime, error)
+	CurrentlyAiring(ctx context.Context, input *model.CurrentlyAiringInput, limit *int) ([]*model.Anime, error)
 	AnimeBySeasons(ctx context.Context, season string) ([]*model.Anime, error)
 	AnimeBySeasonAndYear(ctx context.Context, seasonName string, year int) ([]*model.Anime, error)
 	CharactersAndStaffByAnimeID(ctx context.Context, animeID string) ([]*model.CharacterWithStaff, error)
@@ -889,7 +889,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.CurrentlyAiring(childComplexity, args["input"].(*model.CurrentlyAiringInput)), true
+		return e.complexity.Query.CurrentlyAiring(childComplexity, args["input"].(*model.CurrentlyAiringInput), args["limit"].(*int)), true
 
 	case "Query.dbSearch":
 		if e.complexity.Query.DbSearch == nil {
@@ -1154,7 +1154,7 @@ type Query {
     "Get episodes by anime ID"
     episodesByAnimeId(animeId: ID!): [Episode!]
     "Get currently airing anime"
-    currentlyAiring(input: CurrentlyAiringInput): [Anime!]
+    currentlyAiring(input: CurrentlyAiringInput, limit: Int): [Anime!]
     "Get anime by season and year"
     animeBySeasons(season: Season!): [Anime!]
     "Get anime by season name and year (more flexible)"
@@ -1664,6 +1664,15 @@ func (ec *executionContext) field_Query_currentlyAiring_args(ctx context.Context
 		}
 	}
 	args["input"] = arg0
+	var arg1 *int
+	if tmp, ok := rawArgs["limit"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+		arg1, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["limit"] = arg1
 	return args, nil
 }
 
@@ -6291,7 +6300,7 @@ func (ec *executionContext) _Query_currentlyAiring(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().CurrentlyAiring(rctx, fc.Args["input"].(*model.CurrentlyAiringInput))
+		return ec.resolvers.Query().CurrentlyAiring(rctx, fc.Args["input"].(*model.CurrentlyAiringInput), fc.Args["limit"].(*int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

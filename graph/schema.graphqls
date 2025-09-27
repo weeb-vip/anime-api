@@ -22,7 +22,7 @@ type Query {
     "Get episodes by anime ID"
     episodesByAnimeId(animeId: ID!): [Episode!]
     "Get currently airing anime"
-    currentlyAiring(input: CurrentlyAiringInput): [Anime!]
+    currentlyAiring(input: CurrentlyAiringInput, limit: Int): [Anime!]
     "Get anime by season and year"
     animeBySeasons(season: Season!): [Anime!]
     "Get anime by season name and year (more flexible)"

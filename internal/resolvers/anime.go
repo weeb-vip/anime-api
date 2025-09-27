@@ -8,6 +8,7 @@ import (
 
 	"github.com/weeb-vip/anime-api/graph/model"
 	anime2 "github.com/weeb-vip/anime-api/internal/db/repositories/anime"
+	"github.com/weeb-vip/anime-api/internal/services"
 	"github.com/weeb-vip/anime-api/internal/services/anime"
 	"github.com/weeb-vip/anime-api/metrics"
 	"github.com/weeb-vip/anime-api/tracing"
@@ -438,8 +439,14 @@ func NewestAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit
 	return animes, nil
 }
 
-func CurrentlyAiring(ctx context.Context, animeService anime.AnimeServiceImpl, input *model.CurrentlyAiringInput) ([]*model.Anime, error) {
+func CurrentlyAiring(ctx context.Context, animeService anime.AnimeServiceImpl, input *model.CurrentlyAiringInput, limit *int) ([]*model.Anime, error) {
 	startTime := time.Now()
+
+	// Default limit to 10 if not specified
+	actualLimit := 10
+	if limit != nil && *limit > 0 {
+		actualLimit = *limit
+	}
 
 	var foundAnime []*anime2.Anime
 	if input == nil {
@@ -493,13 +500,16 @@ func CurrentlyAiring(ctx context.Context, animeService anime.AnimeServiceImpl, i
 	transformSpan.SetAttributes(attribute.Int("results.count", len(animes)))
 	transformSpan.SetStatus(codes.Ok, "transformation completed")
 
+	// Process currently airing data to find next episodes and sort by air time
+	processedAnimes := services.ProcessCurrentlyAiring(animes, actualLimit, time.Now())
+
 	metrics.GetAppMetrics().ResolverMetric(
 		float64(time.Since(startTime).Milliseconds()),
 		"CurrentlyAiring",
 		metrics.Success,
 	)
 
-	return animes, nil
+	return processedAnimes, nil
 }
 
 func DBSearchAnime(ctx context.Context, animeService anime.AnimeServiceImpl, query string, page int, limit int) ([]*model.Anime, error) {

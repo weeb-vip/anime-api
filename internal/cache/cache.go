@@ -2,6 +2,7 @@ package cache
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/weeb-vip/anime-api/config"
@@ -95,6 +96,29 @@ func (c *CacheKeyBuilder) EpisodePattern() string {
 // AnimeByIDPattern builds pattern for anime invalidation by ID
 func (c *CacheKeyBuilder) AnimeByIDPattern(animeID string) string {
 	return c.prefix + ":*anime*:" + animeID + "*"
+}
+
+// CurrentlyAiring builds cache key for currently airing anime
+func (c *CacheKeyBuilder) CurrentlyAiring(limit int, startDate, endDate string, daysInFuture int) string {
+	key := c.prefix + ":currently-airing"
+	if limit > 0 {
+		key += ":limit:" + fmt.Sprintf("%d", limit)
+	}
+	if startDate != "" {
+		key += ":start:" + startDate
+	}
+	if endDate != "" {
+		key += ":end:" + endDate
+	}
+	if daysInFuture > 0 {
+		key += ":days:" + fmt.Sprintf("%d", daysInFuture)
+	}
+	return key
+}
+
+// CurrentlyAiringPattern builds pattern for all currently airing cache keys
+func (c *CacheKeyBuilder) CurrentlyAiringPattern() string {
+	return c.prefix + ":currently-airing*"
 }
 
 // TTL helper functions that use configuration values
