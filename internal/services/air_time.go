@@ -246,6 +246,8 @@ func findNextEpisode(episodes []*model.Episode, broadcast *string, currentTime t
 				// Use After instead of Before to exclude episodes at or before the start date
 				if queryStartDate != nil && !airTime.After(*queryStartDate) {
 					withinRange = false
+					// Debug logging
+					// fmt.Printf("Episode excluded: airTime=%v <= queryStartDate=%v\n", airTime.Format(time.RFC3339), queryStartDate.Format(time.RFC3339))
 				}
 				if queryEndDate != nil && airTime.After(*queryEndDate) {
 					withinRange = false
