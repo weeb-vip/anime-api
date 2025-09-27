@@ -1056,12 +1056,12 @@ func (a *AnimeRepository) AiringAnimeWithEpisodes(ctx context.Context, startDate
 
 	if startDate != nil && endDate != nil {
 		// Subquery to get unique anime IDs with episodes in date range - convert to JST
-		// Just convert times to JST without changing to start of day
+		// Using > for start to exclude already aired episodes, <= for end to include boundary
 		startJST := startDate.In(tzTokyo)
 		endJST := endDate.In(tzTokyo)
 		subquery = a.db.DB.Model(&animeEpisode.AnimeEpisode{}).
 			Select("DISTINCT anime_id").
-			Where("aired BETWEEN ? AND ?", startJST, endJST)
+			Where("aired > ? AND aired <= ?", startJST, endJST)
 
 		// Filter anime by subquery results and end_date condition
 		query = query.Where("anime.id IN (?)", subquery).
@@ -1069,24 +1069,25 @@ func (a *AnimeRepository) AiringAnimeWithEpisodes(ctx context.Context, startDate
 
 	} else if startDate != nil && days != nil {
 		// Subquery for days range - convert to JST for consistency with DB storage
-		// Just convert the time to JST without changing to start of day
+		// Using > for start to exclude already aired episodes, <= for end to include boundary
 		startJST := startDate.In(tzTokyo)
 		endJST := startJST.AddDate(0, 0, *days)
 		subquery = a.db.DB.Model(&animeEpisode.AnimeEpisode{}).
 			Select("DISTINCT anime_id").
-			Where("aired BETWEEN ? AND ?", startJST, endJST)
+			Where("aired > ? AND aired <= ?", startJST, endJST)
 
 		// Filter anime by subquery results and end_date condition
 		query = query.Where("anime.id IN (?)", subquery).
 			Where("anime.end_date IS NULL OR anime.end_date >= ?", startDate)
 
 	} else {
-		// Default: currently airing anime (next 30 days)
-		nowJST := startOfDayIn(time.Now().UTC(), tzTokyo)
+		// Default: currently airing anime (next 30 days from now)
+		// Using > to exclude already aired episodes
+		nowJST := time.Now().UTC().In(tzTokyo)
 		endJST := nowJST.AddDate(0, 0, 30)
 		subquery = a.db.DB.Model(&animeEpisode.AnimeEpisode{}).
 			Select("DISTINCT anime_id").
-			Where("aired BETWEEN ? AND ?", nowJST, endJST)
+			Where("aired > ? AND aired <= ?", nowJST, endJST)
 
 		// Filter anime by subquery results (no end_date check for default case)
 		query = query.Where("anime.id IN (?)", subquery).
