@@ -1090,8 +1090,10 @@ func (a *AnimeRepository) AiringAnimeWithEpisodes(ctx context.Context, startDate
 			Where("aired > ? AND aired <= ?", startJST, endJST)
 
 		// Filter anime by subquery results and end_date condition
+		// Use the adjusted start date for end_date filtering to match our broader search
+		adjustedStartDate := startDate.AddDate(0, 0, -1)
 		query = query.Where("anime.id IN (?)", subquery).
-			Where("anime.end_date IS NULL OR anime.end_date >= ?", startDate)
+			Where("anime.end_date IS NULL OR anime.end_date >= ?", adjustedStartDate)
 
 	} else if startDate != nil && days != nil {
 		// Subquery for days range
@@ -1101,8 +1103,10 @@ func (a *AnimeRepository) AiringAnimeWithEpisodes(ctx context.Context, startDate
 			Where("aired > ? AND aired <= ?", startJST, endJST)
 
 		// Filter anime by subquery results and end_date condition
+		// Use the adjusted start date for end_date filtering to match our broader search
+		adjustedStartDate := startDate.AddDate(0, 0, -1)
 		query = query.Where("anime.id IN (?)", subquery).
-			Where("anime.end_date IS NULL OR anime.end_date >= ?", startDate)
+			Where("anime.end_date IS NULL OR anime.end_date >= ?", adjustedStartDate)
 
 	} else {
 		// Default case
