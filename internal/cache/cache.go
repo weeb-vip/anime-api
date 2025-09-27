@@ -137,3 +137,9 @@ func GetSeasonTTL(cfg config.RedisConfig) time.Duration {
 func GetLockTTL(cfg config.RedisConfig) time.Duration {
 	return time.Duration(cfg.LockTTLSeconds) * time.Second
 }
+
+func GetCurrentlyAiringTTL(cfg config.RedisConfig) time.Duration {
+	// Use episode TTL as base since currently airing is episode-based
+	// But shorter since the data changes more frequently
+	return time.Duration(cfg.EpisodeTTLMinutes/2) * time.Minute
+}

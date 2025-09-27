@@ -394,44 +394,29 @@ func ProcessCurrentlyAiring(animes []*model.Anime, limit int, currentTime time.T
 		processedAnime = append(processedAnime, processedEntry)
 	}
 
-	// Filter and sort anime: only recently aired (last 30 minutes) or future episodes
+	// Filter episodes from 30 minutes ago onwards and sort chronologically
 	thirtyMinutesAgo := currentTime.Add(-30 * time.Minute)
 
-	var recentlyAired []ProcessedAnime
-	var futureEpisodes []ProcessedAnime
-
+	var validEpisodes []ProcessedAnime
 	for _, anime := range processedAnime {
 		airTime := anime.NextEpisodeDate
-		if airTime.Before(currentTime) && airTime.After(thirtyMinutesAgo) {
-			recentlyAired = append(recentlyAired, anime)
-		} else if airTime.After(currentTime) {
-			futureEpisodes = append(futureEpisodes, anime)
+		// Include episodes that aired in the last 30 minutes or will air in the future
+		if airTime.After(thirtyMinutesAgo) {
+			validEpisodes = append(validEpisodes, anime)
 		}
 	}
 
-	// Sort recently aired (most recent first)
-	sort.Slice(recentlyAired, func(i, j int) bool {
-		return recentlyAired[i].NextEpisodeDate.After(recentlyAired[j].NextEpisodeDate)
+	// Sort all episodes chronologically (earliest first)
+	sort.Slice(validEpisodes, func(i, j int) bool {
+		return validEpisodes[i].NextEpisodeDate.Before(validEpisodes[j].NextEpisodeDate)
 	})
 
-	// Sort future episodes (earliest first)
-	sort.Slice(futureEpisodes, func(i, j int) bool {
-		return futureEpisodes[i].NextEpisodeDate.Before(futureEpisodes[j].NextEpisodeDate)
-	})
-
-	// Limit recently aired to 2 shows
-	if len(recentlyAired) > 2 {
-		recentlyAired = recentlyAired[:2]
-	}
-
-	// Combine: recently aired first, then future episodes
+	// Apply limit to get the next x results in chronological order
 	var result []ProcessedAnime
-	result = append(result, recentlyAired...)
-	result = append(result, futureEpisodes...)
-
-	// Apply limit
-	if limit > 0 && len(result) > limit {
-		result = result[:limit]
+	if limit > 0 && len(validEpisodes) > limit {
+		result = validEpisodes[:limit]
+	} else {
+		result = validEpisodes
 	}
 
 	// Convert back to []*model.Anime

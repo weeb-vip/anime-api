@@ -226,3 +226,7 @@ func (c *CacheService) GetSeasonTTL() time.Duration {
 func (c *CacheService) GetLockTTL() time.Duration {
 	return GetLockTTL(c.config)
 }
+
+func (c *CacheService) GetCurrentlyAiringTTL() time.Duration {
+	return GetCurrentlyAiringTTL(c.config)
+}

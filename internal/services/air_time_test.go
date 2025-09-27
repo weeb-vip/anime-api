@@ -80,25 +80,24 @@ func TestProcessCurrentlyAiring(t *testing.T) {
 	// Test with limit of 10
 	result := ProcessCurrentlyAiring(animes, 10, now)
 
-	// Should return recently aired first (Anime 3), then future episodes (Anime 1, Anime 2)
-	// Should exclude old episodes (Anime 4)
+	// Should return episodes from 30 minutes ago onwards in chronological order
+	// Should include Anime 3 (15 min ago), Anime 1 (1h future), Anime 2 (2h future)
+	// Should exclude Anime 4 (2h ago - outside 30min window)
 	if len(result) != 3 {
 		t.Errorf("Expected 3 results, got %d", len(result))
 	}
 
-	// First should be recently aired
+	// Should be in chronological order: Anime 3 (earliest), then Anime 1, then Anime 2
 	if result[0].ID != "3" {
-		t.Errorf("Expected first result to be Anime 3 (recently aired), got %s", result[0].ID)
+		t.Errorf("Expected first result to be Anime 3 (earliest in chronological order), got %s", result[0].ID)
 	}
 
-	// Second should be Anime 1 (next to air)
 	if result[1].ID != "1" {
-		t.Errorf("Expected second result to be Anime 1 (next future), got %s", result[1].ID)
+		t.Errorf("Expected second result to be Anime 1 (next in chronological order), got %s", result[1].ID)
 	}
 
-	// Third should be Anime 2
 	if result[2].ID != "2" {
-		t.Errorf("Expected third result to be Anime 2, got %s", result[2].ID)
+		t.Errorf("Expected third result to be Anime 2 (last in chronological order), got %s", result[2].ID)
 	}
 
 	// Test that airTime is populated in UTC
@@ -112,11 +111,71 @@ func TestProcessCurrentlyAiring(t *testing.T) {
 		}
 	}
 
-	// Test with limit of 2
+	// Test with limit of 2 - should get first 2 in chronological order
 	limitedResult := ProcessCurrentlyAiring(animes, 2, now)
 	if len(limitedResult) != 2 {
 		t.Errorf("Expected 2 results with limit, got %d", len(limitedResult))
 	}
+
+	// Should be Anime 3 (earliest) and Anime 1 (next earliest)
+	if limitedResult[0].ID != "3" {
+		t.Errorf("Expected first limited result to be Anime 3, got %s", limitedResult[0].ID)
+	}
+	if limitedResult[1].ID != "1" {
+		t.Errorf("Expected second limited result to be Anime 1, got %s", limitedResult[1].ID)
+	}
+}
+
+func TestProcessCurrentlyAiring30MinuteWindow(t *testing.T) {
+	// Test the 30-minute window behavior specifically
+	now := time.Date(2023, 12, 15, 10, 0, 0, 0, time.UTC)
+
+	// Create episodes at various times relative to "now"
+	tooOld := time.Date(2023, 12, 15, 9, 20, 0, 0, time.UTC)     // 40 minutes ago (excluded)
+	justInWindow := time.Date(2023, 12, 15, 9, 35, 0, 0, time.UTC) // 25 minutes ago (included)
+	recent := time.Date(2023, 12, 15, 9, 55, 0, 0, time.UTC)    // 5 minutes ago (included)
+	future1 := time.Date(2023, 12, 15, 10, 30, 0, 0, time.UTC)  // 30 minutes future (included)
+	future2 := time.Date(2023, 12, 15, 11, 0, 0, 0, time.UTC)   // 1 hour future (included)
+
+	animes := []*model.Anime{
+		{
+			ID: "too-old", TitleEn: stringPtr("Too Old"), Duration: stringPtr("24 min"), Broadcast: stringPtr("Fridays at 09:20 (UTC)"),
+			Episodes: []*model.Episode{{ID: "ep1", AnimeID: stringPtr("too-old"), AirDate: &tooOld}},
+		},
+		{
+			ID: "just-in-window", TitleEn: stringPtr("Just In Window"), Duration: stringPtr("24 min"), Broadcast: stringPtr("Fridays at 09:35 (UTC)"),
+			Episodes: []*model.Episode{{ID: "ep2", AnimeID: stringPtr("just-in-window"), AirDate: &justInWindow}},
+		},
+		{
+			ID: "recent", TitleEn: stringPtr("Recent"), Duration: stringPtr("24 min"), Broadcast: stringPtr("Fridays at 09:55 (UTC)"),
+			Episodes: []*model.Episode{{ID: "ep3", AnimeID: stringPtr("recent"), AirDate: &recent}},
+		},
+		{
+			ID: "future1", TitleEn: stringPtr("Future 1"), Duration: stringPtr("24 min"), Broadcast: stringPtr("Fridays at 10:30 (UTC)"),
+			Episodes: []*model.Episode{{ID: "ep4", AnimeID: stringPtr("future1"), AirDate: &future1}},
+		},
+		{
+			ID: "future2", TitleEn: stringPtr("Future 2"), Duration: stringPtr("24 min"), Broadcast: stringPtr("Fridays at 11:00 (UTC)"),
+			Episodes: []*model.Episode{{ID: "ep5", AnimeID: stringPtr("future2"), AirDate: &future2}},
+		},
+	}
+
+	result := ProcessCurrentlyAiring(animes, 10, now)
+
+	// Should exclude "too-old" (40 min ago) but include the other 4
+	expectedIDs := []string{"just-in-window", "recent", "future1", "future2"}
+	if len(result) != len(expectedIDs) {
+		t.Errorf("Expected %d results, got %d", len(expectedIDs), len(result))
+	}
+
+	// Should be in chronological order
+	for i, expectedID := range expectedIDs {
+		if i < len(result) && result[i].ID != expectedID {
+			t.Errorf("Expected result[%d] to be %s, got %s", i, expectedID, result[i].ID)
+		}
+	}
+
+	t.Logf("30-minute window test passed: excluded episodes older than 30 minutes, included others in chronological order")
 }
 
 func TestParseAirTime(t *testing.T) {

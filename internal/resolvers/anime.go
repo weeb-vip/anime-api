@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/weeb-vip/anime-api/graph/model"
+	"github.com/weeb-vip/anime-api/internal/cache"
 	anime2 "github.com/weeb-vip/anime-api/internal/db/repositories/anime"
 	"github.com/weeb-vip/anime-api/internal/services"
 	"github.com/weeb-vip/anime-api/internal/services/anime"
@@ -16,6 +17,14 @@ import (
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 )
+
+// CacheServiceInterface defines the methods needed for caching
+type CacheServiceInterface interface {
+	GetJSON(ctx context.Context, key string, dest interface{}) error
+	SetJSON(ctx context.Context, key string, value interface{}, ttl time.Duration) error
+	GetKeyBuilder() *cache.CacheKeyBuilder
+	GetCurrentlyAiringTTL() time.Duration
+}
 
 func transformAnimeToGraphQL(animeEntity anime2.Anime) (*model.Anime, error) {
 
@@ -454,13 +463,45 @@ func NewestAnime(ctx context.Context, animeService anime.AnimeServiceImpl, limit
 	return animes, nil
 }
 
-func CurrentlyAiring(ctx context.Context, animeService anime.AnimeServiceImpl, input *model.CurrentlyAiringInput, limit *int) ([]*model.Anime, error) {
+// CurrentlyAiring resolver with caching support
+// Caches results based on input parameters and limit to improve performance
+// Cache TTL is configured as half of episode TTL for optimal freshness
+func CurrentlyAiring(ctx context.Context, animeService anime.AnimeServiceImpl, input *model.CurrentlyAiringInput, limit *int, cacheService CacheServiceInterface) ([]*model.Anime, error) {
 	startTime := time.Now()
 
 	// Default limit to 10 if not specified
 	actualLimit := 10
 	if limit != nil && *limit > 0 {
 		actualLimit = *limit
+	}
+
+	// Build cache key based on input parameters
+	var startDateStr, endDateStr string
+	var daysInFuture int
+
+	if input != nil {
+		startDateStr = input.StartDate.Format("2006-01-02")
+		if input.EndDate != nil {
+			endDateStr = input.EndDate.Format("2006-01-02")
+		}
+		if input.DaysInFuture != nil {
+			daysInFuture = *input.DaysInFuture
+		}
+	}
+
+	cacheKey := cacheService.GetKeyBuilder().CurrentlyAiring(actualLimit, startDateStr, endDateStr, daysInFuture)
+
+	// Try to get from cache first
+	var cachedResult []*model.Anime
+	err := cacheService.GetJSON(ctx, cacheKey, &cachedResult)
+	if err == nil {
+		// Cache hit - add metrics and return
+		metrics.GetAppMetrics().ResolverMetric(
+			float64(time.Since(startTime).Milliseconds()),
+			"CurrentlyAiring",
+			"cache_hit",
+		)
+		return cachedResult, nil
 	}
 
 	var foundAnime []*anime2.Anime
@@ -517,6 +558,11 @@ func CurrentlyAiring(ctx context.Context, animeService anime.AnimeServiceImpl, i
 
 	// Process currently airing data to find next episodes and sort by air time
 	processedAnimes := services.ProcessCurrentlyAiring(animes, actualLimit, time.Now())
+
+	// Cache the result asynchronously
+	go func() {
+		_ = cacheService.SetJSON(context.Background(), cacheKey, processedAnimes, cacheService.GetCurrentlyAiringTTL())
+	}()
 
 	metrics.GetAppMetrics().ResolverMetric(
 		float64(time.Since(startTime).Milliseconds()),

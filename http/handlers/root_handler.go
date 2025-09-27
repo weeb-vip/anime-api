@@ -142,6 +142,7 @@ func BuildRootHandlerWithContext(ctx context.Context, conf config.Config) http.H
 		AnimeCharacterService:              animeCharacterService,
 		AnimeCharacterWithStaffLinkService: animeCharacterWithStaffLinkService,
 		AnimeSeasonService:                 animeSeasonService,
+		CacheService:                       cacheService,
 		Context:                            ctx,
 	}
 
