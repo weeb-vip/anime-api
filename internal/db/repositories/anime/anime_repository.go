@@ -1055,21 +1055,25 @@ func (a *AnimeRepository) AiringAnimeWithEpisodes(ctx context.Context, startDate
 	var subquery *gorm.DB
 
 	if startDate != nil && endDate != nil {
-		// Subquery to get unique anime IDs with episodes in date range
+		// Subquery to get unique anime IDs with episodes in date range - convert to JST
+		startJST := startOfDayIn(startDate.UTC(), tzTokyo)
+		// keep end as provided but in JST zone
+		endJST := endDate.In(tzTokyo)
 		subquery = a.db.DB.Model(&animeEpisode.AnimeEpisode{}).
 			Select("DISTINCT anime_id").
-			Where("aired BETWEEN ? AND ?", *startDate, *endDate)
+			Where("aired BETWEEN ? AND ?", startJST, endJST)
 
 		// Filter anime by subquery results and end_date condition
 		query = query.Where("anime.id IN (?)", subquery).
 			Where("anime.end_date IS NULL OR anime.end_date >= ?", startDate)
 
 	} else if startDate != nil && days != nil {
-		// Subquery for days range
-		endTime := startDate.AddDate(0, 0, *days)
+		// Subquery for days range - convert to JST for consistency with DB storage
+		startJST := startOfDayIn(startDate.UTC(), tzTokyo)
+		endJST := startJST.AddDate(0, 0, *days)
 		subquery = a.db.DB.Model(&animeEpisode.AnimeEpisode{}).
 			Select("DISTINCT anime_id").
-			Where("aired BETWEEN ? AND ?", *startDate, endTime)
+			Where("aired BETWEEN ? AND ?", startJST, endJST)
 
 		// Filter anime by subquery results and end_date condition
 		query = query.Where("anime.id IN (?)", subquery).
