@@ -1056,8 +1056,8 @@ func (a *AnimeRepository) AiringAnimeWithEpisodes(ctx context.Context, startDate
 
 	if startDate != nil && endDate != nil {
 		// Subquery to get unique anime IDs with episodes in date range - convert to JST
-		startJST := startOfDayIn(startDate.UTC(), tzTokyo)
-		// keep end as provided but in JST zone
+		// Just convert times to JST without changing to start of day
+		startJST := startDate.In(tzTokyo)
 		endJST := endDate.In(tzTokyo)
 		subquery = a.db.DB.Model(&animeEpisode.AnimeEpisode{}).
 			Select("DISTINCT anime_id").
@@ -1069,7 +1069,8 @@ func (a *AnimeRepository) AiringAnimeWithEpisodes(ctx context.Context, startDate
 
 	} else if startDate != nil && days != nil {
 		// Subquery for days range - convert to JST for consistency with DB storage
-		startJST := startOfDayIn(startDate.UTC(), tzTokyo)
+		// Just convert the time to JST without changing to start of day
+		startJST := startDate.In(tzTokyo)
 		endJST := startJST.AddDate(0, 0, *days)
 		subquery = a.db.DB.Model(&animeEpisode.AnimeEpisode{}).
 			Select("DISTINCT anime_id").
