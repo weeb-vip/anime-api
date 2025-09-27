@@ -104,7 +104,11 @@ func (u *UltraOptimizedCacheService) ultraOptimize(ctx context.Context, key stri
 func (u *UltraOptimizedCacheService) optimizeSlice(ctx context.Context, key string, val reflect.Value, ttl time.Duration) interface{} {
 	// Check if slice value is valid
 	if !val.IsValid() || val.Kind() != reflect.Slice {
-		return val.Interface()
+		// Return original interface if val is not valid to avoid nil returns
+		if val.IsValid() {
+			return val.Interface()
+		}
+		return nil
 	}
 
 	optimizedSlice := reflect.MakeSlice(val.Type(), val.Len(), val.Cap())
@@ -112,6 +116,8 @@ func (u *UltraOptimizedCacheService) optimizeSlice(ctx context.Context, key stri
 	for i := 0; i < val.Len(); i++ {
 		item := val.Index(i)
 		if !item.IsValid() {
+			// Copy original item if it's invalid
+			optimizedSlice.Index(i).Set(item)
 			continue
 		}
 		optimizedItem, _ := u.ultraOptimize(ctx, key, item.Interface(), ttl)
@@ -119,7 +125,13 @@ func (u *UltraOptimizedCacheService) optimizeSlice(ctx context.Context, key stri
 			optimizedValue := reflect.ValueOf(optimizedItem)
 			if optimizedValue.IsValid() && optimizedValue.Type().AssignableTo(optimizedSlice.Index(i).Type()) {
 				optimizedSlice.Index(i).Set(optimizedValue)
+			} else {
+				// Fallback to original item if optimization failed
+				optimizedSlice.Index(i).Set(item)
 			}
+		} else {
+			// Fallback to original item if optimization returned nil
+			optimizedSlice.Index(i).Set(item)
 		}
 	}
 
@@ -173,18 +185,23 @@ func (u *UltraOptimizedCacheService) optimizeStruct(ctx context.Context, key str
 				optimizedVal := reflect.ValueOf(optimizedField)
 				// Validate the optimized value
 				if !optimizedVal.IsValid() {
+					// Fallback to original field value
+					newVal.Field(i).Set(field)
 					continue
 				}
 				fieldType := newVal.Field(i).Type()
 
 				// Handle type mismatches, especially for time types
 				if optimizedVal.Type() != fieldType {
-					// Skip optimization if types don't match to avoid panics
-					// This commonly happens with time.Time vs *time.Time
+					// Skip optimization if types don't match, keep original value
+					newVal.Field(i).Set(field)
 					continue
 				}
 
 				newVal.Field(i).Set(optimizedVal)
+			} else {
+				// Fallback to original field value if optimization returned nil
+				newVal.Field(i).Set(field)
 			}
 		}
 	}
