@@ -238,27 +238,22 @@ func findNextEpisode(episodes []*model.Episode, broadcast *string, currentTime t
 		if episode.AirDate != nil {
 			airTime := ParseAirTime(episode.AirDate, broadcast)
 			if airTime != nil {
-				// Return episode if it's in the future or aired in the last 24 hours
-				timeDiff := currentTime.UnixMilli() - airTime.UnixMilli()
-				dayMs := int64(24 * 60 * 60 * 1000)
-
-				if airTime.After(currentTime) || timeDiff <= dayMs {
-					animeID := ""
-					if episode.AnimeID != nil {
-						animeID = *episode.AnimeID
-					}
-					return &NextEpisodeResult{
-						Episode: Episode{
-							ID:            episode.ID,
-							AnimeID:       animeID,
-							EpisodeNumber: episode.EpisodeNumber,
-							TitleEn:       episode.TitleEn,
-							TitleJp:       episode.TitleJp,
-							AirDate:       episode.AirDate,
-							Synopsis:      episode.Synopsis,
-						},
-						AirTime: *airTime,
-					}
+				// Return any episode with a valid air time
+				animeID := ""
+				if episode.AnimeID != nil {
+					animeID = *episode.AnimeID
+				}
+				return &NextEpisodeResult{
+					Episode: Episode{
+						ID:            episode.ID,
+						AnimeID:       animeID,
+						EpisodeNumber: episode.EpisodeNumber,
+						TitleEn:       episode.TitleEn,
+						TitleJp:       episode.TitleJp,
+						AirDate:       episode.AirDate,
+						Synopsis:      episode.Synopsis,
+					},
+					AirTime: *airTime,
 				}
 			}
 		}
