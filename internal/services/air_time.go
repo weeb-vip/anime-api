@@ -241,8 +241,10 @@ func findNextEpisode(episodes []*model.Episode, broadcast *string, currentTime t
 			airTime := ParseAirTime(episode.AirDate, broadcast)
 			if airTime != nil {
 				// Check if episode is within the query date range
+				// Note: airTime is in UTC, and queryStartDate/queryEndDate should also be in UTC
 				withinRange := true
-				if queryStartDate != nil && airTime.Before(*queryStartDate) {
+				// Use After instead of Before to exclude episodes at or before the start date
+				if queryStartDate != nil && !airTime.After(*queryStartDate) {
 					withinRange = false
 				}
 				if queryEndDate != nil && airTime.After(*queryEndDate) {
