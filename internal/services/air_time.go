@@ -234,6 +234,8 @@ func findNextEpisode(episodes []*model.Episode, broadcast *string, currentTime t
 		return nil
 	}
 
+	var closestEpisode *NextEpisodeResult
+
 	for _, episode := range episodes {
 		if episode.AirDate != nil {
 			airTime := ParseAirTime(episode.AirDate, broadcast)
@@ -252,7 +254,8 @@ func findNextEpisode(episodes []*model.Episode, broadcast *string, currentTime t
 					if episode.AnimeID != nil {
 						animeID = *episode.AnimeID
 					}
-					return &NextEpisodeResult{
+
+					candidate := &NextEpisodeResult{
 						Episode: Episode{
 							ID:            episode.ID,
 							AnimeID:       animeID,
@@ -264,12 +267,38 @@ func findNextEpisode(episodes []*model.Episode, broadcast *string, currentTime t
 						},
 						AirTime: *airTime,
 					}
+
+					// Keep the episode closest to the query start date (or current time if no query date)
+					if closestEpisode == nil {
+						closestEpisode = candidate
+					} else {
+						referenceTime := currentTime
+						if queryStartDate != nil {
+							referenceTime = *queryStartDate
+						}
+
+						// If this episode is closer to the reference time, use it
+						currentDiff := absTimeDiff(closestEpisode.AirTime, referenceTime)
+						candidateDiff := absTimeDiff(candidate.AirTime, referenceTime)
+						if candidateDiff < currentDiff {
+							closestEpisode = candidate
+						}
+					}
 				}
 			}
 		}
 	}
 
-	return nil
+	return closestEpisode
+}
+
+// Helper function to calculate absolute time difference
+func absTimeDiff(t1, t2 time.Time) time.Duration {
+	diff := t1.Sub(t2)
+	if diff < 0 {
+		return -diff
+	}
+	return diff
 }
 
 // GetAirTimeDisplay gets air time display configuration for AnimeCard component
