@@ -1053,13 +1053,15 @@ func (a *AnimeRepository) AiringAnimeWithEpisodes(ctx context.Context, startDate
 
 	if startDate != nil && endDate != nil {
 		// Convert to JST for consistency with DB storage
-		startJST = startDate.In(tzTokyo)
+		// Subtract 1 day from start for database query to ensure we catch boundary episodes
+		startJST = startDate.AddDate(0, 0, -1).In(tzTokyo)
 		endJST = endDate.In(tzTokyo)
 		hasDateFilter = true
 	} else if startDate != nil && days != nil {
 		// Convert to JST for consistency with DB storage
-		startJST = startDate.In(tzTokyo)
-		endJST = startJST.AddDate(0, 0, *days)
+		// Subtract 1 day from start for database query to ensure we catch boundary episodes
+		startJST = startDate.AddDate(0, 0, -1).In(tzTokyo)
+		endJST = startJST.AddDate(0, 0, *days+1) // Add 1 extra day since we subtracted 1 from start
 		hasDateFilter = true
 	} else {
 		// Default: currently airing anime (next 30 days from now)
@@ -1082,6 +1084,7 @@ func (a *AnimeRepository) AiringAnimeWithEpisodes(ctx context.Context, startDate
 
 	if startDate != nil && endDate != nil {
 		// Subquery to get unique anime IDs with episodes in date range
+		// Use broader range for database query, post-processing will filter precisely
 		subquery = a.db.DB.Model(&animeEpisode.AnimeEpisode{}).
 			Select("DISTINCT anime_id").
 			Where("aired > ? AND aired <= ?", startJST, endJST)
@@ -1092,6 +1095,7 @@ func (a *AnimeRepository) AiringAnimeWithEpisodes(ctx context.Context, startDate
 
 	} else if startDate != nil && days != nil {
 		// Subquery for days range
+		// Use broader range for database query, post-processing will filter precisely
 		subquery = a.db.DB.Model(&animeEpisode.AnimeEpisode{}).
 			Select("DISTINCT anime_id").
 			Where("aired > ? AND aired <= ?", startJST, endJST)
