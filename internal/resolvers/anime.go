@@ -570,9 +570,12 @@ func CurrentlyAiring(ctx context.Context, animeService anime.AnimeServiceImpl, i
 	// Process currently airing data to find next episodes and sort by air time
 	processedAnimes := services.ProcessCurrentlyAiring(animes, actualLimit, time.Now(), queryStartDate, queryEndDate)
 
+	// Calculate optimal cache TTL based on when the next show ends
+	cacheTTL := calculateOptimalCacheTTL(processedAnimes, cacheService.GetCurrentlyAiringTTL())
+
 	// Cache the result asynchronously
 	go func() {
-		_ = cacheService.SetJSON(context.Background(), cacheKey, processedAnimes, cacheService.GetCurrentlyAiringTTL())
+		_ = cacheService.SetJSON(context.Background(), cacheKey, processedAnimes, cacheTTL)
 	}()
 
 	metrics.GetAppMetrics().ResolverMetric(
@@ -582,6 +585,68 @@ func CurrentlyAiring(ctx context.Context, animeService anime.AnimeServiceImpl, i
 	)
 
 	return processedAnimes, nil
+}
+
+// calculateOptimalCacheTTL determines the optimal cache TTL based on when the next episode ends
+func calculateOptimalCacheTTL(animes []*model.Anime, defaultTTL time.Duration) time.Duration {
+	if len(animes) == 0 {
+		return defaultTTL
+	}
+
+	currentTime := time.Now()
+	var earliestEndTime *time.Time
+
+	for _, anime := range animes {
+		if anime.NextEpisode != nil && anime.NextEpisode.AirTime != nil {
+			// Parse duration to get episode length (default 24 minutes for anime)
+			durationMinutes := 24
+			if anime.Duration != nil {
+				if parsed := parseDurationString(*anime.Duration); parsed > 0 {
+					durationMinutes = parsed
+				}
+			}
+
+			// Calculate when this episode ends
+			episodeEndTime := anime.NextEpisode.AirTime.Add(time.Duration(durationMinutes) * time.Minute)
+
+			// Only consider episodes that end in the future
+			if episodeEndTime.After(currentTime) {
+				if earliestEndTime == nil || episodeEndTime.Before(*earliestEndTime) {
+					earliestEndTime = &episodeEndTime
+				}
+			}
+		}
+	}
+
+	// If we found an episode that ends in the future, cache until then
+	if earliestEndTime != nil {
+		ttl := earliestEndTime.Sub(currentTime)
+
+		// Add a small buffer (30 seconds) to ensure cache expires after episode ends
+		ttl += 30 * time.Second
+
+		// Ensure TTL is reasonable (minimum 1 minute, maximum defaultTTL)
+		if ttl < time.Minute {
+			ttl = time.Minute
+		}
+		if ttl > defaultTTL {
+			ttl = defaultTTL
+		}
+
+		return ttl
+	}
+
+	// If no suitable episode found, use default TTL
+	return defaultTTL
+}
+
+// parseDurationString extracts minutes from duration string (e.g., "24 min per episode")
+func parseDurationString(duration string) int {
+	var minutes int
+	if _, err := fmt.Sscanf(duration, "%d", &minutes); err != nil {
+		return 0
+	}
+	return minutes
 }
 
 func DBSearchAnime(ctx context.Context, animeService anime.AnimeServiceImpl, query string, page int, limit int) ([]*model.Anime, error) {

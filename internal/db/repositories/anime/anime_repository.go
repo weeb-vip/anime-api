@@ -962,78 +962,7 @@ func (a *AnimeRepository) AiringAnimeWithEpisodes(ctx context.Context, startDate
 	)
 	defer span.End()
 
-	// Generate cache key based on parameters
-	cacheKey := ""
-	if a.cache != nil {
-		// Add cache key generation tracing
-		_, cacheKeySpan := tracer.Start(ctx, "AnimeRepository.GenerateCacheKey",
-			trace.WithAttributes(
-				attribute.String("cache.operation", "key_generation"),
-			),
-			trace.WithSpanKind(trace.SpanKindInternal),
-		)
-
-		if startDate != nil && endDate != nil {
-			cacheKey = fmt.Sprintf("%s:airing:start_%s:end_%s",
-				a.cache.GetKeyBuilder().AnimePattern()[:len(a.cache.GetKeyBuilder().AnimePattern())-1],
-				startDate.Format("2006-01-02"), endDate.Format("2006-01-02"))
-		} else if startDate != nil && days != nil {
-			cacheKey = fmt.Sprintf("%s:airing:start_%s:days_%d",
-				a.cache.GetKeyBuilder().AnimePattern()[:len(a.cache.GetKeyBuilder().AnimePattern())-1],
-				startDate.Format("2006-01-02"), *days)
-		} else {
-			// Default case (next 30 days from now)
-			cacheKey = fmt.Sprintf("%s:airing:default",
-				a.cache.GetKeyBuilder().AnimePattern()[:len(a.cache.GetKeyBuilder().AnimePattern())-1])
-		}
-
-		cacheKeySpan.SetAttributes(attribute.String("cache.key", cacheKey))
-		cacheKeySpan.End()
-
-		// Try cache first with tracing
-		_, cacheGetSpan := tracer.Start(ctx, "AnimeRepository.CacheGet",
-			trace.WithAttributes(
-				attribute.String("cache.operation", "get"),
-				attribute.String("cache.key", cacheKey),
-			),
-			trace.WithSpanKind(trace.SpanKindInternal),
-		)
-
-		var animeList []*Anime
-		err := a.cache.GetJSON(ctx, cacheKey, &animeList)
-		if err == nil {
-			cacheGetSpan.SetAttributes(
-				attribute.String("cache.result", "hit"),
-				attribute.Int("cache.items_count", len(animeList)),
-			)
-			cacheGetSpan.SetStatus(codes.Ok, "cache hit")
-			cacheGetSpan.End()
-			span.SetAttributes(attribute.String("data_source", "cache"))
-
-			// Debug logging for cache hits
-			log := logger.FromCtx(ctx)
-			log.Info().
-				Str("cache_key", cacheKey).
-				Int("items_count", len(animeList)).
-				Msg("Cache HIT for AiringAnimeWithEpisodes")
-
-			return animeList, nil
-		}
-
-		cacheGetSpan.SetAttributes(attribute.String("cache.result", "miss"))
-		cacheGetSpan.RecordError(err)
-		cacheGetSpan.SetStatus(codes.Error, "cache miss: "+err.Error())
-		cacheGetSpan.End()
-
-		// Debug logging for cache misses
-		log := logger.FromCtx(ctx)
-		log.Info().
-			Str("cache_key", cacheKey).
-			Err(err).
-			Msg("Cache MISS for AiringAnimeWithEpisodes")
-
-		// Continue to database if cache miss or error
-	}
+	// Database-level caching removed - caching handled at resolver level
 
 	// Add database query tracing
 	_, dbQuerySpan := tracer.Start(ctx, "AnimeRepository.DatabaseQuery",
@@ -1146,41 +1075,7 @@ func (a *AnimeRepository) AiringAnimeWithEpisodes(ctx context.Context, startDate
 	dbQuerySpan.End()
 	span.SetAttributes(attribute.String("data_source", "database"))
 
-	// Store in cache if available with tracing
-	if a.cache != nil && cacheKey != "" {
-		_, cacheSetSpan := tracer.Start(ctx, "AnimeRepository.CacheSet",
-			trace.WithAttributes(
-				attribute.String("cache.operation", "set"),
-				attribute.String("cache.key", cacheKey),
-				attribute.Int("cache.items_count", len(animes)),
-			),
-			trace.WithSpanKind(trace.SpanKindInternal),
-		)
-
-		err := a.cache.SetJSON(ctx, cacheKey, animes, a.cache.GetAnimeDataTTL())
-		if err != nil {
-			cacheSetSpan.RecordError(err)
-			cacheSetSpan.SetStatus(codes.Error, "cache set failed: "+err.Error())
-
-			// Debug logging for cache set failures
-			log := logger.FromCtx(ctx)
-			log.Error().
-				Str("cache_key", cacheKey).
-				Int("items_count", len(animes)).
-				Err(err).
-				Msg("Failed to SET cache for AiringAnimeWithEpisodes")
-		} else {
-			cacheSetSpan.SetStatus(codes.Ok, "cache set successful")
-
-			// Debug logging for successful cache sets
-			log := logger.FromCtx(ctx)
-			log.Info().
-				Str("cache_key", cacheKey).
-				Int("items_count", len(animes)).
-				Msg("Successfully SET cache for AiringAnimeWithEpisodes")
-		}
-		cacheSetSpan.End()
-	}
+	// Database-level cache set removed - caching handled at resolver level
 
 	return animes, nil
 }
