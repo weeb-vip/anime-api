@@ -89,6 +89,9 @@ func isSeasonalAnimeQuery(ctx context.Context) bool {
 	}
 
 	// Check if the root field is one of the seasonal anime queries
+	if current.Field.Field == nil {
+		return false
+	}
 	rootField := current.Field.Name
 	return rootField == "animeBySeasons" || rootField == "animeBySeasonAndYear"
 }
