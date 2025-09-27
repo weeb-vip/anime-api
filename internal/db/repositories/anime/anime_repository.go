@@ -8,7 +8,6 @@ import (
 	"github.com/weeb-vip/anime-api/internal/cache"
 	"github.com/weeb-vip/anime-api/internal/db"
 	animeEpisode "github.com/weeb-vip/anime-api/internal/db/repositories/anime_episode"
-	"github.com/weeb-vip/anime-api/internal/logger"
 	"github.com/weeb-vip/anime-api/metrics"
 	"github.com/weeb-vip/anime-api/tracing"
 	metrics_lib "github.com/weeb-vip/go-metrics-lib"
