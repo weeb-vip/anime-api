@@ -556,8 +556,19 @@ func CurrentlyAiring(ctx context.Context, animeService anime.AnimeServiceImpl, i
 	transformSpan.SetAttributes(attribute.Int("results.count", len(animes)))
 	transformSpan.SetStatus(codes.Ok, "transformation completed")
 
+	// Determine query date range for episode filtering
+	var queryStartDate, queryEndDate *time.Time
+	if input != nil {
+		queryStartDate = &input.StartDate
+		queryEndDate = input.EndDate
+		if queryEndDate == nil && input.DaysInFuture != nil {
+			endTime := input.StartDate.AddDate(0, 0, *input.DaysInFuture)
+			queryEndDate = &endTime
+		}
+	}
+
 	// Process currently airing data to find next episodes and sort by air time
-	processedAnimes := services.ProcessCurrentlyAiring(animes, actualLimit, time.Now())
+	processedAnimes := services.ProcessCurrentlyAiring(animes, actualLimit, time.Now(), queryStartDate, queryEndDate)
 
 	// Cache the result asynchronously
 	go func() {

@@ -228,8 +228,8 @@ func calculateCountdown(airDate *time.Time, broadcast *string, durationMinutes i
 	return ""
 }
 
-// findNextEpisode finds the next episode from an episodes array
-func findNextEpisode(episodes []*model.Episode, broadcast *string, currentTime time.Time) *NextEpisodeResult {
+// findNextEpisode finds the next episode from an episodes array within the query date range
+func findNextEpisode(episodes []*model.Episode, broadcast *string, currentTime time.Time, queryStartDate *time.Time, queryEndDate *time.Time) *NextEpisodeResult {
 	if len(episodes) == 0 {
 		return nil
 	}
@@ -238,22 +238,32 @@ func findNextEpisode(episodes []*model.Episode, broadcast *string, currentTime t
 		if episode.AirDate != nil {
 			airTime := ParseAirTime(episode.AirDate, broadcast)
 			if airTime != nil {
-				// Return any episode with a valid air time
-				animeID := ""
-				if episode.AnimeID != nil {
-					animeID = *episode.AnimeID
+				// Check if episode is within the query date range
+				withinRange := true
+				if queryStartDate != nil && airTime.Before(*queryStartDate) {
+					withinRange = false
 				}
-				return &NextEpisodeResult{
-					Episode: Episode{
-						ID:            episode.ID,
-						AnimeID:       animeID,
-						EpisodeNumber: episode.EpisodeNumber,
-						TitleEn:       episode.TitleEn,
-						TitleJp:       episode.TitleJp,
-						AirDate:       episode.AirDate,
-						Synopsis:      episode.Synopsis,
-					},
-					AirTime: *airTime,
+				if queryEndDate != nil && airTime.After(*queryEndDate) {
+					withinRange = false
+				}
+
+				if withinRange {
+					animeID := ""
+					if episode.AnimeID != nil {
+						animeID = *episode.AnimeID
+					}
+					return &NextEpisodeResult{
+						Episode: Episode{
+							ID:            episode.ID,
+							AnimeID:       animeID,
+							EpisodeNumber: episode.EpisodeNumber,
+							TitleEn:       episode.TitleEn,
+							TitleJp:       episode.TitleJp,
+							AirDate:       episode.AirDate,
+							Synopsis:      episode.Synopsis,
+						},
+						AirTime: *airTime,
+					}
 				}
 			}
 		}
@@ -346,7 +356,7 @@ func GetAirTimeDisplay(airDate *time.Time, broadcast *string, duration *string, 
 }
 
 // ProcessCurrentlyAiring processes currently airing data like the frontend
-func ProcessCurrentlyAiring(animes []*model.Anime, limit int, currentTime time.Time) []*model.Anime {
+func ProcessCurrentlyAiring(animes []*model.Anime, limit int, currentTime time.Time, queryStartDate *time.Time, queryEndDate *time.Time) []*model.Anime {
 	if len(animes) == 0 {
 		return []*model.Anime{}
 	}
@@ -366,8 +376,8 @@ func ProcessCurrentlyAiring(animes []*model.Anime, limit int, currentTime time.T
 			continue
 		}
 
-		// Find the next episode
-		nextEpisodeResult := findNextEpisode(anime.Episodes, anime.Broadcast, currentTime)
+		// Find the next episode within the query date range
+		nextEpisodeResult := findNextEpisode(anime.Episodes, anime.Broadcast, currentTime, queryStartDate, queryEndDate)
 		if nextEpisodeResult == nil {
 			continue
 		}
