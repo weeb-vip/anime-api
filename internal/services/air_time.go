@@ -394,17 +394,8 @@ func ProcessCurrentlyAiring(animes []*model.Anime, limit int, currentTime time.T
 		processedAnime = append(processedAnime, processedEntry)
 	}
 
-	// Filter episodes from 30 minutes ago onwards and sort chronologically
-	thirtyMinutesAgo := currentTime.Add(-30 * time.Minute)
-
-	var validEpisodes []ProcessedAnime
-	for _, anime := range processedAnime {
-		airTime := anime.NextEpisodeDate
-		// Include episodes that aired in the last 30 minutes or will air in the future
-		if airTime.After(thirtyMinutesAgo) {
-			validEpisodes = append(validEpisodes, anime)
-		}
-	}
+	// Use all processed anime without time filtering
+	validEpisodes := processedAnime
 
 	// Sort all episodes chronologically (earliest first)
 	sort.Slice(validEpisodes, func(i, j int) bool {

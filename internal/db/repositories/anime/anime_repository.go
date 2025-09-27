@@ -950,7 +950,7 @@ func (a *AnimeRepository) SearchAnimeWithEpisodes(ctx context.Context, search st
 	return animes, nil
 }
 
-func (a *AnimeRepository) AiringAnimeWithEpisodes(ctx context.Context, startDate *time.Time, endDate *time.Time, days *int) ([]*Anime, error) {
+func (a *AnimeRepository) ok AiringAnimeWithEpisodes(ctx context.Context, startDate *time.Time, endDate *time.Time, days *int) ([]*Anime, error) {
 	tracer := tracing.GetTracer(ctx)
 	ctx, span := tracer.Start(ctx, "AnimeRepository.AiringAnimeWithEpisodes",
 		trace.WithAttributes(
