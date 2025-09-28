@@ -164,8 +164,8 @@ type ComplexityRoot struct {
 	Query struct {
 		APIInfo                     func(childComplexity int) int
 		Anime                       func(childComplexity int, id string) int
-		AnimeBySeasonAndYear        func(childComplexity int, seasonName string, year int) int
-		AnimeBySeasons              func(childComplexity int, season string) int
+		AnimeBySeasonAndYear        func(childComplexity int, seasonName string, year int, limit *int) int
+		AnimeBySeasons              func(childComplexity int, season string, limit *int) int
 		CharactersAndStaffByAnimeID func(childComplexity int, animeID string) int
 		CurrentlyAiring             func(childComplexity int, input *model.CurrentlyAiringInput, limit *int) int
 		DbSearch                    func(childComplexity int, searchQuery model.AnimeSearchInput) int
@@ -213,8 +213,8 @@ type QueryResolver interface {
 	Episode(ctx context.Context, id string) (*model.Episode, error)
 	EpisodesByAnimeID(ctx context.Context, animeID string) ([]*model.Episode, error)
 	CurrentlyAiring(ctx context.Context, input *model.CurrentlyAiringInput, limit *int) ([]*model.Anime, error)
-	AnimeBySeasons(ctx context.Context, season string) ([]*model.Anime, error)
-	AnimeBySeasonAndYear(ctx context.Context, seasonName string, year int) ([]*model.Anime, error)
+	AnimeBySeasons(ctx context.Context, season string, limit *int) ([]*model.Anime, error)
+	AnimeBySeasonAndYear(ctx context.Context, seasonName string, year int, limit *int) ([]*model.Anime, error)
 	CharactersAndStaffByAnimeID(ctx context.Context, animeID string) ([]*model.CharacterWithStaff, error)
 }
 type UserAnimeResolver interface {
@@ -861,7 +861,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.AnimeBySeasonAndYear(childComplexity, args["seasonName"].(string), args["year"].(int)), true
+		return e.complexity.Query.AnimeBySeasonAndYear(childComplexity, args["seasonName"].(string), args["year"].(int), args["limit"].(*int)), true
 
 	case "Query.animeBySeasons":
 		if e.complexity.Query.AnimeBySeasons == nil {
@@ -873,7 +873,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.AnimeBySeasons(childComplexity, args["season"].(string)), true
+		return e.complexity.Query.AnimeBySeasons(childComplexity, args["season"].(string), args["limit"].(*int)), true
 
 	case "Query.charactersAndStaffByAnimeId":
 		if e.complexity.Query.CharactersAndStaffByAnimeID == nil {
@@ -1164,9 +1164,9 @@ type Query {
     "Get currently airing anime"
     currentlyAiring(input: CurrentlyAiringInput, limit: Int): [Anime!]
     "Get anime by season and year"
-    animeBySeasons(season: Season!): [Anime!]
+    animeBySeasons(season: Season!, limit: Int): [Anime!]
     "Get anime by season name and year (more flexible)"
-    animeBySeasonAndYear(seasonName: String!, year: Int!): [Anime!]
+    animeBySeasonAndYear(seasonName: String!, year: Int!, limit: Int): [Anime!]
     "characters and staff by anime ID"
     charactersAndStaffByAnimeId(animeId: ID!): [CharacterWithStaff!]
 }
@@ -1614,6 +1614,15 @@ func (ec *executionContext) field_Query_animeBySeasonAndYear_args(ctx context.Co
 		}
 	}
 	args["year"] = arg1
+	var arg2 *int
+	if tmp, ok := rawArgs["limit"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+		arg2, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["limit"] = arg2
 	return args, nil
 }
 
@@ -1629,6 +1638,15 @@ func (ec *executionContext) field_Query_animeBySeasons_args(ctx context.Context,
 		}
 	}
 	args["season"] = arg0
+	var arg1 *int
+	if tmp, ok := rawArgs["limit"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+		arg1, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["limit"] = arg1
 	return args, nil
 }
 
@@ -6469,7 +6487,7 @@ func (ec *executionContext) _Query_animeBySeasons(ctx context.Context, field gra
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().AnimeBySeasons(rctx, fc.Args["season"].(string))
+		return ec.resolvers.Query().AnimeBySeasons(rctx, fc.Args["season"].(string), fc.Args["limit"].(*int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6577,7 +6595,7 @@ func (ec *executionContext) _Query_animeBySeasonAndYear(ctx context.Context, fie
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().AnimeBySeasonAndYear(rctx, fc.Args["seasonName"].(string), fc.Args["year"].(int))
+		return ec.resolvers.Query().AnimeBySeasonAndYear(rctx, fc.Args["seasonName"].(string), fc.Args["year"].(int), fc.Args["limit"].(*int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

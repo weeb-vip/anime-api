@@ -59,13 +59,13 @@ func (r *queryResolver) CurrentlyAiring(ctx context.Context, input *model.Curren
 }
 
 // AnimeBySeasons is the resolver for the animeBySeasons field.
-func (r *queryResolver) AnimeBySeasons(ctx context.Context, season string) ([]*model.Anime, error) {
-	return resolvers.AnimeBySeasons(ctx, r.AnimeSeasonService, r.AnimeService, season)
+func (r *queryResolver) AnimeBySeasons(ctx context.Context, season string, limit *int) ([]*model.Anime, error) {
+	return resolvers.AnimeBySeasons(ctx, r.AnimeSeasonService, r.AnimeService, season, limit)
 }
 
 // AnimeBySeasonAndYear is the resolver for the animeBySeasonAndYear field.
-func (r *queryResolver) AnimeBySeasonAndYear(ctx context.Context, seasonName string, year int) ([]*model.Anime, error) {
-	return resolvers.AnimeBySeasonAndYear(ctx, r.AnimeSeasonService, r.AnimeService, seasonName, year)
+func (r *queryResolver) AnimeBySeasonAndYear(ctx context.Context, seasonName string, year int, limit *int) ([]*model.Anime, error) {
+	return resolvers.AnimeBySeasonAndYear(ctx, r.AnimeSeasonService, r.AnimeService, seasonName, year, limit)
 }
 
 // CharactersAndStaffByAnimeID is the resolver for the charactersAndStaffByAnimeId field.

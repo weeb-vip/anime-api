@@ -24,9 +24,9 @@ type Query {
     "Get currently airing anime"
     currentlyAiring(input: CurrentlyAiringInput, limit: Int): [Anime!]
     "Get anime by season and year"
-    animeBySeasons(season: Season!): [Anime!]
+    animeBySeasons(season: Season!, limit: Int): [Anime!]
     "Get anime by season name and year (more flexible)"
-    animeBySeasonAndYear(seasonName: String!, year: Int!): [Anime!]
+    animeBySeasonAndYear(seasonName: String!, year: Int!, limit: Int): [Anime!]
     "characters and staff by anime ID"
     charactersAndStaffByAnimeId(animeId: ID!): [CharacterWithStaff!]
 }

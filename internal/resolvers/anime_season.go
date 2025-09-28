@@ -61,8 +61,14 @@ func AnimeSeasons(ctx context.Context, animeSeasonService anime_season.AnimeSeas
 	return seasons, nil
 }
 
-func AnimeBySeasons(ctx context.Context, animeSeasonService anime_season.AnimeSeasonServiceImpl, animeService anime_service.AnimeServiceImpl, season string) ([]*model.Anime, error) {
+func AnimeBySeasons(ctx context.Context, animeSeasonService anime_season.AnimeSeasonServiceImpl, animeService anime_service.AnimeServiceImpl, season string, limit *int) ([]*model.Anime, error) {
 	startTime := time.Now()
+
+	// Set default limit to 10 if not provided
+	queryLimit := 10
+	if limit != nil {
+		queryLimit = *limit
+	}
 
 	// Extract field selection from GraphQL context to optimize query
 	fieldSelection := ExtractAnimeFieldSelection(ctx)
@@ -71,11 +77,15 @@ func AnimeBySeasons(ctx context.Context, animeSeasonService anime_season.AnimeSe
 	var err error
 
 	if fieldSelection != nil {
-		// Use field-optimized query that only selects requested fields, limited to top 10
-		animeList, err = animeService.AnimeBySeasonWithFieldSelection(ctx, season, fieldSelection, 10)
+		// Use field-optimized query that only selects requested fields
+		animeList, err = animeService.AnimeBySeasonWithFieldSelection(ctx, season, fieldSelection, queryLimit)
 	} else {
 		// Fall back to standard optimized method (no episodes)
 		animeList, err = animeService.AnimeBySeasonOptimized(ctx, season)
+		// Apply limit manually since this method doesn't support it
+		if err == nil && len(animeList) > queryLimit {
+			animeList = animeList[:queryLimit]
+		}
 	}
 
 	if err != nil {
@@ -106,8 +116,8 @@ func AnimeBySeasons(ctx context.Context, animeSeasonService anime_season.AnimeSe
 	return result, nil
 }
 
-func AnimeBySeasonAndYear(ctx context.Context, animeSeasonService anime_season.AnimeSeasonServiceImpl, animeService anime_service.AnimeServiceImpl, seasonName string, year int) ([]*model.Anime, error) {
+func AnimeBySeasonAndYear(ctx context.Context, animeSeasonService anime_season.AnimeSeasonServiceImpl, animeService anime_service.AnimeServiceImpl, seasonName string, year int, limit *int) ([]*model.Anime, error) {
 	// Construct the season string in the expected format: SPRING_2024, SUMMER_2024, etc.
 	season := fmt.Sprintf("%s_%d", strings.ToUpper(seasonName), year)
-	return AnimeBySeasons(ctx, animeSeasonService, animeService, season)
+	return AnimeBySeasons(ctx, animeSeasonService, animeService, season, limit)
 }
