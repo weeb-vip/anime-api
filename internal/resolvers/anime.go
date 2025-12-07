@@ -35,13 +35,6 @@ func transformAnimeToGraphQL(animeEntity anime2.Anime) (*model.Anime, error) {
 			return nil, err
 		}
 	}
-	var tags []string
-	if animeEntity.Genres != nil {
-		err := json.Unmarshal([]byte(*animeEntity.Genres), &tags)
-		if err != nil {
-			return nil, err
-		}
-	}
 
 	var titleSynonyms []string
 	if animeEntity.TitleSynonyms != nil {
@@ -126,7 +119,6 @@ func transformAnimeToGraphQL(animeEntity anime2.Anime) (*model.Anime, error) {
 		Episodes:      episodes, // Add preloaded episodes
 		Duration:      animeEntity.Duration,
 		Studios:       studios,
-		Tags:          tags,
 		Rating:        ratingStr,
 		AnimeStatus:   animeEntity.Status,
 		ImageURL:      animeEntity.ImageURL,
@@ -146,13 +138,6 @@ func transformAnimeToGraphQLWithEpisode(animeEntity anime2.AnimeWithNextEpisode)
 	var studios []string
 	if animeEntity.Studios != nil {
 		err := json.Unmarshal([]byte(*animeEntity.Studios), &studios)
-		if err != nil {
-			return nil, err
-		}
-	}
-	var tags []string
-	if animeEntity.Genres != nil {
-		err := json.Unmarshal([]byte(*animeEntity.Genres), &tags)
 		if err != nil {
 			return nil, err
 		}
@@ -237,7 +222,6 @@ func transformAnimeToGraphQLWithEpisode(animeEntity anime2.AnimeWithNextEpisode)
 		EpisodeCount:  animeEntity.Episodes,
 		Duration:      animeEntity.Duration,
 		Studios:       studios,
-		Tags:          tags,
 		Rating:        ratingStr,
 		AnimeStatus:   animeEntity.Status,
 		ImageURL:      animeEntity.ImageURL,

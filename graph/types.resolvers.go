@@ -13,6 +13,21 @@ import (
 	"github.com/weeb-vip/anime-api/internal/resolvers"
 )
 
+// Tags is the resolver for the tags field.
+func (r *animeResolver) Tags(ctx context.Context, obj *model.Anime) ([]string, error) {
+	// Check if tags are already preloaded
+	if obj.Tags != nil {
+		return obj.Tags, nil
+	}
+
+	// Fetch tags from the anime_tags junction table
+	tags, err := r.AnimeTagRepository.GetTagNamesForAnime(obj.ID)
+	if err != nil {
+		return nil, err
+	}
+	return tags, nil
+}
+
 // Episodes is the resolver for the episodes field.
 func (r *animeResolver) Episodes(ctx context.Context, obj *model.Anime) ([]*model.Episode, error) {
 	// Check if episodes are already in the Episodes field (preloaded)

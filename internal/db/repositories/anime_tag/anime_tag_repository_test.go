@@ -14,7 +14,7 @@ import (
 )
 
 func setupTestDB(t *testing.T) *db.DB {
-	cfg := &config.DBConfig{
+	cfg := config.DBConfig{
 		Host:     "localhost",
 		Port:     3306,
 		User:     "weeb",
@@ -23,7 +23,7 @@ func setupTestDB(t *testing.T) *db.DB {
 		SSLMode:  "false",
 	}
 
-	database := db.NewDB(*cfg)
+	database := db.NewDatabase(cfg)
 	require.NotNil(t, database)
 
 	sqlDB, err := database.DB.DB()
@@ -34,13 +34,22 @@ func setupTestDB(t *testing.T) *db.DB {
 	return database
 }
 
+// createTestAnime creates a test anime directly in the database
+func createTestAnime(t *testing.T, database *db.DB, id string, title string) {
+	testAnime := &anime.Anime{
+		ID:      id,
+		TitleEn: &title,
+	}
+	err := database.DB.Create(testAnime).Error
+	require.NoError(t, err)
+}
+
 func TestAnimeTagRepository_SetTagsForAnime(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration test")
 	}
 
 	database := setupTestDB(t)
-	animeRepo := anime.NewAnimeRepository(database)
 	tagRepo := tag.NewTagRepository(database)
 	animeTagRepo := anime_tag.NewAnimeTagRepository(database)
 
@@ -54,13 +63,7 @@ func TestAnimeTagRepository_SetTagsForAnime(t *testing.T) {
 	defer cleanup()
 
 	// Create test anime
-	titleEn := "Test Anime for Tags"
-	testAnime := &anime.Anime{
-		ID:      "test-anime-tag-001",
-		TitleEn: &titleEn,
-	}
-	err := animeRepo.Upsert(testAnime, nil)
-	require.NoError(t, err)
+	createTestAnime(t, database, "test-anime-tag-001", "Test Anime for Tags")
 
 	// Create test tags
 	tag1, err := tagRepo.FindOrCreate("test-tag-action")
@@ -116,7 +119,6 @@ func TestAnimeTagRepository_AddAndRemoveTag(t *testing.T) {
 	}
 
 	database := setupTestDB(t)
-	animeRepo := anime.NewAnimeRepository(database)
 	tagRepo := tag.NewTagRepository(database)
 	animeTagRepo := anime_tag.NewAnimeTagRepository(database)
 
@@ -130,13 +132,7 @@ func TestAnimeTagRepository_AddAndRemoveTag(t *testing.T) {
 	defer cleanup()
 
 	// Create test anime
-	titleEn := "Test Anime for Add/Remove"
-	testAnime := &anime.Anime{
-		ID:      "test-anime-tag-002",
-		TitleEn: &titleEn,
-	}
-	err := animeRepo.Upsert(testAnime, nil)
-	require.NoError(t, err)
+	createTestAnime(t, database, "test-anime-tag-002", "Test Anime for Add/Remove")
 
 	// Create test tag
 	testTag, err := tagRepo.FindOrCreate("test-tag-single")
@@ -168,7 +164,6 @@ func TestAnimeTagRepository_DeleteAllTagsForAnime(t *testing.T) {
 	}
 
 	database := setupTestDB(t)
-	animeRepo := anime.NewAnimeRepository(database)
 	tagRepo := tag.NewTagRepository(database)
 	animeTagRepo := anime_tag.NewAnimeTagRepository(database)
 
@@ -182,13 +177,7 @@ func TestAnimeTagRepository_DeleteAllTagsForAnime(t *testing.T) {
 	defer cleanup()
 
 	// Create test anime
-	titleEn := "Test Anime for DeleteAll"
-	testAnime := &anime.Anime{
-		ID:      "test-anime-tag-003",
-		TitleEn: &titleEn,
-	}
-	err := animeRepo.Upsert(testAnime, nil)
-	require.NoError(t, err)
+	createTestAnime(t, database, "test-anime-tag-003", "Test Anime for DeleteAll")
 
 	// Create and add multiple tags
 	tag1, err := tagRepo.FindOrCreate("test-tag-delete-1")
@@ -226,4 +215,130 @@ func TestAnimeTagRepository_GetTagIDsForAnime_EmptyResult(t *testing.T) {
 	tagIDs, err := animeTagRepo.GetTagIDsForAnime("non-existent-anime-id")
 	require.NoError(t, err)
 	assert.Len(t, tagIDs, 0)
+}
+
+func TestAnimeTagRepository_GetTagNamesForAnime(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test")
+	}
+
+	database := setupTestDB(t)
+	tagRepo := tag.NewTagRepository(database)
+	animeTagRepo := anime_tag.NewAnimeTagRepository(database)
+
+	// Clean up test data
+	cleanup := func() {
+		database.DB.Exec("DELETE FROM anime_tags WHERE anime_id LIKE ?", "test-anime-tag-%")
+		database.DB.Exec("DELETE FROM tags WHERE name LIKE ?", "test-tag-%")
+		database.DB.Where("id LIKE ?", "test-anime-tag-%").Delete(&anime.Anime{})
+	}
+	cleanup()
+	defer cleanup()
+
+	// Create test anime
+	createTestAnime(t, database, "test-anime-tag-004", "Test Anime for GetTagNames")
+
+	// Create test tags
+	tag1, err := tagRepo.FindOrCreate("test-tag-action")
+	require.NoError(t, err)
+	tag2, err := tagRepo.FindOrCreate("test-tag-comedy")
+	require.NoError(t, err)
+
+	// Associate tags with anime
+	err = animeTagRepo.SetTagsForAnime("test-anime-tag-004", []int64{tag1.ID, tag2.ID})
+	require.NoError(t, err)
+
+	t.Run("GetTagNamesForAnime_ReturnsTags", func(t *testing.T) {
+		tagNames, err := animeTagRepo.GetTagNamesForAnime("test-anime-tag-004")
+		require.NoError(t, err)
+		assert.Len(t, tagNames, 2)
+		assert.Contains(t, tagNames, "test-tag-action")
+		assert.Contains(t, tagNames, "test-tag-comedy")
+	})
+
+	t.Run("GetTagNamesForAnime_EmptyForNonExistent", func(t *testing.T) {
+		tagNames, err := animeTagRepo.GetTagNamesForAnime("non-existent-anime-id")
+		require.NoError(t, err)
+		assert.Len(t, tagNames, 0)
+	})
+
+	t.Run("GetTagNamesForAnime_EmptyAfterClear", func(t *testing.T) {
+		// Clear all tags
+		err := animeTagRepo.DeleteAllTagsForAnime("test-anime-tag-004")
+		require.NoError(t, err)
+
+		tagNames, err := animeTagRepo.GetTagNamesForAnime("test-anime-tag-004")
+		require.NoError(t, err)
+		assert.Len(t, tagNames, 0)
+	})
+}
+
+func TestAnimeTagRepository_GetTagNamesForAnimeIDs(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test")
+	}
+
+	database := setupTestDB(t)
+	tagRepo := tag.NewTagRepository(database)
+	animeTagRepo := anime_tag.NewAnimeTagRepository(database)
+
+	// Clean up test data
+	cleanup := func() {
+		database.DB.Exec("DELETE FROM anime_tags WHERE anime_id LIKE ?", "test-anime-tag-%")
+		database.DB.Exec("DELETE FROM tags WHERE name LIKE ?", "test-tag-%")
+		database.DB.Where("id LIKE ?", "test-anime-tag-%").Delete(&anime.Anime{})
+	}
+	cleanup()
+	defer cleanup()
+
+	// Create test anime
+	createTestAnime(t, database, "test-anime-tag-005", "Test Anime 1 for Batch")
+	createTestAnime(t, database, "test-anime-tag-006", "Test Anime 2 for Batch")
+	createTestAnime(t, database, "test-anime-tag-007", "Test Anime 3 for Batch")
+
+	// Create test tags
+	tagAction, err := tagRepo.FindOrCreate("test-tag-action")
+	require.NoError(t, err)
+	tagComedy, err := tagRepo.FindOrCreate("test-tag-comedy")
+	require.NoError(t, err)
+	tagDrama, err := tagRepo.FindOrCreate("test-tag-drama")
+	require.NoError(t, err)
+
+	// Associate tags with anime
+	err = animeTagRepo.SetTagsForAnime("test-anime-tag-005", []int64{tagAction.ID, tagComedy.ID})
+	require.NoError(t, err)
+	err = animeTagRepo.SetTagsForAnime("test-anime-tag-006", []int64{tagDrama.ID})
+	require.NoError(t, err)
+	// test-anime-tag-007 has no tags
+
+	t.Run("GetTagNamesForAnimeIDs_ReturnsAllTags", func(t *testing.T) {
+		animeIDs := []string{"test-anime-tag-005", "test-anime-tag-006", "test-anime-tag-007"}
+		tagMap, err := animeTagRepo.GetTagNamesForAnimeIDs(animeIDs)
+		require.NoError(t, err)
+
+		// Check anime 005 tags
+		assert.Len(t, tagMap["test-anime-tag-005"], 2)
+		assert.Contains(t, tagMap["test-anime-tag-005"], "test-tag-action")
+		assert.Contains(t, tagMap["test-anime-tag-005"], "test-tag-comedy")
+
+		// Check anime 006 tags
+		assert.Len(t, tagMap["test-anime-tag-006"], 1)
+		assert.Contains(t, tagMap["test-anime-tag-006"], "test-tag-drama")
+
+		// Check anime 007 has no tags (key may not exist in map)
+		assert.Len(t, tagMap["test-anime-tag-007"], 0)
+	})
+
+	t.Run("GetTagNamesForAnimeIDs_EmptyInput", func(t *testing.T) {
+		tagMap, err := animeTagRepo.GetTagNamesForAnimeIDs([]string{})
+		require.NoError(t, err)
+		assert.Len(t, tagMap, 0)
+	})
+
+	t.Run("GetTagNamesForAnimeIDs_NonExistentAnime", func(t *testing.T) {
+		animeIDs := []string{"non-existent-1", "non-existent-2"}
+		tagMap, err := animeTagRepo.GetTagNamesForAnimeIDs(animeIDs)
+		require.NoError(t, err)
+		assert.Len(t, tagMap, 0)
+	})
 }
