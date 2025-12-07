@@ -9,14 +9,13 @@ CREATE TABLE tags
 );
 
 -- Create anime_tags junction table for many-to-many relationship
+-- Note: Foreign keys not used due to Vitess/PlanetScale compatibility
 CREATE TABLE anime_tags
 (
     anime_id   VARCHAR(36) NOT NULL,
     tag_id     BIGINT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (anime_id, tag_id),
-    FOREIGN KEY (anime_id) REFERENCES anime(id) ON DELETE CASCADE,
-    FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE,
     INDEX idx_anime_tags_anime_id (anime_id),
     INDEX idx_anime_tags_tag_id (tag_id)
 );
