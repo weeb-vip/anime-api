@@ -12,7 +12,7 @@ import (
 )
 
 func setupTestDB(t *testing.T) *db.DB {
-	cfg := &config.DBConfig{
+	cfg := config.DBConfig{
 		Host:     "localhost",
 		Port:     3306,
 		User:     "weeb",
@@ -21,7 +21,7 @@ func setupTestDB(t *testing.T) *db.DB {
 		SSLMode:  "false",
 	}
 
-	database := db.NewDB(*cfg)
+	database := db.NewDatabase(cfg)
 	require.NotNil(t, database)
 
 	sqlDB, err := database.DB.DB()
@@ -201,5 +201,70 @@ func TestTagRepository_Create(t *testing.T) {
 		secondTag := &tag.Tag{Name: tagName}
 		err = tagRepo.Create(secondTag)
 		assert.Error(t, err)
+	})
+}
+
+func TestTagRepository_FindByIDs(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test")
+	}
+
+	database := setupTestDB(t)
+	tagRepo := tag.NewTagRepository(database)
+
+	// Clean up test data
+	cleanup := func() {
+		database.DB.Exec("DELETE FROM tags WHERE name LIKE ?", "test-findbyids-%")
+	}
+	cleanup()
+	defer cleanup()
+
+	// Create test tags
+	tag1, err := tagRepo.FindOrCreate("test-findbyids-action")
+	require.NoError(t, err)
+	tag2, err := tagRepo.FindOrCreate("test-findbyids-comedy")
+	require.NoError(t, err)
+	tag3, err := tagRepo.FindOrCreate("test-findbyids-drama")
+	require.NoError(t, err)
+
+	t.Run("FindsMultipleTagsByIDs", func(t *testing.T) {
+		tagIDs := []int64{tag1.ID, tag2.ID, tag3.ID}
+		foundTags, err := tagRepo.FindByIDs(tagIDs)
+		require.NoError(t, err)
+		assert.Len(t, foundTags, 3)
+
+		foundNames := make([]string, len(foundTags))
+		for i, t := range foundTags {
+			foundNames[i] = t.Name
+		}
+		assert.Contains(t, foundNames, "test-findbyids-action")
+		assert.Contains(t, foundNames, "test-findbyids-comedy")
+		assert.Contains(t, foundNames, "test-findbyids-drama")
+	})
+
+	t.Run("FindsSubsetOfTags", func(t *testing.T) {
+		tagIDs := []int64{tag1.ID, tag3.ID}
+		foundTags, err := tagRepo.FindByIDs(tagIDs)
+		require.NoError(t, err)
+		assert.Len(t, foundTags, 2)
+	})
+
+	t.Run("ReturnsEmptyForNonExistentIDs", func(t *testing.T) {
+		foundTags, err := tagRepo.FindByIDs([]int64{999999, 999998})
+		require.NoError(t, err)
+		assert.Len(t, foundTags, 0)
+	})
+
+	t.Run("HandlesEmptyInput", func(t *testing.T) {
+		foundTags, err := tagRepo.FindByIDs([]int64{})
+		require.NoError(t, err)
+		assert.Len(t, foundTags, 0)
+	})
+
+	t.Run("HandlesMixedExistingAndNonExistingIDs", func(t *testing.T) {
+		tagIDs := []int64{tag1.ID, 999999, tag2.ID}
+		foundTags, err := tagRepo.FindByIDs(tagIDs)
+		require.NoError(t, err)
+		assert.Len(t, foundTags, 2) // Only the two existing tags
 	})
 }

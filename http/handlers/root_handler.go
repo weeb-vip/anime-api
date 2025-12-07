@@ -2,10 +2,13 @@ package handlers
 
 import (
 	"context"
+	"net/http"
+
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/weeb-vip/anime-api/config"
 	"github.com/weeb-vip/anime-api/graph"
 	"github.com/weeb-vip/anime-api/graph/generated"
+	"github.com/weeb-vip/anime-api/http/middleware"
 	"github.com/weeb-vip/anime-api/internal/cache"
 	"github.com/weeb-vip/anime-api/internal/db"
 	anime2 "github.com/weeb-vip/anime-api/internal/db/repositories/anime"
@@ -13,15 +16,14 @@ import (
 	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_character_staff_link"
 	anime3 "github.com/weeb-vip/anime-api/internal/db/repositories/anime_episode"
 	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_season"
+	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_tag"
 	"github.com/weeb-vip/anime-api/internal/directives"
+	"github.com/weeb-vip/anime-api/internal/logger"
 	"github.com/weeb-vip/anime-api/internal/services/anime"
 	anime_character2 "github.com/weeb-vip/anime-api/internal/services/anime_character"
 	anime_character_staff_link2 "github.com/weeb-vip/anime-api/internal/services/anime_character_staff_link"
 	anime_season_service "github.com/weeb-vip/anime-api/internal/services/anime_season"
 	"github.com/weeb-vip/anime-api/internal/services/episodes"
-	"github.com/weeb-vip/anime-api/http/middleware"
-	"github.com/weeb-vip/anime-api/internal/logger"
-	"net/http"
 )
 
 func BuildRootHandler(conf config.Config) http.Handler {
@@ -75,6 +77,7 @@ func BuildRootHandler(conf config.Config) http.Handler {
 	animeCharacterWithStaffLinkService := anime_character_staff_link2.NewAnimeCharacterStaffLinkService(animeCharacterWithStaffLinkRepository)
 	animeSeasonRepository := anime_season.NewAnimeSeasonRepository(database)
 	animeSeasonService := anime_season_service.NewAnimeSeasonService(animeSeasonRepository)
+	animeTagRepository := anime_tag.NewAnimeTagRepository(database)
 	resolvers := &graph.Resolver{
 		Config:                             conf,
 		AnimeService:                       animeService,
@@ -82,6 +85,7 @@ func BuildRootHandler(conf config.Config) http.Handler {
 		AnimeCharacterService:              animeCharacterService,
 		AnimeCharacterWithStaffLinkService: animeCharacterWithStaffLinkService,
 		AnimeSeasonService:                 animeSeasonService,
+		AnimeTagRepository:                 animeTagRepository,
 	}
 
 	cfg := generated.Config{Resolvers: resolvers, Directives: directives.GetDirectives()}
@@ -135,6 +139,7 @@ func BuildRootHandlerWithContext(ctx context.Context, conf config.Config) http.H
 	animeCharacterWithStaffLinkService := anime_character_staff_link2.NewAnimeCharacterStaffLinkService(animeCharacterWithStaffLinkRepository)
 	animeSeasonRepository := anime_season.NewAnimeSeasonRepository(database)
 	animeSeasonService := anime_season_service.NewAnimeSeasonService(animeSeasonRepository)
+	animeTagRepository := anime_tag.NewAnimeTagRepository(database)
 	resolvers := &graph.Resolver{
 		Config:                             conf,
 		AnimeService:                       animeService,
@@ -142,6 +147,7 @@ func BuildRootHandlerWithContext(ctx context.Context, conf config.Config) http.H
 		AnimeCharacterService:              animeCharacterService,
 		AnimeCharacterWithStaffLinkService: animeCharacterWithStaffLinkService,
 		AnimeSeasonService:                 animeSeasonService,
+		AnimeTagRepository:                 animeTagRepository,
 		CacheService:                       cacheService,
 		Context:                            ctx,
 	}

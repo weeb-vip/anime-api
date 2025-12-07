@@ -3,8 +3,10 @@ package graph
 import (
 	"context"
 	"time"
+
 	"github.com/weeb-vip/anime-api/config"
 	"github.com/weeb-vip/anime-api/internal/cache"
+	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_tag"
 	"github.com/weeb-vip/anime-api/internal/services/anime"
 	"github.com/weeb-vip/anime-api/internal/services/anime_character"
 	anime_character_staff_link2 "github.com/weeb-vip/anime-api/internal/services/anime_character_staff_link"
@@ -31,6 +33,7 @@ type Resolver struct {
 	AnimeCharacterService              anime_character.AnimeCharacterServiceImpl
 	AnimeCharacterWithStaffLinkService anime_character_staff_link2.AnimeCharacterStaffLinkImpl
 	AnimeSeasonService                 anime_season.AnimeSeasonServiceImpl
+	AnimeTagRepository                 anime_tag.AnimeTagRepositoryImpl
 	CacheService                       CacheServiceInterface
 	Context                            context.Context
 }

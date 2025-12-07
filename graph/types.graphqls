@@ -44,7 +44,7 @@ type Anime @key(fields: "id") {
     "Image URL of the anime"
     imageUrl: String
     "Tags of the anime"
-    tags: [String!]
+    tags: [String!] @goField(forceResolver: true)
     "Studios of the anime"
     studios: [String!]
     "Anime status (finished, airing, upcoming)"
