@@ -41,6 +41,7 @@ type ResolverRoot interface {
 	Anime() AnimeResolver
 	ApiInfo() ApiInfoResolver
 	Entity() EntityResolver
+	Episode() EpisodeResolver
 	Query() QueryResolver
 	UserAnime() UserAnimeResolver
 }
@@ -52,33 +53,36 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Anime struct {
-		Anidbid       func(childComplexity int) int
-		AnimeStatus   func(childComplexity int) int
-		Broadcast     func(childComplexity int) int
-		CreatedAt     func(childComplexity int) int
-		Description   func(childComplexity int) int
-		Duration      func(childComplexity int) int
-		EndDate       func(childComplexity int) int
-		EpisodeCount  func(childComplexity int) int
-		Episodes      func(childComplexity int) int
-		ID            func(childComplexity int) int
-		ImageURL      func(childComplexity int) int
-		Licensors     func(childComplexity int) int
-		NextEpisode   func(childComplexity int) int
-		Ranking       func(childComplexity int) int
-		Rating        func(childComplexity int) int
-		Seasons       func(childComplexity int) int
-		Source        func(childComplexity int) int
-		StartDate     func(childComplexity int) int
-		Studios       func(childComplexity int) int
-		Tags          func(childComplexity int) int
-		Thetvdbid     func(childComplexity int) int
-		TitleEn       func(childComplexity int) int
-		TitleJp       func(childComplexity int) int
-		TitleKanji    func(childComplexity int) int
-		TitleRomaji   func(childComplexity int) int
-		TitleSynonyms func(childComplexity int) int
-		UpdatedAt     func(childComplexity int) int
+		Anidbid            func(childComplexity int) int
+		AnimeStatus        func(childComplexity int) int
+		Broadcast          func(childComplexity int) int
+		CreatedAt          func(childComplexity int) int
+		Description        func(childComplexity int) int
+		Duration           func(childComplexity int) int
+		EndDate            func(childComplexity int) int
+		EpisodeCount       func(childComplexity int) int
+		Episodes           func(childComplexity int) int
+		ID                 func(childComplexity int) int
+		ImageURL           func(childComplexity int) int
+		Licensors          func(childComplexity int) int
+		MalID              func(childComplexity int) int
+		NextEpisode        func(childComplexity int) int
+		Ranking            func(childComplexity int) int
+		Rating             func(childComplexity int) int
+		ScheduleInfo       func(childComplexity int) int
+		Seasons            func(childComplexity int) int
+		Source             func(childComplexity int) int
+		StartDate          func(childComplexity int) int
+		StreamingPlatforms func(childComplexity int) int
+		Studios            func(childComplexity int) int
+		Tags               func(childComplexity int) int
+		Thetvdbid          func(childComplexity int) int
+		TitleEn            func(childComplexity int) int
+		TitleJp            func(childComplexity int) int
+		TitleKanji         func(childComplexity int) int
+		TitleRomaji        func(childComplexity int) int
+		TitleSynonyms      func(childComplexity int) int
+		UpdatedAt          func(childComplexity int) int
 	}
 
 	AnimeApi struct {
@@ -103,6 +107,16 @@ type ComplexityRoot struct {
 		UpdatedAt     func(childComplexity int) int
 		Weight        func(childComplexity int) int
 		Zodiac        func(childComplexity int) int
+	}
+
+	AnimeScheduleInfo struct {
+		DelayedTimetable    func(childComplexity int) int
+		DubDelayedTimetable func(childComplexity int) int
+		DubTime             func(childComplexity int) int
+		JpnTime             func(childComplexity int) int
+		Notes               func(childComplexity int) int
+		SubDelayedTimetable func(childComplexity int) int
+		SubTime             func(childComplexity int) int
 	}
 
 	AnimeSeason struct {
@@ -151,6 +165,7 @@ type ComplexityRoot struct {
 	Episode struct {
 		AirDate       func(childComplexity int) int
 		AirTime       func(childComplexity int) int
+		AirTimes      func(childComplexity int) int
 		AnimeID       func(childComplexity int) int
 		CreatedAt     func(childComplexity int) int
 		EpisodeNumber func(childComplexity int) int
@@ -159,6 +174,12 @@ type ComplexityRoot struct {
 		TitleEn       func(childComplexity int) int
 		TitleJp       func(childComplexity int) int
 		UpdatedAt     func(childComplexity int) int
+	}
+
+	EpisodeAirTime struct {
+		AirDatetime func(childComplexity int) int
+		AirType     func(childComplexity int) int
+		Streams     func(childComplexity int) int
 	}
 
 	Query struct {
@@ -178,6 +199,12 @@ type ComplexityRoot struct {
 		__resolve_entities          func(childComplexity int, representations []map[string]interface{}) int
 	}
 
+	StreamingPlatform struct {
+		Name     func(childComplexity int) int
+		Platform func(childComplexity int) int
+		URL      func(childComplexity int) int
+	}
+
 	UserAnime struct {
 		Anime   func(childComplexity int) int
 		AnimeID func(childComplexity int) int
@@ -193,6 +220,8 @@ type AnimeResolver interface {
 
 	Episodes(ctx context.Context, obj *model.Anime) ([]*model.Episode, error)
 
+	ScheduleInfo(ctx context.Context, obj *model.Anime) (*model.AnimeScheduleInfo, error)
+	StreamingPlatforms(ctx context.Context, obj *model.Anime) ([]*model.StreamingPlatform, error)
 	Seasons(ctx context.Context, obj *model.Anime) ([]*model.AnimeSeason, error)
 
 	NextEpisode(ctx context.Context, obj *model.Anime) (*model.Episode, error)
@@ -204,6 +233,9 @@ type EntityResolver interface {
 	FindAnimeByID(ctx context.Context, id string) (*model.Anime, error)
 	FindEpisodeByAnimeID(ctx context.Context, animeID *string) (*model.Episode, error)
 	FindUserAnimeByAnimeID(ctx context.Context, animeID string) (*model.UserAnime, error)
+}
+type EpisodeResolver interface {
+	AirTimes(ctx context.Context, obj *model.Episode) ([]*model.EpisodeAirTime, error)
 }
 type QueryResolver interface {
 	DbSearch(ctx context.Context, searchQuery model.AnimeSearchInput) ([]*model.Anime, error)
@@ -322,6 +354,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Anime.Licensors(childComplexity), true
 
+	case "Anime.malId":
+		if e.complexity.Anime.MalID == nil {
+			break
+		}
+
+		return e.complexity.Anime.MalID(childComplexity), true
+
 	case "Anime.nextEpisode":
 		if e.complexity.Anime.NextEpisode == nil {
 			break
@@ -343,6 +382,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Anime.Rating(childComplexity), true
 
+	case "Anime.scheduleInfo":
+		if e.complexity.Anime.ScheduleInfo == nil {
+			break
+		}
+
+		return e.complexity.Anime.ScheduleInfo(childComplexity), true
+
 	case "Anime.seasons":
 		if e.complexity.Anime.Seasons == nil {
 			break
@@ -363,6 +409,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Anime.StartDate(childComplexity), true
+
+	case "Anime.streamingPlatforms":
+		if e.complexity.Anime.StreamingPlatforms == nil {
+			break
+		}
+
+		return e.complexity.Anime.StreamingPlatforms(childComplexity), true
 
 	case "Anime.studios":
 		if e.complexity.Anime.Studios == nil {
@@ -552,6 +605,55 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.AnimeCharacter.Zodiac(childComplexity), true
+
+	case "AnimeScheduleInfo.delayedTimetable":
+		if e.complexity.AnimeScheduleInfo.DelayedTimetable == nil {
+			break
+		}
+
+		return e.complexity.AnimeScheduleInfo.DelayedTimetable(childComplexity), true
+
+	case "AnimeScheduleInfo.dubDelayedTimetable":
+		if e.complexity.AnimeScheduleInfo.DubDelayedTimetable == nil {
+			break
+		}
+
+		return e.complexity.AnimeScheduleInfo.DubDelayedTimetable(childComplexity), true
+
+	case "AnimeScheduleInfo.dubTime":
+		if e.complexity.AnimeScheduleInfo.DubTime == nil {
+			break
+		}
+
+		return e.complexity.AnimeScheduleInfo.DubTime(childComplexity), true
+
+	case "AnimeScheduleInfo.jpnTime":
+		if e.complexity.AnimeScheduleInfo.JpnTime == nil {
+			break
+		}
+
+		return e.complexity.AnimeScheduleInfo.JpnTime(childComplexity), true
+
+	case "AnimeScheduleInfo.notes":
+		if e.complexity.AnimeScheduleInfo.Notes == nil {
+			break
+		}
+
+		return e.complexity.AnimeScheduleInfo.Notes(childComplexity), true
+
+	case "AnimeScheduleInfo.subDelayedTimetable":
+		if e.complexity.AnimeScheduleInfo.SubDelayedTimetable == nil {
+			break
+		}
+
+		return e.complexity.AnimeScheduleInfo.SubDelayedTimetable(childComplexity), true
+
+	case "AnimeScheduleInfo.subTime":
+		if e.complexity.AnimeScheduleInfo.SubTime == nil {
+			break
+		}
+
+		return e.complexity.AnimeScheduleInfo.SubTime(childComplexity), true
 
 	case "AnimeSeason.animeId":
 		if e.complexity.AnimeSeason.AnimeID == nil {
@@ -778,6 +880,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Episode.AirTime(childComplexity), true
 
+	case "Episode.airTimes":
+		if e.complexity.Episode.AirTimes == nil {
+			break
+		}
+
+		return e.complexity.Episode.AirTimes(childComplexity), true
+
 	case "Episode.animeId":
 		if e.complexity.Episode.AnimeID == nil {
 			break
@@ -833,6 +942,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Episode.UpdatedAt(childComplexity), true
+
+	case "EpisodeAirTime.airDatetime":
+		if e.complexity.EpisodeAirTime.AirDatetime == nil {
+			break
+		}
+
+		return e.complexity.EpisodeAirTime.AirDatetime(childComplexity), true
+
+	case "EpisodeAirTime.airType":
+		if e.complexity.EpisodeAirTime.AirType == nil {
+			break
+		}
+
+		return e.complexity.EpisodeAirTime.AirType(childComplexity), true
+
+	case "EpisodeAirTime.streams":
+		if e.complexity.EpisodeAirTime.Streams == nil {
+			break
+		}
+
+		return e.complexity.EpisodeAirTime.Streams(childComplexity), true
 
 	case "Query.apiInfo":
 		if e.complexity.Query.APIInfo == nil {
@@ -991,6 +1121,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.__resolve_entities(childComplexity, args["representations"].([]map[string]interface{})), true
+
+	case "StreamingPlatform.name":
+		if e.complexity.StreamingPlatform.Name == nil {
+			break
+		}
+
+		return e.complexity.StreamingPlatform.Name(childComplexity), true
+
+	case "StreamingPlatform.platform":
+		if e.complexity.StreamingPlatform.Platform == nil {
+			break
+		}
+
+		return e.complexity.StreamingPlatform.Platform(childComplexity), true
+
+	case "StreamingPlatform.url":
+		if e.complexity.StreamingPlatform.URL == nil {
+			break
+		}
+
+		return e.complexity.StreamingPlatform.URL(childComplexity), true
 
 	case "UserAnime.anime":
 		if e.complexity.UserAnime.Anime == nil {
@@ -1184,6 +1335,51 @@ enum AnimeSeasonStatus {
     CANCELLED
 }
 
+"Air type for schedule times (raw Japanese broadcast, subtitled, dubbed)"
+enum AirType {
+    RAW
+    SUB
+    DUB
+}
+
+"Streaming platform where an anime is available"
+type StreamingPlatform {
+    "Platform identifier (e.g., crunchyroll, netflix)"
+    platform: String!
+    "Display name of the platform"
+    name: String
+    "URL to watch on this platform"
+    url: String!
+}
+
+"Precise air time for an episode by type (raw/sub/dub)"
+type EpisodeAirTime {
+    "Air type (raw, sub, dub)"
+    airType: AirType!
+    "Precise air datetime from AnimeSchedule"
+    airDatetime: Time!
+    "Streaming platforms where this episode is available for this air type"
+    streams: [StreamingPlatform!]
+}
+
+"Schedule metadata from AnimeSchedule.net"
+type AnimeScheduleInfo {
+    "Japanese broadcast time"
+    jpnTime: Time
+    "Subtitle release time"
+    subTime: Time
+    "Dub release time"
+    dubTime: Time
+    "Notes (early streaming, delays, etc.)"
+    notes: String
+    "Delay status for raw version"
+    delayedTimetable: String
+    "Delay status for sub version"
+    subDelayedTimetable: String
+    "Delay status for dub version"
+    dubDelayedTimetable: String
+}
+
 type AnimeApi {
     "Version of event anime-api service"
     version: String!
@@ -1244,6 +1440,12 @@ type Anime @key(fields: "id") {
     licensors: [String!]
     "Anime rank"
     ranking: Int
+    "MAL ID for cross-referencing"
+    malId: Int
+    "Schedule info from AnimeSchedule.net"
+    scheduleInfo: AnimeScheduleInfo @goField(forceResolver: true)
+    "Streaming platforms where this anime is available"
+    streamingPlatforms: [StreamingPlatform!] @goField(forceResolver: true)
     "Anime seasons"
     seasons: [AnimeSeason!] @goField(forceResolver: true)
     createdAt: String!
@@ -1285,6 +1487,8 @@ type Episode @key(fields: "animeId") {
     airDate: Time
     "Calculated air time with timezone conversion"
     airTime: Time
+    "Precise air times by type (raw/sub/dub) with per-type streaming platforms"
+    airTimes: [EpisodeAirTime!] @goField(forceResolver: true)
 
     createdAt: String!
     updatedAt: String!
@@ -2463,6 +2667,8 @@ func (ec *executionContext) fieldContext_Anime_episodes(ctx context.Context, fie
 				return ec.fieldContext_Episode_airDate(ctx, field)
 			case "airTime":
 				return ec.fieldContext_Episode_airTime(ctx, field)
+			case "airTimes":
+				return ec.fieldContext_Episode_airTimes(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Episode_createdAt(ctx, field)
 			case "updatedAt":
@@ -2802,6 +3008,153 @@ func (ec *executionContext) fieldContext_Anime_ranking(ctx context.Context, fiel
 	return fc, nil
 }
 
+func (ec *executionContext) _Anime_malId(ctx context.Context, field graphql.CollectedField, obj *model.Anime) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Anime_malId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MalID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Anime_malId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Anime",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Anime_scheduleInfo(ctx context.Context, field graphql.CollectedField, obj *model.Anime) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Anime_scheduleInfo(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Anime().ScheduleInfo(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.AnimeScheduleInfo)
+	fc.Result = res
+	return ec.marshalOAnimeScheduleInfo2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnimeScheduleInfo(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Anime_scheduleInfo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Anime",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "jpnTime":
+				return ec.fieldContext_AnimeScheduleInfo_jpnTime(ctx, field)
+			case "subTime":
+				return ec.fieldContext_AnimeScheduleInfo_subTime(ctx, field)
+			case "dubTime":
+				return ec.fieldContext_AnimeScheduleInfo_dubTime(ctx, field)
+			case "notes":
+				return ec.fieldContext_AnimeScheduleInfo_notes(ctx, field)
+			case "delayedTimetable":
+				return ec.fieldContext_AnimeScheduleInfo_delayedTimetable(ctx, field)
+			case "subDelayedTimetable":
+				return ec.fieldContext_AnimeScheduleInfo_subDelayedTimetable(ctx, field)
+			case "dubDelayedTimetable":
+				return ec.fieldContext_AnimeScheduleInfo_dubDelayedTimetable(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AnimeScheduleInfo", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Anime_streamingPlatforms(ctx context.Context, field graphql.CollectedField, obj *model.Anime) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Anime_streamingPlatforms(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Anime().StreamingPlatforms(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.StreamingPlatform)
+	fc.Result = res
+	return ec.marshalOStreamingPlatform2ᚕᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐStreamingPlatformᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Anime_streamingPlatforms(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Anime",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "platform":
+				return ec.fieldContext_StreamingPlatform_platform(ctx, field)
+			case "name":
+				return ec.fieldContext_StreamingPlatform_name(ctx, field)
+			case "url":
+				return ec.fieldContext_StreamingPlatform_url(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type StreamingPlatform", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Anime_seasons(ctx context.Context, field graphql.CollectedField, obj *model.Anime) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Anime_seasons(ctx, field)
 	if err != nil {
@@ -3001,6 +3354,8 @@ func (ec *executionContext) fieldContext_Anime_nextEpisode(ctx context.Context, 
 				return ec.fieldContext_Episode_airDate(ctx, field)
 			case "airTime":
 				return ec.fieldContext_Episode_airTime(ctx, field)
+			case "airTimes":
+				return ec.fieldContext_Episode_airTimes(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Episode_createdAt(ctx, field)
 			case "updatedAt":
@@ -3788,6 +4143,293 @@ func (ec *executionContext) fieldContext_AnimeCharacter_staff(ctx context.Contex
 				return ec.fieldContext_AnimeStaff_characters(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type AnimeStaff", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeScheduleInfo_jpnTime(ctx context.Context, field graphql.CollectedField, obj *model.AnimeScheduleInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeScheduleInfo_jpnTime(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.JpnTime, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeScheduleInfo_jpnTime(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeScheduleInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeScheduleInfo_subTime(ctx context.Context, field graphql.CollectedField, obj *model.AnimeScheduleInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeScheduleInfo_subTime(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SubTime, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeScheduleInfo_subTime(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeScheduleInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeScheduleInfo_dubTime(ctx context.Context, field graphql.CollectedField, obj *model.AnimeScheduleInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeScheduleInfo_dubTime(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DubTime, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeScheduleInfo_dubTime(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeScheduleInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeScheduleInfo_notes(ctx context.Context, field graphql.CollectedField, obj *model.AnimeScheduleInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeScheduleInfo_notes(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Notes, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeScheduleInfo_notes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeScheduleInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeScheduleInfo_delayedTimetable(ctx context.Context, field graphql.CollectedField, obj *model.AnimeScheduleInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeScheduleInfo_delayedTimetable(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DelayedTimetable, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeScheduleInfo_delayedTimetable(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeScheduleInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeScheduleInfo_subDelayedTimetable(ctx context.Context, field graphql.CollectedField, obj *model.AnimeScheduleInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeScheduleInfo_subDelayedTimetable(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SubDelayedTimetable, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeScheduleInfo_subDelayedTimetable(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeScheduleInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeScheduleInfo_dubDelayedTimetable(ctx context.Context, field graphql.CollectedField, obj *model.AnimeScheduleInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeScheduleInfo_dubDelayedTimetable(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DubDelayedTimetable, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeScheduleInfo_dubDelayedTimetable(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeScheduleInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -5040,6 +5682,12 @@ func (ec *executionContext) fieldContext_Entity_findAnimeByID(ctx context.Contex
 				return ec.fieldContext_Anime_licensors(ctx, field)
 			case "ranking":
 				return ec.fieldContext_Anime_ranking(ctx, field)
+			case "malId":
+				return ec.fieldContext_Anime_malId(ctx, field)
+			case "scheduleInfo":
+				return ec.fieldContext_Anime_scheduleInfo(ctx, field)
+			case "streamingPlatforms":
+				return ec.fieldContext_Anime_streamingPlatforms(ctx, field)
 			case "seasons":
 				return ec.fieldContext_Anime_seasons(ctx, field)
 			case "createdAt":
@@ -5121,6 +5769,8 @@ func (ec *executionContext) fieldContext_Entity_findEpisodeByAnimeID(ctx context
 				return ec.fieldContext_Episode_airDate(ctx, field)
 			case "airTime":
 				return ec.fieldContext_Episode_airTime(ctx, field)
+			case "airTimes":
+				return ec.fieldContext_Episode_airTimes(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Episode_createdAt(ctx, field)
 			case "updatedAt":
@@ -5535,6 +6185,55 @@ func (ec *executionContext) fieldContext_Episode_airTime(ctx context.Context, fi
 	return fc, nil
 }
 
+func (ec *executionContext) _Episode_airTimes(ctx context.Context, field graphql.CollectedField, obj *model.Episode) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Episode_airTimes(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Episode().AirTimes(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.EpisodeAirTime)
+	fc.Result = res
+	return ec.marshalOEpisodeAirTime2ᚕᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐEpisodeAirTimeᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Episode_airTimes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Episode",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "airType":
+				return ec.fieldContext_EpisodeAirTime_airType(ctx, field)
+			case "airDatetime":
+				return ec.fieldContext_EpisodeAirTime_airDatetime(ctx, field)
+			case "streams":
+				return ec.fieldContext_EpisodeAirTime_streams(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type EpisodeAirTime", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Episode_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Episode) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Episode_createdAt(ctx, field)
 	if err != nil {
@@ -5623,6 +6322,143 @@ func (ec *executionContext) fieldContext_Episode_updatedAt(ctx context.Context, 
 	return fc, nil
 }
 
+func (ec *executionContext) _EpisodeAirTime_airType(ctx context.Context, field graphql.CollectedField, obj *model.EpisodeAirTime) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EpisodeAirTime_airType(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AirType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.AirType)
+	fc.Result = res
+	return ec.marshalNAirType2githubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAirType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EpisodeAirTime_airType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EpisodeAirTime",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type AirType does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EpisodeAirTime_airDatetime(ctx context.Context, field graphql.CollectedField, obj *model.EpisodeAirTime) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EpisodeAirTime_airDatetime(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AirDatetime, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EpisodeAirTime_airDatetime(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EpisodeAirTime",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EpisodeAirTime_streams(ctx context.Context, field graphql.CollectedField, obj *model.EpisodeAirTime) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EpisodeAirTime_streams(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Streams, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.StreamingPlatform)
+	fc.Result = res
+	return ec.marshalOStreamingPlatform2ᚕᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐStreamingPlatformᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EpisodeAirTime_streams(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EpisodeAirTime",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "platform":
+				return ec.fieldContext_StreamingPlatform_platform(ctx, field)
+			case "name":
+				return ec.fieldContext_StreamingPlatform_name(ctx, field)
+			case "url":
+				return ec.fieldContext_StreamingPlatform_url(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type StreamingPlatform", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_dbSearch(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_dbSearch(ctx, field)
 	if err != nil {
@@ -5705,6 +6541,12 @@ func (ec *executionContext) fieldContext_Query_dbSearch(ctx context.Context, fie
 				return ec.fieldContext_Anime_licensors(ctx, field)
 			case "ranking":
 				return ec.fieldContext_Anime_ranking(ctx, field)
+			case "malId":
+				return ec.fieldContext_Anime_malId(ctx, field)
+			case "scheduleInfo":
+				return ec.fieldContext_Anime_scheduleInfo(ctx, field)
+			case "streamingPlatforms":
+				return ec.fieldContext_Anime_streamingPlatforms(ctx, field)
 			case "seasons":
 				return ec.fieldContext_Anime_seasons(ctx, field)
 			case "createdAt":
@@ -5866,6 +6708,12 @@ func (ec *executionContext) fieldContext_Query_anime(ctx context.Context, field 
 				return ec.fieldContext_Anime_licensors(ctx, field)
 			case "ranking":
 				return ec.fieldContext_Anime_ranking(ctx, field)
+			case "malId":
+				return ec.fieldContext_Anime_malId(ctx, field)
+			case "scheduleInfo":
+				return ec.fieldContext_Anime_scheduleInfo(ctx, field)
+			case "streamingPlatforms":
+				return ec.fieldContext_Anime_streamingPlatforms(ctx, field)
 			case "seasons":
 				return ec.fieldContext_Anime_seasons(ctx, field)
 			case "createdAt":
@@ -5974,6 +6822,12 @@ func (ec *executionContext) fieldContext_Query_newestAnime(ctx context.Context, 
 				return ec.fieldContext_Anime_licensors(ctx, field)
 			case "ranking":
 				return ec.fieldContext_Anime_ranking(ctx, field)
+			case "malId":
+				return ec.fieldContext_Anime_malId(ctx, field)
+			case "scheduleInfo":
+				return ec.fieldContext_Anime_scheduleInfo(ctx, field)
+			case "streamingPlatforms":
+				return ec.fieldContext_Anime_streamingPlatforms(ctx, field)
 			case "seasons":
 				return ec.fieldContext_Anime_seasons(ctx, field)
 			case "createdAt":
@@ -6082,6 +6936,12 @@ func (ec *executionContext) fieldContext_Query_topRatedAnime(ctx context.Context
 				return ec.fieldContext_Anime_licensors(ctx, field)
 			case "ranking":
 				return ec.fieldContext_Anime_ranking(ctx, field)
+			case "malId":
+				return ec.fieldContext_Anime_malId(ctx, field)
+			case "scheduleInfo":
+				return ec.fieldContext_Anime_scheduleInfo(ctx, field)
+			case "streamingPlatforms":
+				return ec.fieldContext_Anime_streamingPlatforms(ctx, field)
 			case "seasons":
 				return ec.fieldContext_Anime_seasons(ctx, field)
 			case "createdAt":
@@ -6190,6 +7050,12 @@ func (ec *executionContext) fieldContext_Query_mostPopularAnime(ctx context.Cont
 				return ec.fieldContext_Anime_licensors(ctx, field)
 			case "ranking":
 				return ec.fieldContext_Anime_ranking(ctx, field)
+			case "malId":
+				return ec.fieldContext_Anime_malId(ctx, field)
+			case "scheduleInfo":
+				return ec.fieldContext_Anime_scheduleInfo(ctx, field)
+			case "streamingPlatforms":
+				return ec.fieldContext_Anime_streamingPlatforms(ctx, field)
 			case "seasons":
 				return ec.fieldContext_Anime_seasons(ctx, field)
 			case "createdAt":
@@ -6271,6 +7137,8 @@ func (ec *executionContext) fieldContext_Query_episode(ctx context.Context, fiel
 				return ec.fieldContext_Episode_airDate(ctx, field)
 			case "airTime":
 				return ec.fieldContext_Episode_airTime(ctx, field)
+			case "airTimes":
+				return ec.fieldContext_Episode_airTimes(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Episode_createdAt(ctx, field)
 			case "updatedAt":
@@ -6345,6 +7213,8 @@ func (ec *executionContext) fieldContext_Query_episodesByAnimeId(ctx context.Con
 				return ec.fieldContext_Episode_airDate(ctx, field)
 			case "airTime":
 				return ec.fieldContext_Episode_airTime(ctx, field)
+			case "airTimes":
+				return ec.fieldContext_Episode_airTimes(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Episode_createdAt(ctx, field)
 			case "updatedAt":
@@ -6449,6 +7319,12 @@ func (ec *executionContext) fieldContext_Query_currentlyAiring(ctx context.Conte
 				return ec.fieldContext_Anime_licensors(ctx, field)
 			case "ranking":
 				return ec.fieldContext_Anime_ranking(ctx, field)
+			case "malId":
+				return ec.fieldContext_Anime_malId(ctx, field)
+			case "scheduleInfo":
+				return ec.fieldContext_Anime_scheduleInfo(ctx, field)
+			case "streamingPlatforms":
+				return ec.fieldContext_Anime_streamingPlatforms(ctx, field)
 			case "seasons":
 				return ec.fieldContext_Anime_seasons(ctx, field)
 			case "createdAt":
@@ -6557,6 +7433,12 @@ func (ec *executionContext) fieldContext_Query_animeBySeasons(ctx context.Contex
 				return ec.fieldContext_Anime_licensors(ctx, field)
 			case "ranking":
 				return ec.fieldContext_Anime_ranking(ctx, field)
+			case "malId":
+				return ec.fieldContext_Anime_malId(ctx, field)
+			case "scheduleInfo":
+				return ec.fieldContext_Anime_scheduleInfo(ctx, field)
+			case "streamingPlatforms":
+				return ec.fieldContext_Anime_streamingPlatforms(ctx, field)
 			case "seasons":
 				return ec.fieldContext_Anime_seasons(ctx, field)
 			case "createdAt":
@@ -6665,6 +7547,12 @@ func (ec *executionContext) fieldContext_Query_animeBySeasonAndYear(ctx context.
 				return ec.fieldContext_Anime_licensors(ctx, field)
 			case "ranking":
 				return ec.fieldContext_Anime_ranking(ctx, field)
+			case "malId":
+				return ec.fieldContext_Anime_malId(ctx, field)
+			case "scheduleInfo":
+				return ec.fieldContext_Anime_scheduleInfo(ctx, field)
+			case "streamingPlatforms":
+				return ec.fieldContext_Anime_streamingPlatforms(ctx, field)
 			case "seasons":
 				return ec.fieldContext_Anime_seasons(ctx, field)
 			case "createdAt":
@@ -6981,6 +7869,135 @@ func (ec *executionContext) fieldContext_Query___schema(ctx context.Context, fie
 	return fc, nil
 }
 
+func (ec *executionContext) _StreamingPlatform_platform(ctx context.Context, field graphql.CollectedField, obj *model.StreamingPlatform) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_StreamingPlatform_platform(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Platform, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_StreamingPlatform_platform(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "StreamingPlatform",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _StreamingPlatform_name(ctx context.Context, field graphql.CollectedField, obj *model.StreamingPlatform) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_StreamingPlatform_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_StreamingPlatform_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "StreamingPlatform",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _StreamingPlatform_url(ctx context.Context, field graphql.CollectedField, obj *model.StreamingPlatform) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_StreamingPlatform_url(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.URL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_StreamingPlatform_url(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "StreamingPlatform",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _UserAnime_animeID(ctx context.Context, field graphql.CollectedField, obj *model.UserAnime) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_UserAnime_animeID(ctx, field)
 	if err != nil {
@@ -7107,6 +8124,12 @@ func (ec *executionContext) fieldContext_UserAnime_anime(ctx context.Context, fi
 				return ec.fieldContext_Anime_licensors(ctx, field)
 			case "ranking":
 				return ec.fieldContext_Anime_ranking(ctx, field)
+			case "malId":
+				return ec.fieldContext_Anime_malId(ctx, field)
+			case "scheduleInfo":
+				return ec.fieldContext_Anime_scheduleInfo(ctx, field)
+			case "streamingPlatforms":
+				return ec.fieldContext_Anime_streamingPlatforms(ctx, field)
 			case "seasons":
 				return ec.fieldContext_Anime_seasons(ctx, field)
 			case "createdAt":
@@ -9235,6 +10258,74 @@ func (ec *executionContext) _Anime(ctx context.Context, sel ast.SelectionSet, ob
 			out.Values[i] = ec._Anime_licensors(ctx, field, obj)
 		case "ranking":
 			out.Values[i] = ec._Anime_ranking(ctx, field, obj)
+		case "malId":
+			out.Values[i] = ec._Anime_malId(ctx, field, obj)
+		case "scheduleInfo":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Anime_scheduleInfo(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "streamingPlatforms":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Anime_streamingPlatforms(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "seasons":
 			field := field
 
@@ -9430,6 +10521,54 @@ func (ec *executionContext) _AnimeCharacter(ctx context.Context, sel ast.Selecti
 			out.Values[i] = ec._AnimeCharacter_updatedAt(ctx, field, obj)
 		case "staff":
 			out.Values[i] = ec._AnimeCharacter_staff(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var animeScheduleInfoImplementors = []string{"AnimeScheduleInfo"}
+
+func (ec *executionContext) _AnimeScheduleInfo(ctx context.Context, sel ast.SelectionSet, obj *model.AnimeScheduleInfo) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, animeScheduleInfoImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AnimeScheduleInfo")
+		case "jpnTime":
+			out.Values[i] = ec._AnimeScheduleInfo_jpnTime(ctx, field, obj)
+		case "subTime":
+			out.Values[i] = ec._AnimeScheduleInfo_subTime(ctx, field, obj)
+		case "dubTime":
+			out.Values[i] = ec._AnimeScheduleInfo_dubTime(ctx, field, obj)
+		case "notes":
+			out.Values[i] = ec._AnimeScheduleInfo_notes(ctx, field, obj)
+		case "delayedTimetable":
+			out.Values[i] = ec._AnimeScheduleInfo_delayedTimetable(ctx, field, obj)
+		case "subDelayedTimetable":
+			out.Values[i] = ec._AnimeScheduleInfo_subDelayedTimetable(ctx, field, obj)
+		case "dubDelayedTimetable":
+			out.Values[i] = ec._AnimeScheduleInfo_dubDelayedTimetable(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -9825,7 +10964,7 @@ func (ec *executionContext) _Episode(ctx context.Context, sel ast.SelectionSet, 
 		case "id":
 			out.Values[i] = ec._Episode_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "animeId":
 			out.Values[i] = ec._Episode_animeId(ctx, field, obj)
@@ -9841,16 +10980,95 @@ func (ec *executionContext) _Episode(ctx context.Context, sel ast.SelectionSet, 
 			out.Values[i] = ec._Episode_airDate(ctx, field, obj)
 		case "airTime":
 			out.Values[i] = ec._Episode_airTime(ctx, field, obj)
+		case "airTimes":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Episode_airTimes(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "createdAt":
 			out.Values[i] = ec._Episode_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "updatedAt":
 			out.Values[i] = ec._Episode_updatedAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var episodeAirTimeImplementors = []string{"EpisodeAirTime"}
+
+func (ec *executionContext) _EpisodeAirTime(ctx context.Context, sel ast.SelectionSet, obj *model.EpisodeAirTime) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, episodeAirTimeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("EpisodeAirTime")
+		case "airType":
+			out.Values[i] = ec._EpisodeAirTime_airType(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "airDatetime":
+			out.Values[i] = ec._EpisodeAirTime_airDatetime(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "streams":
+			out.Values[i] = ec._EpisodeAirTime_streams(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -10182,6 +11400,52 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___schema(ctx, field)
 			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var streamingPlatformImplementors = []string{"StreamingPlatform"}
+
+func (ec *executionContext) _StreamingPlatform(ctx context.Context, sel ast.SelectionSet, obj *model.StreamingPlatform) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, streamingPlatformImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("StreamingPlatform")
+		case "platform":
+			out.Values[i] = ec._StreamingPlatform_platform(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._StreamingPlatform_name(ctx, field, obj)
+		case "url":
+			out.Values[i] = ec._StreamingPlatform_url(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -10639,6 +11903,16 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
+func (ec *executionContext) unmarshalNAirType2githubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAirType(ctx context.Context, v interface{}) (model.AirType, error) {
+	var res model.AirType
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNAirType2githubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAirType(ctx context.Context, sel ast.SelectionSet, v model.AirType) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) marshalNAnime2githubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnime(ctx context.Context, sel ast.SelectionSet, v model.Anime) graphql.Marshaler {
 	return ec._Anime(ctx, sel, &v)
 }
@@ -10765,6 +12039,16 @@ func (ec *executionContext) marshalNEpisode2ᚖgithubᚗcomᚋweebᚑvipᚋanime
 	return ec._Episode(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNEpisodeAirTime2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐEpisodeAirTime(ctx context.Context, sel ast.SelectionSet, v *model.EpisodeAirTime) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._EpisodeAirTime(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {
 	res, err := graphql.UnmarshalID(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -10808,6 +12092,16 @@ func (ec *executionContext) marshalNSeason2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNStreamingPlatform2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐStreamingPlatform(ctx context.Context, sel ast.SelectionSet, v *model.StreamingPlatform) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._StreamingPlatform(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
@@ -11318,6 +12612,13 @@ func (ec *executionContext) marshalOAnimeCharacter2ᚕᚖgithubᚗcomᚋweebᚑv
 	return ret
 }
 
+func (ec *executionContext) marshalOAnimeScheduleInfo2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnimeScheduleInfo(ctx context.Context, sel ast.SelectionSet, v *model.AnimeScheduleInfo) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._AnimeScheduleInfo(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalOAnimeSeason2ᚕᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnimeSeasonᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.AnimeSeason) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -11547,6 +12848,53 @@ func (ec *executionContext) marshalOEpisode2ᚖgithubᚗcomᚋweebᚑvipᚋanime
 	return ec._Episode(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalOEpisodeAirTime2ᚕᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐEpisodeAirTimeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.EpisodeAirTime) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNEpisodeAirTime2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐEpisodeAirTime(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
 func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {
 	if v == nil {
 		return nil, nil
@@ -11561,6 +12909,53 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	}
 	res := graphql.MarshalInt(*v)
 	return res
+}
+
+func (ec *executionContext) marshalOStreamingPlatform2ᚕᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐStreamingPlatformᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.StreamingPlatform) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNStreamingPlatform2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐStreamingPlatform(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {
