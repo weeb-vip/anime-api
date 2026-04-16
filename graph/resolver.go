@@ -6,7 +6,10 @@ import (
 
 	"github.com/weeb-vip/anime-api/config"
 	"github.com/weeb-vip/anime-api/internal/cache"
+	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_schedule"
+	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_streaming_platform"
 	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_tag"
+	"github.com/weeb-vip/anime-api/internal/db/repositories/episode_air_time"
 	"github.com/weeb-vip/anime-api/internal/services/anime"
 	"github.com/weeb-vip/anime-api/internal/services/anime_character"
 	anime_character_staff_link2 "github.com/weeb-vip/anime-api/internal/services/anime_character_staff_link"
@@ -34,6 +37,9 @@ type Resolver struct {
 	AnimeCharacterWithStaffLinkService anime_character_staff_link2.AnimeCharacterStaffLinkImpl
 	AnimeSeasonService                 anime_season.AnimeSeasonServiceImpl
 	AnimeTagRepository                 anime_tag.AnimeTagRepositoryImpl
+	AnimeScheduleRepository            anime_schedule.AnimeScheduleRepositoryImpl
+	AnimeStreamingPlatformRepository   anime_streaming_platform.AnimeStreamingPlatformRepositoryImpl
+	EpisodeAirTimeRepository           episode_air_time.EpisodeAirTimeRepositoryImpl
 	CacheService                       CacheServiceInterface
 	Context                            context.Context
 }
