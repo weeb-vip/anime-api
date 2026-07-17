@@ -42,7 +42,10 @@ CROSS JOIN JSON_TABLE(
     a.genres,
     '$[*]' COLUMNS (genre VARCHAR(100) PATH '$')
 ) AS j
-INNER JOIN tags t ON t.name = TRIM(j.genre)
+-- Force a common collation on both sides: tags.name may be utf8mb4_general_ci
+-- (older DB default) while the JSON_TABLE-derived value is utf8mb4_0900_ai_ci
+-- (MySQL 8 default). Comparing them directly raises "Illegal mix of collations".
+INNER JOIN tags t ON t.name COLLATE utf8mb4_general_ci = TRIM(j.genre) COLLATE utf8mb4_general_ci
 WHERE a.genres IS NOT NULL
   AND JSON_VALID(a.genres)
   AND TRIM(j.genre) != '';
