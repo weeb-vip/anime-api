@@ -9,6 +9,5 @@ CREATE TABLE episode_air_time (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_episode_air_time_air_datetime (air_datetime),
-    UNIQUE INDEX idx_episode_air_time_unique (anime_id, episode_number, air_type),
-    FOREIGN KEY (anime_id) REFERENCES anime(id) ON DELETE CASCADE
+    UNIQUE INDEX idx_episode_air_time_unique (anime_id, episode_number, air_type)
 );

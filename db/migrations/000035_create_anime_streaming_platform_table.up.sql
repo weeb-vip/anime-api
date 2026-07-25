@@ -6,6 +6,5 @@ CREATE TABLE anime_streaming_platform (
     url TEXT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    UNIQUE INDEX idx_streaming_anime_platform (anime_id, platform),
-    FOREIGN KEY (anime_id) REFERENCES anime(id) ON DELETE CASCADE
+    UNIQUE INDEX idx_streaming_anime_platform (anime_id, platform)
 );

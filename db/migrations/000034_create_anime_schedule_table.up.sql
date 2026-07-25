@@ -25,6 +25,5 @@ CREATE TABLE anime_schedule (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE INDEX idx_anime_schedule_anime_id (anime_id),
-    INDEX idx_anime_schedule_route (animeschedule_route),
-    FOREIGN KEY (anime_id) REFERENCES anime(id) ON DELETE CASCADE
+    INDEX idx_anime_schedule_route (animeschedule_route)
 );
