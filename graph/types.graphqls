@@ -9,6 +9,51 @@ enum AnimeSeasonStatus {
     CANCELLED
 }
 
+"Air type for schedule times (raw Japanese broadcast, subtitled, dubbed)"
+enum AirType {
+    RAW
+    SUB
+    DUB
+}
+
+"Streaming platform where an anime is available"
+type StreamingPlatform {
+    "Platform identifier (e.g., crunchyroll, netflix)"
+    platform: String!
+    "Display name of the platform"
+    name: String
+    "URL to watch on this platform"
+    url: String!
+}
+
+"Precise air time for an episode by type (raw/sub/dub)"
+type EpisodeAirTime {
+    "Air type (raw, sub, dub)"
+    airType: AirType!
+    "Precise air datetime from AnimeSchedule"
+    airDatetime: Time!
+    "Streaming platforms where this episode is available for this air type"
+    streams: [StreamingPlatform!]
+}
+
+"Schedule metadata from AnimeSchedule.net"
+type AnimeScheduleInfo {
+    "Japanese broadcast time"
+    jpnTime: Time
+    "Subtitle release time"
+    subTime: Time
+    "Dub release time"
+    dubTime: Time
+    "Notes (early streaming, delays, etc.)"
+    notes: String
+    "Delay status for raw version"
+    delayedTimetable: String
+    "Delay status for sub version"
+    subDelayedTimetable: String
+    "Delay status for dub version"
+    dubDelayedTimetable: String
+}
+
 type AnimeApi {
     "Version of event anime-api service"
     version: String!
@@ -69,6 +114,12 @@ type Anime @key(fields: "id") {
     licensors: [String!]
     "Anime rank"
     ranking: Int
+    "MAL ID for cross-referencing"
+    malId: Int
+    "Schedule info from AnimeSchedule.net"
+    scheduleInfo: AnimeScheduleInfo @goField(forceResolver: true)
+    "Streaming platforms where this anime is available"
+    streamingPlatforms: [StreamingPlatform!] @goField(forceResolver: true)
     "Anime seasons"
     seasons: [AnimeSeason!] @goField(forceResolver: true)
     createdAt: String!
@@ -110,6 +161,8 @@ type Episode @key(fields: "animeId") {
     airDate: Time
     "Calculated air time with timezone conversion"
     airTime: Time
+    "Precise air times by type (raw/sub/dub) with per-type streaming platforms"
+    airTimes: [EpisodeAirTime!] @goField(forceResolver: true)
 
     createdAt: String!
     updatedAt: String!

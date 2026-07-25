@@ -57,6 +57,12 @@ type Anime struct {
 	Licensors []string `json:"licensors,omitempty"`
 	// Anime rank
 	Ranking *int `json:"ranking,omitempty"`
+	// MAL ID for cross-referencing
+	MalID *int `json:"malId,omitempty"`
+	// Schedule info from AnimeSchedule.net
+	ScheduleInfo *AnimeScheduleInfo `json:"scheduleInfo,omitempty"`
+	// Streaming platforms where this anime is available
+	StreamingPlatforms []*StreamingPlatform `json:"streamingPlatforms,omitempty"`
 	// Anime seasons
 	Seasons     []*AnimeSeason `json:"seasons,omitempty"`
 	CreatedAt   string         `json:"createdAt"`
@@ -106,6 +112,24 @@ type AnimeCharacter struct {
 	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
 	// The voice actor for the character
 	Staff []*AnimeStaff `json:"staff,omitempty"`
+}
+
+// Schedule metadata from AnimeSchedule.net
+type AnimeScheduleInfo struct {
+	// Japanese broadcast time
+	JpnTime *time.Time `json:"jpnTime,omitempty"`
+	// Subtitle release time
+	SubTime *time.Time `json:"subTime,omitempty"`
+	// Dub release time
+	DubTime *time.Time `json:"dubTime,omitempty"`
+	// Notes (early streaming, delays, etc.)
+	Notes *string `json:"notes,omitempty"`
+	// Delay status for raw version
+	DelayedTimetable *string `json:"delayedTimetable,omitempty"`
+	// Delay status for sub version
+	SubDelayedTimetable *string `json:"subDelayedTimetable,omitempty"`
+	// Delay status for dub version
+	DubDelayedTimetable *string `json:"dubDelayedTimetable,omitempty"`
 }
 
 type AnimeSearchInput struct {
@@ -212,12 +236,34 @@ type Episode struct {
 	// Episode air date
 	AirDate *time.Time `json:"airDate,omitempty"`
 	// Calculated air time with timezone conversion
-	AirTime   *time.Time `json:"airTime,omitempty"`
-	CreatedAt string     `json:"createdAt"`
-	UpdatedAt string     `json:"updatedAt"`
+	AirTime *time.Time `json:"airTime,omitempty"`
+	// Precise air times by type (raw/sub/dub) with per-type streaming platforms
+	AirTimes  []*EpisodeAirTime `json:"airTimes,omitempty"`
+	CreatedAt string            `json:"createdAt"`
+	UpdatedAt string            `json:"updatedAt"`
 }
 
 func (Episode) IsEntity() {}
+
+// Precise air time for an episode by type (raw/sub/dub)
+type EpisodeAirTime struct {
+	// Air type (raw, sub, dub)
+	AirType AirType `json:"airType"`
+	// Precise air datetime from AnimeSchedule
+	AirDatetime time.Time `json:"airDatetime"`
+	// Streaming platforms where this episode is available for this air type
+	Streams []*StreamingPlatform `json:"streams,omitempty"`
+}
+
+// Streaming platform where an anime is available
+type StreamingPlatform struct {
+	// Platform identifier (e.g., crunchyroll, netflix)
+	Platform string `json:"platform"`
+	// Display name of the platform
+	Name *string `json:"name,omitempty"`
+	// URL to watch on this platform
+	URL string `json:"url"`
+}
 
 type UserAnime struct {
 	AnimeID string `json:"animeID"`
@@ -225,6 +271,50 @@ type UserAnime struct {
 }
 
 func (UserAnime) IsEntity() {}
+
+// Air type for schedule times (raw Japanese broadcast, subtitled, dubbed)
+type AirType string
+
+const (
+	AirTypeRaw AirType = "RAW"
+	AirTypeSub AirType = "SUB"
+	AirTypeDub AirType = "DUB"
+)
+
+var AllAirType = []AirType{
+	AirTypeRaw,
+	AirTypeSub,
+	AirTypeDub,
+}
+
+func (e AirType) IsValid() bool {
+	switch e {
+	case AirTypeRaw, AirTypeSub, AirTypeDub:
+		return true
+	}
+	return false
+}
+
+func (e AirType) String() string {
+	return string(e)
+}
+
+func (e *AirType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = AirType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid AirType", str)
+	}
+	return nil
+}
+
+func (e AirType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
 
 type AnimeSeasonStatus string
 

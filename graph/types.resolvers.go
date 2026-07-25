@@ -6,6 +6,7 @@ package graph
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/weeb-vip/anime-api/graph/generated"
@@ -46,6 +47,46 @@ func (r *animeResolver) Episodes(ctx context.Context, obj *model.Anime) ([]*mode
 	return resolvers.EpisodesByAnimeID(ctx, r.AnimeEpisodeService, animeID)
 }
 
+// ScheduleInfo is the resolver for the scheduleInfo field.
+func (r *animeResolver) ScheduleInfo(ctx context.Context, obj *model.Anime) (*model.AnimeScheduleInfo, error) {
+	if r.AnimeScheduleRepository == nil {
+		return nil, nil
+	}
+	schedule, err := r.AnimeScheduleRepository.FindByAnimeID(obj.ID)
+	if err != nil {
+		return nil, nil // Not found is not an error
+	}
+	return &model.AnimeScheduleInfo{
+		JpnTime:             schedule.JpnTime,
+		SubTime:             schedule.SubTime,
+		DubTime:             schedule.DubTime,
+		Notes:               schedule.Notes,
+		DelayedTimetable:    schedule.DelayedTimetable,
+		SubDelayedTimetable: schedule.SubDelayedTimetable,
+		DubDelayedTimetable: schedule.DubDelayedTimetable,
+	}, nil
+}
+
+// StreamingPlatforms is the resolver for the streamingPlatforms field.
+func (r *animeResolver) StreamingPlatforms(ctx context.Context, obj *model.Anime) ([]*model.StreamingPlatform, error) {
+	if r.AnimeStreamingPlatformRepository == nil {
+		return nil, nil
+	}
+	platforms, err := r.AnimeStreamingPlatformRepository.FindByAnimeID(obj.ID)
+	if err != nil {
+		return nil, nil
+	}
+	var result []*model.StreamingPlatform
+	for _, p := range platforms {
+		result = append(result, &model.StreamingPlatform{
+			Platform: p.Platform,
+			Name:     p.Name,
+			URL:      p.URL,
+		})
+	}
+	return result, nil
+}
+
 // Seasons is the resolver for the seasons field.
 func (r *animeResolver) Seasons(ctx context.Context, obj *model.Anime) ([]*model.AnimeSeason, error) {
 	animeID := obj.ID
@@ -66,6 +107,45 @@ func (r *apiInfoResolver) AnimeAPI(ctx context.Context, obj *model.APIInfo) (*mo
 	return resolvers.AnimeAPI(r.Config)
 }
 
+// AirTimes is the resolver for the airTimes field.
+func (r *episodeResolver) AirTimes(ctx context.Context, obj *model.Episode) ([]*model.EpisodeAirTime, error) {
+	if r.EpisodeAirTimeRepository == nil || obj.AnimeID == nil || obj.EpisodeNumber == nil {
+		return nil, nil
+	}
+	airTimes, err := r.EpisodeAirTimeRepository.FindByAnimeIDAndEpisode(*obj.AnimeID, *obj.EpisodeNumber)
+	if err != nil {
+		return nil, nil
+	}
+	var result []*model.EpisodeAirTime
+	for _, at := range airTimes {
+		airType := model.AirType(at.AirType)
+		entry := &model.EpisodeAirTime{
+			AirType:     airType,
+			AirDatetime: at.AirDatetime,
+		}
+		// Parse streams JSON
+		if at.StreamsJSON != nil {
+			var streams []struct {
+				Platform string `json:"platform"`
+				Name     string `json:"name"`
+				URL      string `json:"url"`
+			}
+			if err := json.Unmarshal([]byte(*at.StreamsJSON), &streams); err == nil {
+				for _, s := range streams {
+					name := s.Name
+					entry.Streams = append(entry.Streams, &model.StreamingPlatform{
+						Platform: s.Platform,
+						Name:     &name,
+						URL:      s.URL,
+					})
+				}
+			}
+		}
+		result = append(result, entry)
+	}
+	return result, nil
+}
+
 // Anime is the resolver for the anime field.
 func (r *userAnimeResolver) Anime(ctx context.Context, obj *model.UserAnime) (*model.Anime, error) {
 	animeID := obj.AnimeID
@@ -78,11 +158,15 @@ func (r *Resolver) Anime() generated.AnimeResolver { return &animeResolver{r} }
 // ApiInfo returns generated.ApiInfoResolver implementation.
 func (r *Resolver) ApiInfo() generated.ApiInfoResolver { return &apiInfoResolver{r} }
 
+// Episode returns generated.EpisodeResolver implementation.
+func (r *Resolver) Episode() generated.EpisodeResolver { return &episodeResolver{r} }
+
 // UserAnime returns generated.UserAnimeResolver implementation.
 func (r *Resolver) UserAnime() generated.UserAnimeResolver { return &userAnimeResolver{r} }
 
 type animeResolver struct{ *Resolver }
 type apiInfoResolver struct{ *Resolver }
+type episodeResolver struct{ *Resolver }
 type userAnimeResolver struct{ *Resolver }
 
 // !!! WARNING !!!
