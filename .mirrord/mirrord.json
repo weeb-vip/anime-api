@@ -1,0 +1,14 @@
+{
+  "target": {
+    "path": "deployment/anime-api",
+    "namespace": "weeb-staging"
+  },
+  "feature": {
+    "network": {
+      "incoming": "steal",
+      "dns": true
+    },
+    "fs": "local",
+    "env": true
+  }
+}
