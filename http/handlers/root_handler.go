@@ -15,8 +15,11 @@ import (
 	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_character"
 	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_character_staff_link"
 	anime3 "github.com/weeb-vip/anime-api/internal/db/repositories/anime_episode"
+	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_schedule"
 	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_season"
+	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_streaming_platform"
 	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_tag"
+	"github.com/weeb-vip/anime-api/internal/db/repositories/episode_air_time"
 	"github.com/weeb-vip/anime-api/internal/directives"
 	"github.com/weeb-vip/anime-api/internal/logger"
 	"github.com/weeb-vip/anime-api/internal/services/anime"
@@ -78,6 +81,9 @@ func BuildRootHandler(conf config.Config) http.Handler {
 	animeSeasonRepository := anime_season.NewAnimeSeasonRepository(database)
 	animeSeasonService := anime_season_service.NewAnimeSeasonService(animeSeasonRepository)
 	animeTagRepository := anime_tag.NewAnimeTagRepository(database)
+	animeScheduleRepository := anime_schedule.NewAnimeScheduleRepository(database)
+	animeStreamingPlatformRepository := anime_streaming_platform.NewAnimeStreamingPlatformRepository(database)
+	episodeAirTimeRepository := episode_air_time.NewEpisodeAirTimeRepository(database)
 	resolvers := &graph.Resolver{
 		Config:                             conf,
 		AnimeService:                       animeService,
@@ -86,6 +92,9 @@ func BuildRootHandler(conf config.Config) http.Handler {
 		AnimeCharacterWithStaffLinkService: animeCharacterWithStaffLinkService,
 		AnimeSeasonService:                 animeSeasonService,
 		AnimeTagRepository:                 animeTagRepository,
+		AnimeScheduleRepository:            animeScheduleRepository,
+		AnimeStreamingPlatformRepository:   animeStreamingPlatformRepository,
+		EpisodeAirTimeRepository:           episodeAirTimeRepository,
 	}
 
 	cfg := generated.Config{Resolvers: resolvers, Directives: directives.GetDirectives()}
@@ -140,6 +149,9 @@ func BuildRootHandlerWithContext(ctx context.Context, conf config.Config) http.H
 	animeSeasonRepository := anime_season.NewAnimeSeasonRepository(database)
 	animeSeasonService := anime_season_service.NewAnimeSeasonService(animeSeasonRepository)
 	animeTagRepository := anime_tag.NewAnimeTagRepository(database)
+	animeScheduleRepository := anime_schedule.NewAnimeScheduleRepository(database)
+	animeStreamingPlatformRepository := anime_streaming_platform.NewAnimeStreamingPlatformRepository(database)
+	episodeAirTimeRepository := episode_air_time.NewEpisodeAirTimeRepository(database)
 	resolvers := &graph.Resolver{
 		Config:                             conf,
 		AnimeService:                       animeService,
@@ -148,6 +160,9 @@ func BuildRootHandlerWithContext(ctx context.Context, conf config.Config) http.H
 		AnimeCharacterWithStaffLinkService: animeCharacterWithStaffLinkService,
 		AnimeSeasonService:                 animeSeasonService,
 		AnimeTagRepository:                 animeTagRepository,
+		AnimeScheduleRepository:            animeScheduleRepository,
+		AnimeStreamingPlatformRepository:   animeStreamingPlatformRepository,
+		EpisodeAirTimeRepository:           episodeAirTimeRepository,
 		CacheService:                       cacheService,
 		Context:                            ctx,
 	}
