@@ -26,6 +26,25 @@ type StreamingPlatform {
     url: String!
 }
 
+type AnimeNews {
+    id: ID!
+    animeId: ID!
+    title: String!
+    summary: String
+    category: String!
+    sourceUrl: String
+    sourceName: String
+    publishedDate: String
+    episodeNumber: Int
+    malId: Int
+}
+
+type Fanart {
+    id: ID!
+    imageUrl: String!
+    sourceUrl: String
+}
+
 "Precise air time for an episode by type (raw/sub/dub)"
 type EpisodeAirTime {
     "Air type (raw, sub, dub)"
@@ -120,6 +139,10 @@ type Anime @key(fields: "id") {
     scheduleInfo: AnimeScheduleInfo @goField(forceResolver: true)
     "Streaming platforms where this anime is available"
     streamingPlatforms: [StreamingPlatform!] @goField(forceResolver: true)
+    "AI-researched news for this anime"
+    news: [AnimeNews!] @goField(forceResolver: true)
+    "Fanart / visuals gathered for this anime"
+    fanart: [Fanart!] @goField(forceResolver: true)
     "Anime seasons"
     seasons: [AnimeSeason!] @goField(forceResolver: true)
     createdAt: String!
