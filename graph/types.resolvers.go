@@ -114,6 +114,8 @@ func (r *animeResolver) News(ctx context.Context, obj *model.Anime) ([]*model.An
 			PublishedDate: publishedDate,
 			EpisodeNumber: n.EpisodeNumber,
 			MalID:         n.MalID,
+			Language:      n.Language,
+			References:    decodeNewsReferences(n.ReferenceLinks),
 		})
 	}
 	return result, nil

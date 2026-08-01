@@ -116,8 +116,10 @@ type ComplexityRoot struct {
 		Category      func(childComplexity int) int
 		EpisodeNumber func(childComplexity int) int
 		ID            func(childComplexity int) int
+		Language      func(childComplexity int) int
 		MalID         func(childComplexity int) int
 		PublishedDate func(childComplexity int) int
+		References    func(childComplexity int) int
 		SourceName    func(childComplexity int) int
 		SourceURL     func(childComplexity int) int
 		Summary       func(childComplexity int) int
@@ -201,6 +203,12 @@ type ComplexityRoot struct {
 		ID        func(childComplexity int) int
 		ImageURL  func(childComplexity int) int
 		SourceURL func(childComplexity int) int
+	}
+
+	NewsReference struct {
+		Kind  func(childComplexity int) int
+		Title func(childComplexity int) int
+		URL   func(childComplexity int) int
 	}
 
 	Query struct {
@@ -671,6 +679,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.AnimeNews.ID(childComplexity), true
 
+	case "AnimeNews.language":
+		if e.complexity.AnimeNews.Language == nil {
+			break
+		}
+
+		return e.complexity.AnimeNews.Language(childComplexity), true
+
 	case "AnimeNews.malId":
 		if e.complexity.AnimeNews.MalID == nil {
 			break
@@ -684,6 +699,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.AnimeNews.PublishedDate(childComplexity), true
+
+	case "AnimeNews.references":
+		if e.complexity.AnimeNews.References == nil {
+			break
+		}
+
+		return e.complexity.AnimeNews.References(childComplexity), true
 
 	case "AnimeNews.sourceName":
 		if e.complexity.AnimeNews.SourceName == nil {
@@ -1092,6 +1114,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Fanart.SourceURL(childComplexity), true
 
+	case "NewsReference.kind":
+		if e.complexity.NewsReference.Kind == nil {
+			break
+		}
+
+		return e.complexity.NewsReference.Kind(childComplexity), true
+
+	case "NewsReference.title":
+		if e.complexity.NewsReference.Title == nil {
+			break
+		}
+
+		return e.complexity.NewsReference.Title(childComplexity), true
+
+	case "NewsReference.url":
+		if e.complexity.NewsReference.URL == nil {
+			break
+		}
+
+		return e.complexity.NewsReference.URL(childComplexity), true
+
 	case "Query.apiInfo":
 		if e.complexity.Query.APIInfo == nil {
 			break
@@ -1491,6 +1534,17 @@ type AnimeNews {
     publishedDate: String
     episodeNumber: Int
     malId: Int
+    "ISO 639-1 code of the source article. The summary is always English."
+    language: String
+    "Media the article points at — a PV, the official site, an announcement post."
+    references: [NewsReference!]
+}
+
+type NewsReference {
+    "Coarse bucket derived from the link's host: video, post or site."
+    kind: String!
+    title: String!
+    url: String!
 }
 
 type Fanart {
@@ -3362,6 +3416,10 @@ func (ec *executionContext) fieldContext_Anime_news(ctx context.Context, field g
 				return ec.fieldContext_AnimeNews_episodeNumber(ctx, field)
 			case "malId":
 				return ec.fieldContext_AnimeNews_malId(ctx, field)
+			case "language":
+				return ec.fieldContext_AnimeNews_language(ctx, field)
+			case "references":
+				return ec.fieldContext_AnimeNews_references(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type AnimeNews", field.Name)
 		},
@@ -4828,6 +4886,96 @@ func (ec *executionContext) fieldContext_AnimeNews_malId(ctx context.Context, fi
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeNews_language(ctx context.Context, field graphql.CollectedField, obj *model.AnimeNews) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeNews_language(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Language, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeNews_language(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeNews",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeNews_references(ctx context.Context, field graphql.CollectedField, obj *model.AnimeNews) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeNews_references(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.References, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.NewsReference)
+	fc.Result = res
+	return ec.marshalONewsReference2ᚕᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐNewsReferenceᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeNews_references(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeNews",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "kind":
+				return ec.fieldContext_NewsReference_kind(ctx, field)
+			case "title":
+				return ec.fieldContext_NewsReference_title(ctx, field)
+			case "url":
+				return ec.fieldContext_NewsReference_url(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type NewsReference", field.Name)
 		},
 	}
 	return fc, nil
@@ -7267,6 +7415,138 @@ func (ec *executionContext) _Fanart_sourceUrl(ctx context.Context, field graphql
 func (ec *executionContext) fieldContext_Fanart_sourceUrl(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Fanart",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _NewsReference_kind(ctx context.Context, field graphql.CollectedField, obj *model.NewsReference) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_NewsReference_kind(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Kind, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_NewsReference_kind(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NewsReference",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _NewsReference_title(ctx context.Context, field graphql.CollectedField, obj *model.NewsReference) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_NewsReference_title(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Title, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_NewsReference_title(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NewsReference",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _NewsReference_url(ctx context.Context, field graphql.CollectedField, obj *model.NewsReference) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_NewsReference_url(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.URL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_NewsReference_url(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NewsReference",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -11507,6 +11787,10 @@ func (ec *executionContext) _AnimeNews(ctx context.Context, sel ast.SelectionSet
 			out.Values[i] = ec._AnimeNews_episodeNumber(ctx, field, obj)
 		case "malId":
 			out.Values[i] = ec._AnimeNews_malId(ctx, field, obj)
+		case "language":
+			out.Values[i] = ec._AnimeNews_language(ctx, field, obj)
+		case "references":
+			out.Values[i] = ec._AnimeNews_references(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -12101,6 +12385,55 @@ func (ec *executionContext) _Fanart(ctx context.Context, sel ast.SelectionSet, o
 			}
 		case "sourceUrl":
 			out.Values[i] = ec._Fanart_sourceUrl(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var newsReferenceImplementors = []string{"NewsReference"}
+
+func (ec *executionContext) _NewsReference(ctx context.Context, sel ast.SelectionSet, obj *model.NewsReference) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, newsReferenceImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("NewsReference")
+		case "kind":
+			out.Values[i] = ec._NewsReference_kind(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "title":
+			out.Values[i] = ec._NewsReference_title(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "url":
+			out.Values[i] = ec._NewsReference_url(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -13131,6 +13464,16 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 	return res
 }
 
+func (ec *executionContext) marshalNNewsReference2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐNewsReference(ctx context.Context, sel ast.SelectionSet, v *model.NewsReference) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._NewsReference(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNSeason2string(ctx context.Context, v interface{}) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -14055,6 +14398,53 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	}
 	res := graphql.MarshalInt(*v)
 	return res
+}
+
+func (ec *executionContext) marshalONewsReference2ᚕᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐNewsReferenceᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.NewsReference) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNNewsReference2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐNewsReference(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalOStreamingPlatform2ᚕᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐStreamingPlatformᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.StreamingPlatform) graphql.Marshaler {

@@ -129,6 +129,10 @@ type AnimeNews struct {
 	PublishedDate *string `json:"publishedDate,omitempty"`
 	EpisodeNumber *int    `json:"episodeNumber,omitempty"`
 	MalID         *int    `json:"malId,omitempty"`
+	// ISO 639-1 code of the source article. The summary is always English.
+	Language *string `json:"language,omitempty"`
+	// Media the article points at — a PV, the official site, an announcement post.
+	References []*NewsReference `json:"references,omitempty"`
 }
 
 // Schedule metadata from AnimeSchedule.net
@@ -276,6 +280,13 @@ type Fanart struct {
 	ID        string  `json:"id"`
 	ImageURL  string  `json:"imageUrl"`
 	SourceURL *string `json:"sourceUrl,omitempty"`
+}
+
+type NewsReference struct {
+	// Coarse bucket derived from the link's host: video, post or site.
+	Kind  string `json:"kind"`
+	Title string `json:"title"`
+	URL   string `json:"url"`
 }
 
 // Streaming platform where an anime is available
