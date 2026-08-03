@@ -87,40 +87,6 @@ func (r *animeResolver) StreamingPlatforms(ctx context.Context, obj *model.Anime
 	return result, nil
 }
 
-// News is the resolver for the news field.
-func (r *animeResolver) News(ctx context.Context, obj *model.Anime) ([]*model.AnimeNews, error) {
-	if r.AnimeNewsRepository == nil {
-		return nil, nil
-	}
-	news, err := r.AnimeNewsRepository.FindByAnimeID(obj.ID)
-	if err != nil {
-		return nil, nil
-	}
-	var result []*model.AnimeNews
-	for _, n := range news {
-		var publishedDate *string
-		if n.PublishedDate != nil {
-			formatted := n.PublishedDate.Format("2006-01-02")
-			publishedDate = &formatted
-		}
-		result = append(result, &model.AnimeNews{
-			ID:            n.ID,
-			AnimeID:       n.AnimeID,
-			Title:         n.Title,
-			Summary:       n.Summary,
-			Category:      n.Category,
-			SourceURL:     n.SourceURL,
-			SourceName:    n.SourceName,
-			PublishedDate: publishedDate,
-			EpisodeNumber: n.EpisodeNumber,
-			MalID:         n.MalID,
-			Language:      n.Language,
-			References:    decodeNewsReferences(n.ReferenceLinks),
-		})
-	}
-	return result, nil
-}
-
 // Fanart is the resolver for the fanart field.
 func (r *animeResolver) Fanart(ctx context.Context, obj *model.Anime) ([]*model.Fanart, error) {
 	if r.AnimeFanartRepository == nil {
