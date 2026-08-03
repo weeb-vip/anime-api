@@ -7,7 +7,6 @@ import (
 	"github.com/weeb-vip/anime-api/config"
 	"github.com/weeb-vip/anime-api/internal/cache"
 	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_fanart"
-	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_news"
 	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_schedule"
 	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_streaming_platform"
 	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_tag"
@@ -41,7 +40,6 @@ type Resolver struct {
 	AnimeTagRepository                 anime_tag.AnimeTagRepositoryImpl
 	AnimeScheduleRepository            anime_schedule.AnimeScheduleRepositoryImpl
 	AnimeStreamingPlatformRepository   anime_streaming_platform.AnimeStreamingPlatformRepositoryImpl
-	AnimeNewsRepository                anime_news.AnimeNewsRepositoryImpl
 	AnimeFanartRepository              anime_fanart.AnimeFanartRepositoryImpl
 	EpisodeAirTimeRepository           episode_air_time.EpisodeAirTimeRepositoryImpl
 	CacheService                       CacheServiceInterface

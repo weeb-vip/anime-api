@@ -63,8 +63,6 @@ type Anime struct {
 	ScheduleInfo *AnimeScheduleInfo `json:"scheduleInfo,omitempty"`
 	// Streaming platforms where this anime is available
 	StreamingPlatforms []*StreamingPlatform `json:"streamingPlatforms,omitempty"`
-	// AI-researched news for this anime
-	News []*AnimeNews `json:"news,omitempty"`
 	// Fanart / visuals gathered for this anime
 	Fanart []*Fanart `json:"fanart,omitempty"`
 	// Anime seasons
@@ -116,23 +114,6 @@ type AnimeCharacter struct {
 	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
 	// The voice actor for the character
 	Staff []*AnimeStaff `json:"staff,omitempty"`
-}
-
-type AnimeNews struct {
-	ID            string  `json:"id"`
-	AnimeID       string  `json:"animeId"`
-	Title         string  `json:"title"`
-	Summary       *string `json:"summary,omitempty"`
-	Category      string  `json:"category"`
-	SourceURL     *string `json:"sourceUrl,omitempty"`
-	SourceName    *string `json:"sourceName,omitempty"`
-	PublishedDate *string `json:"publishedDate,omitempty"`
-	EpisodeNumber *int    `json:"episodeNumber,omitempty"`
-	MalID         *int    `json:"malId,omitempty"`
-	// ISO 639-1 code of the source article. The summary is always English.
-	Language *string `json:"language,omitempty"`
-	// Media the article points at — a PV, the official site, an announcement post.
-	References []*NewsReference `json:"references,omitempty"`
 }
 
 // Schedule metadata from AnimeSchedule.net
@@ -280,13 +261,6 @@ type Fanart struct {
 	ID        string  `json:"id"`
 	ImageURL  string  `json:"imageUrl"`
 	SourceURL *string `json:"sourceUrl,omitempty"`
-}
-
-type NewsReference struct {
-	// Coarse bucket derived from the link's host: video, post or site.
-	Kind  string `json:"kind"`
-	Title string `json:"title"`
-	URL   string `json:"url"`
 }
 
 // Streaming platform where an anime is available

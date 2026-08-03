@@ -17,7 +17,6 @@ import (
 	anime3 "github.com/weeb-vip/anime-api/internal/db/repositories/anime_episode"
 	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_schedule"
 	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_fanart"
-	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_news"
 	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_season"
 	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_streaming_platform"
 	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_tag"
@@ -85,7 +84,6 @@ func BuildRootHandler(conf config.Config) http.Handler {
 	animeTagRepository := anime_tag.NewAnimeTagRepository(database)
 	animeScheduleRepository := anime_schedule.NewAnimeScheduleRepository(database)
 	animeStreamingPlatformRepository := anime_streaming_platform.NewAnimeStreamingPlatformRepository(database)
-	animeNewsRepository := anime_news.NewAnimeNewsRepository(database)
 	animeFanartRepository := anime_fanart.NewAnimeFanartRepository(database)
 	episodeAirTimeRepository := episode_air_time.NewEpisodeAirTimeRepository(database)
 	resolvers := &graph.Resolver{
@@ -98,7 +96,6 @@ func BuildRootHandler(conf config.Config) http.Handler {
 		AnimeTagRepository:                 animeTagRepository,
 		AnimeScheduleRepository:            animeScheduleRepository,
 		AnimeStreamingPlatformRepository:   animeStreamingPlatformRepository,
-		AnimeNewsRepository:                animeNewsRepository,
 		AnimeFanartRepository:              animeFanartRepository,
 		EpisodeAirTimeRepository:           episodeAirTimeRepository,
 	}
@@ -157,7 +154,6 @@ func BuildRootHandlerWithContext(ctx context.Context, conf config.Config) http.H
 	animeTagRepository := anime_tag.NewAnimeTagRepository(database)
 	animeScheduleRepository := anime_schedule.NewAnimeScheduleRepository(database)
 	animeStreamingPlatformRepository := anime_streaming_platform.NewAnimeStreamingPlatformRepository(database)
-	animeNewsRepository := anime_news.NewAnimeNewsRepository(database)
 	animeFanartRepository := anime_fanart.NewAnimeFanartRepository(database)
 	episodeAirTimeRepository := episode_air_time.NewEpisodeAirTimeRepository(database)
 	resolvers := &graph.Resolver{
@@ -170,7 +166,6 @@ func BuildRootHandlerWithContext(ctx context.Context, conf config.Config) http.H
 		AnimeTagRepository:                 animeTagRepository,
 		AnimeScheduleRepository:            animeScheduleRepository,
 		AnimeStreamingPlatformRepository:   animeStreamingPlatformRepository,
-		AnimeNewsRepository:                animeNewsRepository,
 		AnimeFanartRepository:              animeFanartRepository,
 		EpisodeAirTimeRepository:           episodeAirTimeRepository,
 		CacheService:                       cacheService,
