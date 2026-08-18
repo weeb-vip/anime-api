@@ -6,8 +6,16 @@
 -- Nullable on purpose: rows exist here before the postgres backfill reaches
 -- them, and a NOT NULL column would reject those CDC writes outright.
 --
--- The unique index is what stops two anime ever claiming the same URL. MySQL
--- permits any number of NULLs under a unique index, so unbackfilled rows do not
--- collide with each other while the backfill is in flight.
+-- The index is deliberately NOT unique. Uniqueness is enforced in postgres,
+-- where the slug is minted; this table is a replica, and a constraint here can
+-- only ever reject a write that the source already accepted.
+--
+-- That is not hypothetical. A slug freed by deleting one anime can be reused by
+-- another, and the two rows are different Kafka keys and so different
+-- partitions -- nothing orders the new row's insert after the old row's delete.
+-- Under a unique index that ordering lands as a duplicate-key error inside
+-- anime-sync, which stalls the consumer. A plain index serves animeBySlug
+-- lookups just as well without turning a transient ordering quirk into an
+-- outage.
 ALTER TABLE anime ADD COLUMN url_slug VARCHAR(255) NULL;
-CREATE UNIQUE INDEX idx_anime_url_slug ON anime (url_slug);
+CREATE INDEX idx_anime_url_slug ON anime (url_slug);
