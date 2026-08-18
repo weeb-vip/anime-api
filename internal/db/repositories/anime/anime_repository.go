@@ -1134,6 +1134,7 @@ func (a *AnimeRepository) FindBySeasonWithEpisodes(ctx context.Context, season s
 		AnidbID            *string    `gorm:"column:anidbid"`
 		TheTVDBID          *string    `gorm:"column:thetvdbid"`
 		Type               *RECORD_TYPE `gorm:"column:type"`
+		UrlSlug            *string    `gorm:"column:url_slug"`
 		TitleEn            *string    `gorm:"column:title_en"`
 		TitleJp            *string    `gorm:"column:title_jp"`
 		TitleRomaji        *string    `gorm:"column:title_romaji"`
@@ -1173,6 +1174,7 @@ func (a *AnimeRepository) FindBySeasonWithEpisodes(ctx context.Context, season s
 			a.id as anime_id,
 			a.anidbid,
 			a.thetvdbid,
+			a.url_slug,
 			a.type,
 			a.title_en,
 			a.title_jp,
@@ -1232,6 +1234,7 @@ func (a *AnimeRepository) FindBySeasonWithEpisodes(ctx context.Context, season s
 				AnidbID:       result.AnidbID,
 				TheTVDBID:     result.TheTVDBID,
 				Type:          result.Type,
+				UrlSlug:       result.UrlSlug,
 				TitleEn:       result.TitleEn,
 				TitleJp:       result.TitleJp,
 				TitleRomaji:   result.TitleRomaji,
