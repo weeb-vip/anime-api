@@ -47,6 +47,15 @@ func (c *CacheKeyBuilder) AnimeByID(id string) string {
 	return c.prefix + ":anime:id:" + id
 }
 
+// AnimeBySlug builds cache key for anime by public URL slug.
+//
+// Keyed separately from AnimeByID rather than resolving slug->id first: the
+// slug is what the page request carries, so caching on it avoids a lookup
+// per request, and an anime's slug is as stable as its id.
+func (c *CacheKeyBuilder) AnimeBySlug(slug string) string {
+	return c.prefix + ":anime:slug:" + slug
+}
+
 // AnimeWithEpisodesByID builds cache key for anime with episodes by ID
 func (c *CacheKeyBuilder) AnimeWithEpisodesByID(id string) string {
 	return c.prefix + ":anime:id:" + id + ":with-episodes"

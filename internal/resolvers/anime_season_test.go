@@ -45,6 +45,19 @@ func (c *MockAnimeServiceMockRecorder) AnimeByID(ctx, id interface{}) *gomock.Ca
 	return c.mock.ctrl.RecordCallWithMethodType(c.mock, "AnimeByID", reflect.TypeOf((*MockAnimeService)(nil).AnimeByID), ctx, id)
 }
 
+func (m *MockAnimeService) AnimeBySlug(ctx context.Context, slug string) (*anime_repo.Anime, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AnimeBySlug", ctx, slug)
+	ret0, _ := ret[0].(*anime_repo.Anime)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+func (c *MockAnimeServiceMockRecorder) AnimeBySlug(ctx, slug interface{}) *gomock.Call {
+	c.mock.ctrl.T.Helper()
+	return c.mock.ctrl.RecordCallWithMethodType(c.mock, "AnimeBySlug", reflect.TypeOf((*MockAnimeService)(nil).AnimeBySlug), ctx, slug)
+}
+
 func (m *MockAnimeService) AnimeByIDWithEpisodes(ctx context.Context, id string) (*anime_repo.Anime, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AnimeByIDWithEpisodes", ctx, id)

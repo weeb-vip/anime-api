@@ -3,6 +3,7 @@ package resolvers
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -16,6 +17,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
+	"gorm.io/gorm"
 )
 
 // CacheServiceInterface defines the methods needed for caching
@@ -109,6 +111,7 @@ func transformAnimeToGraphQL(animeEntity anime2.Anime) (*model.Anime, error) {
 		ID:            animeEntity.ID,
 		Anidbid:       animeEntity.AnidbID,
 		Thetvdbid:     animeEntity.TheTVDBID,
+		Slug:          animeEntity.UrlSlug,
 		MalID:         animeEntity.MalID,
 		TitleEn:       animeEntity.TitleEn,
 		TitleJp:       animeEntity.TitleJp,
@@ -214,6 +217,7 @@ func transformAnimeToGraphQLWithEpisode(animeEntity anime2.AnimeWithNextEpisode)
 		ID:            animeEntity.ID,
 		Anidbid:       animeEntity.AnidbID,
 		Thetvdbid:     animeEntity.TheTVDBID,
+		Slug:          animeEntity.UrlSlug,
 		MalID:         animeEntity.MalID,
 		TitleEn:       animeEntity.TitleEn,
 		TitleJp:       animeEntity.TitleJp,
@@ -237,6 +241,35 @@ func transformAnimeToGraphQLWithEpisode(animeEntity anime2.AnimeWithNextEpisode)
 		UpdatedAt:     animeEntity.UpdatedAt.Format("2006-01-02 15:04:05"),
 		NextEpisode:   nextEpisode,
 	}, nil
+}
+
+// AnimeBySlug resolves the public URL form, /anime/<slug>.
+//
+// A slug nobody claims returns (nil, nil) rather than an error: the URL is
+// simply wrong, which is a 404 for the caller to render, not a failure worth
+// logging or alerting on. Any other database error is passed through.
+func AnimeBySlug(ctx context.Context, animeService anime.AnimeServiceImpl, slug string) (*model.Anime, error) {
+	tracer := tracing.GetTracer(ctx)
+	ctx, span := tracer.Start(ctx, "AnimeBySlug",
+		trace.WithAttributes(
+			attribute.String("anime.slug", slug),
+			attribute.String("resolver.name", "AnimeBySlug"),
+		),
+		tracing.GetEnvironmentAttribute(),
+	)
+	defer span.End()
+
+	foundAnime, err := animeService.AnimeBySlug(ctx, slug)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			span.SetAttributes(attribute.Bool("anime.found", false))
+			return nil, nil
+		}
+		span.RecordError(err)
+		return nil, err
+	}
+
+	return transformAnimeToGraphQL(*foundAnime)
 }
 
 func AnimeByID(ctx context.Context, animeService anime.AnimeServiceImpl, id string) (*model.Anime, error) {
