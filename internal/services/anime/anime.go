@@ -12,6 +12,7 @@ import (
 
 type AnimeServiceImpl interface {
 	AnimeByID(ctx context.Context, id string) (*anime.Anime, error)
+	AnimeBySlug(ctx context.Context, slug string) (*anime.Anime, error)
 	AnimeByIDWithEpisodes(ctx context.Context, id string) (*anime.Anime, error)
 	AnimeByIDs(ctx context.Context, ids []string) ([]*anime.Anime, error)
 	AnimeByIDsWithEpisodes(ctx context.Context, ids []string) ([]*anime.Anime, error)
@@ -70,6 +71,21 @@ func (a *AnimeService) AnimeByID(ctx context.Context, id string) (*anime.Anime, 
 	defer span.End()
 
 	return a.Repository.FindById(ctx, id)
+}
+
+func (a *AnimeService) AnimeBySlug(ctx context.Context, slug string) (*anime.Anime, error) {
+	tracer := tracing.GetTracer(ctx)
+	ctx, span := tracer.Start(ctx, "AnimeService.AnimeBySlug",
+		trace.WithAttributes(
+			attribute.String("service", "anime"),
+			attribute.String("type", "service"),
+			attribute.String("anime.slug", slug),
+		),
+		tracing.GetEnvironmentAttribute(),
+	)
+	defer span.End()
+
+	return a.Repository.FindBySlug(ctx, slug)
 }
 
 func (a *AnimeService) TopRatedAnime(ctx context.Context, limit int) ([]*anime.Anime, error) {

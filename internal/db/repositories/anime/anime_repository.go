@@ -34,6 +34,7 @@ type AnimeRepositoryImpl interface {
 	FindAllWithEpisodes(ctx context.Context) ([]*Anime, error)
 	FindById(ctx context.Context, id string) (*Anime, error)
 	FindByIdWithEpisodes(ctx context.Context, id string) (*Anime, error)
+	FindBySlug(ctx context.Context, slug string) (*Anime, error)
 	FindByIDs(ctx context.Context, ids []string) ([]*Anime, error)
 	FindByIDsWithEpisodes(ctx context.Context, ids []string) ([]*Anime, error)
 	FindByName(ctx context.Context, name string) ([]*Anime, error)
@@ -170,6 +171,49 @@ func (a *AnimeRepository) FindById(ctx context.Context, id string) (*Anime, erro
 	// Store in cache if available
 	if a.cache != nil {
 		key := a.cache.GetKeyBuilder().AnimeByID(id)
+		_ = a.cache.SetJSON(ctx, key, &anime, a.cache.GetAnimeDataTTL())
+	}
+
+	return &anime, nil
+}
+
+// FindBySlug looks an anime up by its public URL slug.
+//
+// url_slug carries a unique index, so this is a single-row lookup like
+// FindById. It returns gorm.ErrRecordNotFound for an unknown slug, which the
+// resolver turns into a null rather than an error -- an unrecognised URL is a
+// 404, not a failure.
+func (a *AnimeRepository) FindBySlug(ctx context.Context, slug string) (*Anime, error) {
+	if a.cache != nil {
+		key := a.cache.GetKeyBuilder().AnimeBySlug(slug)
+		var anime Anime
+		if err := a.cache.GetJSON(ctx, key, &anime); err == nil {
+			return &anime, nil
+		}
+	}
+
+	startTime := time.Now()
+	var anime Anime
+	err := a.db.DB.WithContext(ctx).Where("url_slug = ?", slug).First(&anime).Error
+	if err != nil {
+		metrics.GetAppMetrics().DatabaseMetric(
+			float64(time.Since(startTime).Milliseconds()),
+			"anime",
+			"select",
+			metrics.Error,
+		)
+		return nil, err
+	}
+
+	metrics.GetAppMetrics().DatabaseMetric(
+		float64(time.Since(startTime).Milliseconds()),
+		"anime",
+		"select",
+		metrics.Success,
+	)
+
+	if a.cache != nil {
+		key := a.cache.GetKeyBuilder().AnimeBySlug(slug)
 		_ = a.cache.SetJSON(ctx, key, &anime, a.cache.GetAnimeDataTTL())
 	}
 

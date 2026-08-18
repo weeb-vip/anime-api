@@ -17,6 +17,11 @@ type Anime struct {
 	Anidbid *string `json:"anidbid,omitempty"`
 	// TheTVDB ID of the anime
 	Thetvdbid *string `json:"thetvdbid,omitempty"`
+	// Public URL segment for the anime, e.g. "cowboy-bebop". Derived from the
+	// title, with a year and type appended only where several anime would
+	// otherwise claim the same slug. Null for records the backfill has not
+	// reached; callers should fall back to the id.
+	Slug *string `json:"slug,omitempty"`
 	// English titel the anime
 	TitleEn *string `json:"titleEn,omitempty"`
 	// Japanese titel the anime

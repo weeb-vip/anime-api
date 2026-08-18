@@ -11,6 +11,8 @@ type Query {
     apiInfo:  ApiInfo!
     "Get anime by ID"
     anime(id: ID!): Anime!
+    "Look an anime up by its public URL slug. Null when no anime claims it."
+    animeBySlug(slug: String!): Anime
     "Get newest anime with a response limit"
     newestAnime(limit: Int): [Anime!]
     "Get top rated anime with a response limit"

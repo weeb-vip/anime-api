@@ -80,6 +80,13 @@ type Anime @key(fields: "id") {
     anidbid: String
     "TheTVDB ID of the anime"
     thetvdbid: String
+    """
+    Public URL segment for the anime, e.g. "cowboy-bebop". Derived from the
+    title, with a year and type appended only where several anime would
+    otherwise claim the same slug. Null for records the backfill has not
+    reached; callers should fall back to the id.
+    """
+    slug: String
     "English titel the anime"
     titleEn: String
     "Japanese titel the anime"
