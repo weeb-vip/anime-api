@@ -122,6 +122,11 @@ func (r *animeResolver) NextEpisode(ctx context.Context, obj *model.Anime) (*mod
 	return resolvers.NextEpisode(ctx, r.AnimeEpisodeService, animeID)
 }
 
+// Roles is the resolver for the roles field.
+func (r *animeStaffResolver) Roles(ctx context.Context, obj *model.AnimeStaff) ([]*model.StaffRole, error) {
+	return resolvers.RolesByStaffID(ctx, r.AnimeCharacterWithStaffLinkService, r.AnimeService, obj.ID)
+}
+
 // AnimeAPI is the resolver for the animeApi field.
 func (r *apiInfoResolver) AnimeAPI(ctx context.Context, obj *model.APIInfo) (*model.AnimeAPI, error) {
 	return resolvers.AnimeAPI(r.Config)
@@ -175,6 +180,9 @@ func (r *userAnimeResolver) Anime(ctx context.Context, obj *model.UserAnime) (*m
 // Anime returns generated.AnimeResolver implementation.
 func (r *Resolver) Anime() generated.AnimeResolver { return &animeResolver{r} }
 
+// AnimeStaff returns generated.AnimeStaffResolver implementation.
+func (r *Resolver) AnimeStaff() generated.AnimeStaffResolver { return &animeStaffResolver{r} }
+
 // ApiInfo returns generated.ApiInfoResolver implementation.
 func (r *Resolver) ApiInfo() generated.ApiInfoResolver { return &apiInfoResolver{r} }
 
@@ -185,6 +193,7 @@ func (r *Resolver) Episode() generated.EpisodeResolver { return &episodeResolver
 func (r *Resolver) UserAnime() generated.UserAnimeResolver { return &userAnimeResolver{r} }
 
 type animeResolver struct{ *Resolver }
+type animeStaffResolver struct{ *Resolver }
 type apiInfoResolver struct{ *Resolver }
 type episodeResolver struct{ *Resolver }
 type userAnimeResolver struct{ *Resolver }

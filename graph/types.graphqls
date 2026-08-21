@@ -308,6 +308,30 @@ type AnimeStaff {
 
     "the characters associated with the staff member"
     characters: [AnimeCharacter!]
+
+    """
+    Every credited role for this staff member, across every anime. Ordered by
+    the anime's start date, newest first, with undated anime last.
+
+    anime_character rows are scoped to a single anime, so one person voicing the
+    same character across several seasons appears here once per season -- that
+    is a credit each, not a duplicate.
+    """
+    roles: [StaffRole!] @goField(forceResolver: true)
+}
+
+"""
+One credit: a character a staff member played, and the anime they played it in.
+"""
+type StaffRole {
+    "The character performed"
+    character: AnimeCharacter!
+
+    """
+    The anime the character belongs to. Null when the character outlived its
+    anime row -- character deletes are not cascaded from the anime side.
+    """
+    anime: Anime
 }
 
 type CharacterWithStaff {
