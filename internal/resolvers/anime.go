@@ -28,6 +28,18 @@ type CacheServiceInterface interface {
 	GetCurrentlyAiringTTL() time.Duration
 }
 
+// recordTypeToString maps the entity's RECORD_TYPE to a plain nullable string
+// for GraphQL. Kept as a helper rather than inlined because both converters
+// need it and a divergence between them is exactly the kind of thing that goes
+// unnoticed.
+func recordTypeToString(t *anime2.RECORD_TYPE) *string {
+	if t == nil {
+		return nil
+	}
+	s := string(*t)
+	return &s
+}
+
 func transformAnimeToGraphQL(animeEntity anime2.Anime) (*model.Anime, error) {
 
 	var studios []string
@@ -112,6 +124,7 @@ func transformAnimeToGraphQL(animeEntity anime2.Anime) (*model.Anime, error) {
 		Anidbid:       animeEntity.AnidbID,
 		Thetvdbid:     animeEntity.TheTVDBID,
 		Slug:          animeEntity.UrlSlug,
+		Type:          recordTypeToString(animeEntity.Type),
 		MalID:         animeEntity.MalID,
 		TitleEn:       animeEntity.TitleEn,
 		TitleJp:       animeEntity.TitleJp,
@@ -218,6 +231,7 @@ func transformAnimeToGraphQLWithEpisode(animeEntity anime2.AnimeWithNextEpisode)
 		Anidbid:       animeEntity.AnidbID,
 		Thetvdbid:     animeEntity.TheTVDBID,
 		Slug:          animeEntity.UrlSlug,
+		Type:          recordTypeToString(animeEntity.Type),
 		MalID:         animeEntity.MalID,
 		TitleEn:       animeEntity.TitleEn,
 		TitleJp:       animeEntity.TitleJp,
@@ -698,4 +712,57 @@ func DBSearchAnime(ctx context.Context, animeService anime.AnimeServiceImpl, que
 	)
 
 	return animes, nil
+}
+
+// RelatedAnimeBySeries resolves Anime.relatedAnime: the other entries sharing
+// this anime's TheTVDB series id.
+//
+// A default limit rather than none, because the groups are not uniformly small
+// -- the largest in the catalogue holds 78 anime, and a Pokemon page returning
+// all of them would be a wall of links and a much larger response than the
+// caller expected.
+func RelatedAnimeBySeries(ctx context.Context, animeService anime.AnimeServiceImpl, obj *model.Anime, limit *int) ([]*model.Anime, error) {
+	tracer := tracing.GetTracer(ctx)
+	ctx, span := tracer.Start(ctx, "RelatedAnimeBySeries",
+		trace.WithAttributes(
+			attribute.String("anime.id", obj.ID),
+			attribute.String("resolver.name", "RelatedAnimeBySeries"),
+		),
+		tracing.GetEnvironmentAttribute(),
+	)
+	defer span.End()
+
+	// No series id means nothing to group on. Not an error: most of the
+	// catalogue has never been enriched with one.
+	if obj.Thetvdbid == nil || *obj.Thetvdbid == "" {
+		span.SetAttributes(attribute.Bool("anime.has_series_id", false))
+		return []*model.Anime{}, nil
+	}
+
+	resultLimit := 25
+	if limit != nil && *limit > 0 {
+		resultLimit = *limit
+	}
+
+	found, err := animeService.RelatedAnimeBySeriesID(ctx, *obj.Thetvdbid, obj.ID, resultLimit)
+	if err != nil {
+		span.RecordError(err)
+		return nil, err
+	}
+
+	related := make([]*model.Anime, 0, len(found))
+	for _, entity := range found {
+		if entity == nil {
+			continue
+		}
+		transformed, err := transformAnimeToGraphQL(*entity)
+		if err != nil {
+			span.RecordError(err)
+			return nil, err
+		}
+		related = append(related, transformed)
+	}
+
+	span.SetAttributes(attribute.Int("anime.related_count", len(related)))
+	return related, nil
 }

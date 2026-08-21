@@ -36,6 +36,7 @@ type AnimeRepositoryImpl interface {
 	FindByIdWithEpisodes(ctx context.Context, id string) (*Anime, error)
 	FindBySlug(ctx context.Context, slug string) (*Anime, error)
 	FindByIDs(ctx context.Context, ids []string) ([]*Anime, error)
+	FindBySeriesID(ctx context.Context, seriesID string, excludeID string, limit int) ([]*Anime, error)
 	FindByIDsWithEpisodes(ctx context.Context, ids []string) ([]*Anime, error)
 	FindByName(ctx context.Context, name string) ([]*Anime, error)
 	FindByNameWithEpisodes(ctx context.Context, name string) ([]*Anime, error)
@@ -1300,6 +1301,51 @@ func (a *AnimeRepository) FindByIDs(ctx context.Context, ids []string) ([]*Anime
 
 	var animes []*Anime
 	err := a.db.DB.WithContext(ctx).Where("id IN ?", ids).Find(&animes).Error
+	if err != nil {
+		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
+			Service: "anime-api",
+			Table:   "anime",
+			Method:  metrics_lib.DatabaseMetricMethodSelect,
+			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
+		})
+		return nil, err
+	}
+
+	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
+		Service: "anime-api",
+		Table:   "anime",
+		Method:  metrics_lib.DatabaseMetricMethodSelect,
+		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
+	})
+	return animes, nil
+}
+
+// FindBySeriesID returns the other anime sharing a TheTVDB series id, oldest
+// first with undated entries last.
+//
+// The empty-string guard is the important part. thetvdbid is nullable and a
+// good deal of the catalogue has never been enriched, but some of those rows
+// hold '' rather than NULL -- and '' = '' is true, so without this an anime
+// with a blank id would come back "related" to every other blank one. That is
+// thousands of unrelated titles, and it would look like a working feature.
+//
+// Served by idx_anime_thetvdbid from migration 000021.
+func (a *AnimeRepository) FindBySeriesID(ctx context.Context, seriesID string, excludeID string, limit int) ([]*Anime, error) {
+	startTime := time.Now()
+
+	if seriesID == "" {
+		return []*Anime{}, nil
+	}
+
+	var animes []*Anime
+	err := a.db.DB.WithContext(ctx).
+		Where("thetvdbid = ? AND id <> ?", seriesID, excludeID).
+		Order("start_date IS NULL, start_date ASC").
+		Limit(limit).
+		Find(&animes).Error
+
 	if err != nil {
 		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
 			Service: "anime-api",
