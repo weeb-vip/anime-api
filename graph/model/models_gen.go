@@ -178,6 +178,10 @@ type AnimeSeason struct {
 type AnimeStaff struct {
 	// Unique identifier for the staff member
 	ID string `json:"id"`
+	// Public URL segment for this staff member, e.g. "mary-elizabeth-mcglynn",
+	// derived from their name. Null only where a name reduces to nothing a URL can
+	// carry; callers should fall back to the id.
+	Slug *string `json:"slug,omitempty"`
 	// The given name of the staff member
 	GivenName string `json:"givenName"`
 	// Staff Language

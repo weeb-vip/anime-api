@@ -20,6 +20,7 @@ import (
 func transformStaffToGraphQL(staff anime_staff2.AnimeStaff) *model.AnimeStaff {
 	return &model.AnimeStaff{
 		ID:         staff.ID,
+		Slug:       staff.URLSlug,
 		GivenName:  staff.GivenName,
 		FamilyName: staff.FamilyName,
 		Language:   &staff.Language,
@@ -161,4 +162,31 @@ func RolesByStaffID(
 	}
 
 	return roles, nil
+}
+
+// StaffBySlug resolves the staffBySlug query. Missing is null, not an error,
+// for the same reason StaffByID is: the field is nullable and a stale link
+// should not fail the whole query.
+func StaffBySlug(ctx context.Context, staffService anime_staff3.AnimeStaffServiceImpl, slug string) (*model.AnimeStaff, error) {
+	tracer := tracing.GetTracer(ctx)
+	ctx, span := tracer.Start(ctx, "StaffBySlug",
+		trace.WithAttributes(
+			attribute.String("staff.slug", slug),
+			attribute.String("resolver.name", "StaffBySlug"),
+		),
+		tracing.GetEnvironmentAttribute(),
+	)
+	defer span.End()
+
+	staff, err := staffService.StaffBySlug(ctx, slug)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			span.SetAttributes(attribute.Bool("staff.found", false))
+			return nil, nil
+		}
+		span.RecordError(err)
+		return nil, err
+	}
+
+	return transformStaffToGraphQL(*staff), nil
 }

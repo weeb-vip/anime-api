@@ -146,6 +146,7 @@ type ComplexityRoot struct {
 		Image      func(childComplexity int) int
 		Language   func(childComplexity int) int
 		Roles      func(childComplexity int) int
+		Slug       func(childComplexity int) int
 		Summary    func(childComplexity int) int
 		UpdatedAt  func(childComplexity int) int
 	}
@@ -206,6 +207,7 @@ type ComplexityRoot struct {
 		MostPopularAnime            func(childComplexity int, limit *int) int
 		NewestAnime                 func(childComplexity int, limit *int) int
 		Staff                       func(childComplexity int, id string) int
+		StaffBySlug                 func(childComplexity int, slug string) int
 		TopRatedAnime               func(childComplexity int, limit *int) int
 		__resolve__service          func(childComplexity int) int
 		__resolve_entities          func(childComplexity int, representations []map[string]interface{}) int
@@ -273,6 +275,7 @@ type QueryResolver interface {
 	AnimeBySeasonAndYear(ctx context.Context, seasonName string, year int, limit *int) ([]*model.Anime, error)
 	CharactersAndStaffByAnimeID(ctx context.Context, animeID string) ([]*model.CharacterWithStaff, error)
 	Staff(ctx context.Context, id string) (*model.AnimeStaff, error)
+	StaffBySlug(ctx context.Context, slug string) (*model.AnimeStaff, error)
 }
 type UserAnimeResolver interface {
 	Anime(ctx context.Context, obj *model.UserAnime) (*model.Anime, error)
@@ -832,6 +835,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.AnimeStaff.Roles(childComplexity), true
 
+	case "AnimeStaff.slug":
+		if e.complexity.AnimeStaff.Slug == nil {
+			break
+		}
+
+		return e.complexity.AnimeStaff.Slug(childComplexity), true
+
 	case "AnimeStaff.summary":
 		if e.complexity.AnimeStaff.Summary == nil {
 			break
@@ -1180,6 +1190,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Staff(childComplexity, args["id"].(string)), true
 
+	case "Query.staffBySlug":
+		if e.complexity.Query.StaffBySlug == nil {
+			break
+		}
+
+		args, err := ec.field_Query_staffBySlug_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.StaffBySlug(childComplexity, args["slug"].(string)), true
+
 	case "Query.topRatedAnime":
 		if e.complexity.Query.TopRatedAnime == nil {
 			break
@@ -1429,6 +1451,8 @@ type Query {
     charactersAndStaffByAnimeId(animeId: ID!): [CharacterWithStaff!]
     "Get a staff member (voice actor) by ID. Null when no staff member has that id."
     staff(id: ID!): AnimeStaff
+    "Look a staff member up by their public URL slug. Null when no one claims it."
+    staffBySlug(slug: String!): AnimeStaff
 }
 `, BuiltIn: false},
 	{Name: "../types.graphqls", Input: `# Season is now a string scalar that can accept any season format
@@ -1705,6 +1729,13 @@ type AnimeCharacter {
 type AnimeStaff {
     "Unique identifier for the staff member"
     id: ID!
+
+    """
+    Public URL segment for this staff member, e.g. "mary-elizabeth-mcglynn",
+    derived from their name. Null only where a name reduces to nothing a URL can
+    carry; callers should fall back to the id.
+    """
+    slug: String
 
     "The given name of the staff member"
     givenName: String!
@@ -2141,6 +2172,21 @@ func (ec *executionContext) field_Query_newestAnime_args(ctx context.Context, ra
 		}
 	}
 	args["limit"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_staffBySlug_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["slug"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("slug"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["slug"] = arg0
 	return args, nil
 }
 
@@ -4381,6 +4427,8 @@ func (ec *executionContext) fieldContext_AnimeCharacter_staff(ctx context.Contex
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_AnimeStaff_id(ctx, field)
+			case "slug":
+				return ec.fieldContext_AnimeStaff_slug(ctx, field)
 			case "givenName":
 				return ec.fieldContext_AnimeStaff_givenName(ctx, field)
 			case "language":
@@ -5083,6 +5131,47 @@ func (ec *executionContext) fieldContext_AnimeStaff_id(ctx context.Context, fiel
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnimeStaff_slug(ctx context.Context, field graphql.CollectedField, obj *model.AnimeStaff) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeStaff_slug(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Slug, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeStaff_slug(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeStaff",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -5879,6 +5968,8 @@ func (ec *executionContext) fieldContext_CharacterWithStaff_staff(ctx context.Co
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_AnimeStaff_id(ctx, field)
+			case "slug":
+				return ec.fieldContext_AnimeStaff_slug(ctx, field)
 			case "givenName":
 				return ec.fieldContext_AnimeStaff_givenName(ctx, field)
 			case "language":
@@ -8273,6 +8364,8 @@ func (ec *executionContext) fieldContext_Query_staff(ctx context.Context, field 
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_AnimeStaff_id(ctx, field)
+			case "slug":
+				return ec.fieldContext_AnimeStaff_slug(ctx, field)
 			case "givenName":
 				return ec.fieldContext_AnimeStaff_givenName(ctx, field)
 			case "language":
@@ -8311,6 +8404,90 @@ func (ec *executionContext) fieldContext_Query_staff(ctx context.Context, field 
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_staff_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_staffBySlug(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_staffBySlug(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().StaffBySlug(rctx, fc.Args["slug"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.AnimeStaff)
+	fc.Result = res
+	return ec.marshalOAnimeStaff2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnimeStaff(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_staffBySlug(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_AnimeStaff_id(ctx, field)
+			case "slug":
+				return ec.fieldContext_AnimeStaff_slug(ctx, field)
+			case "givenName":
+				return ec.fieldContext_AnimeStaff_givenName(ctx, field)
+			case "language":
+				return ec.fieldContext_AnimeStaff_language(ctx, field)
+			case "familyName":
+				return ec.fieldContext_AnimeStaff_familyName(ctx, field)
+			case "image":
+				return ec.fieldContext_AnimeStaff_image(ctx, field)
+			case "birthday":
+				return ec.fieldContext_AnimeStaff_birthday(ctx, field)
+			case "birthPlace":
+				return ec.fieldContext_AnimeStaff_birthPlace(ctx, field)
+			case "bloodType":
+				return ec.fieldContext_AnimeStaff_bloodType(ctx, field)
+			case "hobbies":
+				return ec.fieldContext_AnimeStaff_hobbies(ctx, field)
+			case "summary":
+				return ec.fieldContext_AnimeStaff_summary(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_AnimeStaff_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_AnimeStaff_updatedAt(ctx, field)
+			case "characters":
+				return ec.fieldContext_AnimeStaff_characters(ctx, field)
+			case "roles":
+				return ec.fieldContext_AnimeStaff_roles(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AnimeStaff", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_staffBySlug_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -11579,6 +11756,8 @@ func (ec *executionContext) _AnimeStaff(ctx context.Context, sel ast.SelectionSe
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "slug":
+			out.Values[i] = ec._AnimeStaff_slug(ctx, field, obj)
 		case "givenName":
 			out.Values[i] = ec._AnimeStaff_givenName(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -12362,6 +12541,25 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_staff(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "staffBySlug":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_staffBySlug(ctx, field)
 				return res
 			}
 

@@ -33,4 +33,6 @@ type Query {
     charactersAndStaffByAnimeId(animeId: ID!): [CharacterWithStaff!]
     "Get a staff member (voice actor) by ID. Null when no staff member has that id."
     staff(id: ID!): AnimeStaff
+    "Look a staff member up by their public URL slug. Null when no one claims it."
+    staffBySlug(slug: String!): AnimeStaff
 }

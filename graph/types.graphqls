@@ -273,6 +273,13 @@ type AnimeStaff {
     "Unique identifier for the staff member"
     id: ID!
 
+    """
+    Public URL segment for this staff member, e.g. "mary-elizabeth-mcglynn",
+    derived from their name. Null only where a name reduces to nothing a URL can
+    carry; callers should fall back to the id.
+    """
+    slug: String
+
     "The given name of the staff member"
     givenName: String!
 

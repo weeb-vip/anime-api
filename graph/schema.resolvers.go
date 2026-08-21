@@ -83,6 +83,11 @@ func (r *queryResolver) Staff(ctx context.Context, id string) (*model.AnimeStaff
 	return resolvers.StaffByID(ctx, r.AnimeStaffService, id)
 }
 
+// StaffBySlug is the resolver for the staffBySlug field.
+func (r *queryResolver) StaffBySlug(ctx context.Context, slug string) (*model.AnimeStaff, error) {
+	return resolvers.StaffBySlug(ctx, r.AnimeStaffService, slug)
+}
+
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
