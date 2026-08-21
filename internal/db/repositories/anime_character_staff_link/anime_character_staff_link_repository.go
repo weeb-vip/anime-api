@@ -42,6 +42,7 @@ func (a *AnimeCharacterStaffLinkRepository) FindAnimeCharacterAndStaffByAnimeId(
 		CharacterRole          string
 		CharacterImage         string
 		StaffID                string
+		StaffURLSlug           *string
 		GivenName              string
 		FamilyName             string
 		StaffImage             string
@@ -79,6 +80,7 @@ func (a *AnimeCharacterStaffLinkRepository) FindAnimeCharacterAndStaffByAnimeId(
 			anime_character.title as character_title,
 			anime_character.summary as character_summary,
 			anime_staff.id as staff_id,
+			anime_staff.url_slug as staff_url_slug,
 			anime_staff.given_name,
 			anime_staff.family_name,
 			anime_staff.image as staff_image,
@@ -130,6 +132,7 @@ func (a *AnimeCharacterStaffLinkRepository) FindAnimeCharacterAndStaffByAnimeId(
 
 		characterMap[row.CharacterID].VoiceActors = append(characterMap[row.CharacterID].VoiceActors, anime_staff.AnimeStaff{
 			ID:         row.StaffID,
+			URLSlug:    row.StaffURLSlug,
 			GivenName:  row.GivenName,
 			FamilyName: row.FamilyName,
 			Image:      row.StaffImage,

@@ -8,6 +8,7 @@ import (
 
 type AnimeStaffServiceImpl interface {
 	StaffByID(ctx context.Context, id string) (*anime_staff.AnimeStaff, error)
+	StaffBySlug(ctx context.Context, slug string) (*anime_staff.AnimeStaff, error)
 }
 
 type AnimeStaffService struct {
@@ -22,4 +23,8 @@ func NewAnimeStaffService(repository anime_staff.AnimeStaffRepositoryImpl) Anime
 
 func (a *AnimeStaffService) StaffByID(ctx context.Context, id string) (*anime_staff.AnimeStaff, error) {
 	return a.Repository.FindStaffByID(ctx, id)
+}
+
+func (a *AnimeStaffService) StaffBySlug(ctx context.Context, slug string) (*anime_staff.AnimeStaff, error) {
+	return a.Repository.FindStaffBySlug(ctx, slug)
 }
