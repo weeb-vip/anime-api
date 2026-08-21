@@ -39,6 +39,7 @@ type Config struct {
 
 type ResolverRoot interface {
 	Anime() AnimeResolver
+	AnimeStaff() AnimeStaffResolver
 	ApiInfo() ApiInfoResolver
 	Entity() EntityResolver
 	Episode() EpisodeResolver
@@ -144,6 +145,7 @@ type ComplexityRoot struct {
 		ID         func(childComplexity int) int
 		Image      func(childComplexity int) int
 		Language   func(childComplexity int) int
+		Roles      func(childComplexity int) int
 		Summary    func(childComplexity int) int
 		UpdatedAt  func(childComplexity int) int
 	}
@@ -203,9 +205,15 @@ type ComplexityRoot struct {
 		EpisodesByAnimeID           func(childComplexity int, animeID string) int
 		MostPopularAnime            func(childComplexity int, limit *int) int
 		NewestAnime                 func(childComplexity int, limit *int) int
+		Staff                       func(childComplexity int, id string) int
 		TopRatedAnime               func(childComplexity int, limit *int) int
 		__resolve__service          func(childComplexity int) int
 		__resolve_entities          func(childComplexity int, representations []map[string]interface{}) int
+	}
+
+	StaffRole struct {
+		Anime     func(childComplexity int) int
+		Character func(childComplexity int) int
 	}
 
 	StreamingPlatform struct {
@@ -236,6 +244,9 @@ type AnimeResolver interface {
 
 	NextEpisode(ctx context.Context, obj *model.Anime) (*model.Episode, error)
 }
+type AnimeStaffResolver interface {
+	Roles(ctx context.Context, obj *model.AnimeStaff) ([]*model.StaffRole, error)
+}
 type ApiInfoResolver interface {
 	AnimeAPI(ctx context.Context, obj *model.APIInfo) (*model.AnimeAPI, error)
 }
@@ -261,6 +272,7 @@ type QueryResolver interface {
 	AnimeBySeasons(ctx context.Context, season string, limit *int) ([]*model.Anime, error)
 	AnimeBySeasonAndYear(ctx context.Context, seasonName string, year int, limit *int) ([]*model.Anime, error)
 	CharactersAndStaffByAnimeID(ctx context.Context, animeID string) ([]*model.CharacterWithStaff, error)
+	Staff(ctx context.Context, id string) (*model.AnimeStaff, error)
 }
 type UserAnimeResolver interface {
 	Anime(ctx context.Context, obj *model.UserAnime) (*model.Anime, error)
@@ -813,6 +825,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.AnimeStaff.Language(childComplexity), true
 
+	case "AnimeStaff.roles":
+		if e.complexity.AnimeStaff.Roles == nil {
+			break
+		}
+
+		return e.complexity.AnimeStaff.Roles(childComplexity), true
+
 	case "AnimeStaff.summary":
 		if e.complexity.AnimeStaff.Summary == nil {
 			break
@@ -1149,6 +1168,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.NewestAnime(childComplexity, args["limit"].(*int)), true
 
+	case "Query.staff":
+		if e.complexity.Query.Staff == nil {
+			break
+		}
+
+		args, err := ec.field_Query_staff_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Staff(childComplexity, args["id"].(string)), true
+
 	case "Query.topRatedAnime":
 		if e.complexity.Query.TopRatedAnime == nil {
 			break
@@ -1179,6 +1210,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.__resolve_entities(childComplexity, args["representations"].([]map[string]interface{})), true
+
+	case "StaffRole.anime":
+		if e.complexity.StaffRole.Anime == nil {
+			break
+		}
+
+		return e.complexity.StaffRole.Anime(childComplexity), true
+
+	case "StaffRole.character":
+		if e.complexity.StaffRole.Character == nil {
+			break
+		}
+
+		return e.complexity.StaffRole.Character(childComplexity), true
 
 	case "StreamingPlatform.name":
 		if e.complexity.StreamingPlatform.Name == nil {
@@ -1382,6 +1427,8 @@ type Query {
     animeBySeasonAndYear(seasonName: String!, year: Int!, limit: Int): [Anime!]
     "characters and staff by anime ID"
     charactersAndStaffByAnimeId(animeId: ID!): [CharacterWithStaff!]
+    "Get a staff member (voice actor) by ID. Null when no staff member has that id."
+    staff(id: ID!): AnimeStaff
 }
 `, BuiltIn: false},
 	{Name: "../types.graphqls", Input: `# Season is now a string scalar that can accept any season format
@@ -1694,6 +1741,30 @@ type AnimeStaff {
 
     "the characters associated with the staff member"
     characters: [AnimeCharacter!]
+
+    """
+    Every credited role for this staff member, across every anime. Ordered by
+    the anime's start date, newest first, with undated anime last.
+
+    anime_character rows are scoped to a single anime, so one person voicing the
+    same character across several seasons appears here once per season -- that
+    is a credit each, not a duplicate.
+    """
+    roles: [StaffRole!] @goField(forceResolver: true)
+}
+
+"""
+One credit: a character a staff member played, and the anime they played it in.
+"""
+type StaffRole {
+    "The character performed"
+    character: AnimeCharacter!
+
+    """
+    The anime the character belongs to. Null when the character outlived its
+    anime row -- character deletes are not cascaded from the anime side.
+    """
+    anime: Anime
 }
 
 type CharacterWithStaff {
@@ -2070,6 +2141,21 @@ func (ec *executionContext) field_Query_newestAnime_args(ctx context.Context, ra
 		}
 	}
 	args["limit"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_staff_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -4319,6 +4405,8 @@ func (ec *executionContext) fieldContext_AnimeCharacter_staff(ctx context.Contex
 				return ec.fieldContext_AnimeStaff_updatedAt(ctx, field)
 			case "characters":
 				return ec.fieldContext_AnimeStaff_characters(ctx, field)
+			case "roles":
+				return ec.fieldContext_AnimeStaff_roles(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type AnimeStaff", field.Name)
 		},
@@ -5534,6 +5622,53 @@ func (ec *executionContext) fieldContext_AnimeStaff_characters(ctx context.Conte
 	return fc, nil
 }
 
+func (ec *executionContext) _AnimeStaff_roles(ctx context.Context, field graphql.CollectedField, obj *model.AnimeStaff) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnimeStaff_roles(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.AnimeStaff().Roles(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.StaffRole)
+	fc.Result = res
+	return ec.marshalOStaffRole2ᚕᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐStaffRoleᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnimeStaff_roles(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnimeStaff",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "character":
+				return ec.fieldContext_StaffRole_character(ctx, field)
+			case "anime":
+				return ec.fieldContext_StaffRole_anime(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type StaffRole", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ApiInfo_animeApi(ctx context.Context, field graphql.CollectedField, obj *model.APIInfo) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ApiInfo_animeApi(ctx, field)
 	if err != nil {
@@ -5768,6 +5903,8 @@ func (ec *executionContext) fieldContext_CharacterWithStaff_staff(ctx context.Co
 				return ec.fieldContext_AnimeStaff_updatedAt(ctx, field)
 			case "characters":
 				return ec.fieldContext_AnimeStaff_characters(ctx, field)
+			case "roles":
+				return ec.fieldContext_AnimeStaff_roles(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type AnimeStaff", field.Name)
 		},
@@ -8098,6 +8235,88 @@ func (ec *executionContext) fieldContext_Query_charactersAndStaffByAnimeId(ctx c
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_staff(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_staff(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Staff(rctx, fc.Args["id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.AnimeStaff)
+	fc.Result = res
+	return ec.marshalOAnimeStaff2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnimeStaff(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_staff(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_AnimeStaff_id(ctx, field)
+			case "givenName":
+				return ec.fieldContext_AnimeStaff_givenName(ctx, field)
+			case "language":
+				return ec.fieldContext_AnimeStaff_language(ctx, field)
+			case "familyName":
+				return ec.fieldContext_AnimeStaff_familyName(ctx, field)
+			case "image":
+				return ec.fieldContext_AnimeStaff_image(ctx, field)
+			case "birthday":
+				return ec.fieldContext_AnimeStaff_birthday(ctx, field)
+			case "birthPlace":
+				return ec.fieldContext_AnimeStaff_birthPlace(ctx, field)
+			case "bloodType":
+				return ec.fieldContext_AnimeStaff_bloodType(ctx, field)
+			case "hobbies":
+				return ec.fieldContext_AnimeStaff_hobbies(ctx, field)
+			case "summary":
+				return ec.fieldContext_AnimeStaff_summary(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_AnimeStaff_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_AnimeStaff_updatedAt(ctx, field)
+			case "characters":
+				return ec.fieldContext_AnimeStaff_characters(ctx, field)
+			case "roles":
+				return ec.fieldContext_AnimeStaff_roles(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AnimeStaff", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_staff_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query__entities(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query__entities(ctx, field)
 	if err != nil {
@@ -8325,6 +8544,193 @@ func (ec *executionContext) fieldContext_Query___schema(ctx context.Context, fie
 				return ec.fieldContext___Schema_directives(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type __Schema", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _StaffRole_character(ctx context.Context, field graphql.CollectedField, obj *model.StaffRole) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_StaffRole_character(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Character, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.AnimeCharacter)
+	fc.Result = res
+	return ec.marshalNAnimeCharacter2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnimeCharacter(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_StaffRole_character(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "StaffRole",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_AnimeCharacter_id(ctx, field)
+			case "animeId":
+				return ec.fieldContext_AnimeCharacter_animeId(ctx, field)
+			case "name":
+				return ec.fieldContext_AnimeCharacter_name(ctx, field)
+			case "role":
+				return ec.fieldContext_AnimeCharacter_role(ctx, field)
+			case "birthday":
+				return ec.fieldContext_AnimeCharacter_birthday(ctx, field)
+			case "zodiac":
+				return ec.fieldContext_AnimeCharacter_zodiac(ctx, field)
+			case "gender":
+				return ec.fieldContext_AnimeCharacter_gender(ctx, field)
+			case "race":
+				return ec.fieldContext_AnimeCharacter_race(ctx, field)
+			case "height":
+				return ec.fieldContext_AnimeCharacter_height(ctx, field)
+			case "weight":
+				return ec.fieldContext_AnimeCharacter_weight(ctx, field)
+			case "title":
+				return ec.fieldContext_AnimeCharacter_title(ctx, field)
+			case "martialStatus":
+				return ec.fieldContext_AnimeCharacter_martialStatus(ctx, field)
+			case "summary":
+				return ec.fieldContext_AnimeCharacter_summary(ctx, field)
+			case "image":
+				return ec.fieldContext_AnimeCharacter_image(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_AnimeCharacter_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_AnimeCharacter_updatedAt(ctx, field)
+			case "staff":
+				return ec.fieldContext_AnimeCharacter_staff(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AnimeCharacter", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _StaffRole_anime(ctx context.Context, field graphql.CollectedField, obj *model.StaffRole) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_StaffRole_anime(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Anime, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Anime)
+	fc.Result = res
+	return ec.marshalOAnime2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_StaffRole_anime(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "StaffRole",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Anime_id(ctx, field)
+			case "anidbid":
+				return ec.fieldContext_Anime_anidbid(ctx, field)
+			case "thetvdbid":
+				return ec.fieldContext_Anime_thetvdbid(ctx, field)
+			case "slug":
+				return ec.fieldContext_Anime_slug(ctx, field)
+			case "titleEn":
+				return ec.fieldContext_Anime_titleEn(ctx, field)
+			case "titleJp":
+				return ec.fieldContext_Anime_titleJp(ctx, field)
+			case "titleRomaji":
+				return ec.fieldContext_Anime_titleRomaji(ctx, field)
+			case "titleKanji":
+				return ec.fieldContext_Anime_titleKanji(ctx, field)
+			case "titleSynonyms":
+				return ec.fieldContext_Anime_titleSynonyms(ctx, field)
+			case "description":
+				return ec.fieldContext_Anime_description(ctx, field)
+			case "imageUrl":
+				return ec.fieldContext_Anime_imageUrl(ctx, field)
+			case "tags":
+				return ec.fieldContext_Anime_tags(ctx, field)
+			case "studios":
+				return ec.fieldContext_Anime_studios(ctx, field)
+			case "animeStatus":
+				return ec.fieldContext_Anime_animeStatus(ctx, field)
+			case "episodeCount":
+				return ec.fieldContext_Anime_episodeCount(ctx, field)
+			case "episodes":
+				return ec.fieldContext_Anime_episodes(ctx, field)
+			case "duration":
+				return ec.fieldContext_Anime_duration(ctx, field)
+			case "rating":
+				return ec.fieldContext_Anime_rating(ctx, field)
+			case "startDate":
+				return ec.fieldContext_Anime_startDate(ctx, field)
+			case "endDate":
+				return ec.fieldContext_Anime_endDate(ctx, field)
+			case "broadcast":
+				return ec.fieldContext_Anime_broadcast(ctx, field)
+			case "source":
+				return ec.fieldContext_Anime_source(ctx, field)
+			case "licensors":
+				return ec.fieldContext_Anime_licensors(ctx, field)
+			case "ranking":
+				return ec.fieldContext_Anime_ranking(ctx, field)
+			case "malId":
+				return ec.fieldContext_Anime_malId(ctx, field)
+			case "scheduleInfo":
+				return ec.fieldContext_Anime_scheduleInfo(ctx, field)
+			case "streamingPlatforms":
+				return ec.fieldContext_Anime_streamingPlatforms(ctx, field)
+			case "fanart":
+				return ec.fieldContext_Anime_fanart(ctx, field)
+			case "seasons":
+				return ec.fieldContext_Anime_seasons(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Anime_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Anime_updatedAt(ctx, field)
+			case "nextEpisode":
+				return ec.fieldContext_Anime_nextEpisode(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Anime", field.Name)
 		},
 	}
 	return fc, nil
@@ -11171,19 +11577,19 @@ func (ec *executionContext) _AnimeStaff(ctx context.Context, sel ast.SelectionSe
 		case "id":
 			out.Values[i] = ec._AnimeStaff_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "givenName":
 			out.Values[i] = ec._AnimeStaff_givenName(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "language":
 			out.Values[i] = ec._AnimeStaff_language(ctx, field, obj)
 		case "familyName":
 			out.Values[i] = ec._AnimeStaff_familyName(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "image":
 			out.Values[i] = ec._AnimeStaff_image(ctx, field, obj)
@@ -11203,6 +11609,39 @@ func (ec *executionContext) _AnimeStaff(ctx context.Context, sel ast.SelectionSe
 			out.Values[i] = ec._AnimeStaff_updatedAt(ctx, field, obj)
 		case "characters":
 			out.Values[i] = ec._AnimeStaff_characters(ctx, field, obj)
+		case "roles":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._AnimeStaff_roles(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -11913,6 +12352,25 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "staff":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_staff(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "_entities":
 			field := field
 
@@ -11965,6 +12423,47 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___schema(ctx, field)
 			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var staffRoleImplementors = []string{"StaffRole"}
+
+func (ec *executionContext) _StaffRole(ctx context.Context, sel ast.SelectionSet, obj *model.StaffRole) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, staffRoleImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("StaffRole")
+		case "character":
+			out.Values[i] = ec._StaffRole_character(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "anime":
+			out.Values[i] = ec._StaffRole_anime(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -12669,6 +13168,16 @@ func (ec *executionContext) marshalNSeason2string(ctx context.Context, sel ast.S
 	return res
 }
 
+func (ec *executionContext) marshalNStaffRole2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐStaffRole(ctx context.Context, sel ast.SelectionSet, v *model.StaffRole) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._StaffRole(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNStreamingPlatform2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐStreamingPlatform(ctx context.Context, sel ast.SelectionSet, v *model.StreamingPlatform) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -13288,6 +13797,13 @@ func (ec *executionContext) marshalOAnimeStaff2ᚕᚖgithubᚗcomᚋweebᚑvip�
 	return ret
 }
 
+func (ec *executionContext) marshalOAnimeStaff2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnimeStaff(ctx context.Context, sel ast.SelectionSet, v *model.AnimeStaff) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._AnimeStaff(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -13531,6 +14047,53 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	}
 	res := graphql.MarshalInt(*v)
 	return res
+}
+
+func (ec *executionContext) marshalOStaffRole2ᚕᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐStaffRoleᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.StaffRole) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNStaffRole2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐStaffRole(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalOStreamingPlatform2ᚕᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐStreamingPlatformᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.StreamingPlatform) graphql.Marshaler {

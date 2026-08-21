@@ -78,6 +78,11 @@ func (r *queryResolver) CharactersAndStaffByAnimeID(ctx context.Context, animeID
 	return resolvers.CharactersAndStaffByAnimeID(ctx, r.AnimeCharacterWithStaffLinkService, animeID)
 }
 
+// Staff is the resolver for the staff field.
+func (r *queryResolver) Staff(ctx context.Context, id string) (*model.AnimeStaff, error) {
+	return resolvers.StaffByID(ctx, r.AnimeStaffService, id)
+}
+
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 

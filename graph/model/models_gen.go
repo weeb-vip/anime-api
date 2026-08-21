@@ -202,6 +202,13 @@ type AnimeStaff struct {
 	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
 	// the characters associated with the staff member
 	Characters []*AnimeCharacter `json:"characters,omitempty"`
+	// Every credited role for this staff member, across every anime. Ordered by
+	// the anime's start date, newest first, with undated anime last.
+	//
+	// anime_character rows are scoped to a single anime, so one person voicing the
+	// same character across several seasons appears here once per season -- that
+	// is a credit each, not a duplicate.
+	Roles []*StaffRole `json:"roles,omitempty"`
 }
 
 type APIInfo struct {
@@ -266,6 +273,15 @@ type Fanart struct {
 	ID        string  `json:"id"`
 	ImageURL  string  `json:"imageUrl"`
 	SourceURL *string `json:"sourceUrl,omitempty"`
+}
+
+// One credit: a character a staff member played, and the anime they played it in.
+type StaffRole struct {
+	// The character performed
+	Character *AnimeCharacter `json:"character"`
+	// The anime the character belongs to. Null when the character outlived its
+	// anime row -- character deletes are not cascaded from the anime side.
+	Anime *Anime `json:"anime,omitempty"`
 }
 
 // Streaming platform where an anime is available

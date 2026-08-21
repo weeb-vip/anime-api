@@ -22,6 +22,7 @@ func (AnimeCharacterWithStaff) TableName() string {
 
 type AnimeCharacterStaffLinkRepositoryImpl interface {
 	FindAnimeCharacterAndStaffByAnimeId(ctx context.Context, animeId string) ([]*AnimeCharacterWithStaff, error)
+	FindCharactersByStaffId(ctx context.Context, staffId string) ([]*anime_character.AnimeCharacter, error)
 }
 
 type AnimeCharacterStaffLinkRepository struct {
@@ -154,4 +155,51 @@ func (a *AnimeCharacterStaffLinkRepository) FindAnimeCharacterAndStaffByAnimeId(
 		Env:     metrics.GetCurrentEnv(),
 	})
 	return result, nil
+}
+
+
+// FindCharactersByStaffId returns every character this staff member is linked
+// to, across every anime.
+//
+// anime_staff is deduplicated on (given_name, family_name) by the scraper and
+// carries no anime_id, so one row is one real person and this join is the whole
+// of their credited work -- no cross-anime name matching needed.
+//
+// Ordered by the anime's start date, newest first. MySQL sorts NULL first on
+// ASC and last on DESC, so undated anime land at the end of the DESC ordering
+// on their own; the explicit IS NULL key keeps that true if the direction ever
+// changes.
+func (a *AnimeCharacterStaffLinkRepository) FindCharactersByStaffId(ctx context.Context, staffId string) ([]*anime_character.AnimeCharacter, error) {
+	startTime := time.Now()
+
+	var characters []*anime_character.AnimeCharacter
+
+	err := a.db.DB.WithContext(ctx).
+		Table("anime_character_staff_link").
+		Select("anime_character.*").
+		Joins("JOIN anime_character ON anime_character.id = anime_character_staff_link.character_id").
+		Joins("LEFT JOIN anime ON anime.id = anime_character.anime_id").
+		Where("anime_character_staff_link.staff_id = ?", staffId).
+		Order("anime.start_date IS NULL, anime.start_date DESC").
+		Find(&characters).Error
+
+	if err != nil {
+		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
+			Service: "anime-api",
+			Table:   "anime_character_staff_link",
+			Method:  metrics_lib.DatabaseMetricMethodSelect,
+			Result:  metrics_lib.Error,
+			Env:     metrics.GetCurrentEnv(),
+		})
+		return nil, err
+	}
+
+	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
+		Service: "anime-api",
+		Table:   "anime_character_staff_link",
+		Method:  metrics_lib.DatabaseMetricMethodSelect,
+		Result:  metrics_lib.Success,
+		Env:     metrics.GetCurrentEnv(),
+	})
+	return characters, nil
 }

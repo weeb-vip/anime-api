@@ -31,4 +31,6 @@ type Query {
     animeBySeasonAndYear(seasonName: String!, year: Int!, limit: Int): [Anime!]
     "characters and staff by anime ID"
     charactersAndStaffByAnimeId(animeId: ID!): [CharacterWithStaff!]
+    "Get a staff member (voice actor) by ID. Null when no staff member has that id."
+    staff(id: ID!): AnimeStaff
 }
