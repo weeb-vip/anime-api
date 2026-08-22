@@ -1,0 +1,177 @@
+name: Migrations
+
+# Verifies the Postgres migrations against a real Postgres before they are ever
+# pointed at RDS.
+#
+# This exists because the MySQL chain cannot do the same. Its trigger migrations
+# are bare CREATE TRIGGER ... BEGIN ... END with no DELIMITER, so any client that
+# splits on ';' dies partway through and a database cannot be built from the
+# migrations alone. That was only discovered by trying it. The point of this job
+# is that the Postgres chain never gets to be in that state unnoticed.
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'db/migrations/postgres/**'
+      - '.github/workflows/migrations.yaml'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'db/migrations/postgres/**'
+      - '.github/workflows/migrations.yaml'
+
+jobs:
+  postgres:
+    name: Postgres migrations
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        # Pinned to the RDS engine version. A migration that works on a newer
+        # Postgres and not on 16.4 is a failure we want here, not in an apply.
+        image: postgres:16.4
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: weeb_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DB_URL: postgres://postgres:postgres@localhost:5432/weeb_test?sslmode=disable
+      MIGRATIONS: db/migrations/postgres
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install golang-migrate
+        run: |
+          curl -sSfL https://github.com/golang-migrate/migrate/releases/download/v4.17.1/migrate.linux-amd64.tar.gz \
+            | tar xz -C /usr/local/bin migrate
+          migrate -version
+
+      - name: Migrate up
+        run: migrate -path "$MIGRATIONS" -database "$DB_URL" up
+
+      # A migration that applies is not the same as a migration that produced the
+      # schema it was supposed to. These assertions are the difference.
+      - name: Verify schema
+        run: |
+          psql "$DB_URL" -v ON_ERROR_STOP=1 <<'SQL'
+          DO $$
+          DECLARE
+            n int;
+          BEGIN
+            SELECT count(*) INTO n FROM information_schema.tables
+              WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+                AND table_name <> 'schema_migrations';
+            IF n <> 12 THEN
+              RAISE EXCEPTION 'expected 12 tables, found %', n;
+            END IF;
+
+            SELECT count(*) INTO n FROM information_schema.columns
+              WHERE table_schema = 'public' AND table_name <> 'schema_migrations';
+            IF n <> 135 THEN
+              RAISE EXCEPTION 'expected 135 columns, found %', n;
+            END IF;
+
+            -- Three episode-count triggers plus eight updated_at triggers.
+            SELECT count(*) INTO n FROM information_schema.triggers
+              WHERE trigger_schema = 'public';
+            IF n < 11 THEN
+              RAISE EXCEPTION 'expected at least 11 triggers, found %', n;
+            END IF;
+          END $$;
+          SQL
+
+      # The behaviour, not just the shape. Each of these replaces something MySQL
+      # did natively and Postgres does not, so each is a place the conversion
+      # could be silently wrong.
+      - name: Verify behaviour
+        run: |
+          psql "$DB_URL" -v ON_ERROR_STOP=1 <<'SQL'
+          -- Generated column: accents must fold, replacing a 70-branch REPLACE chain.
+          INSERT INTO anime_staff (id, given_name, family_name)
+            VALUES ('t1', 'José', 'Peña'), ('t2', 'Jürgen', 'Müller-Groß');
+          DO $$
+          BEGIN
+            IF (SELECT url_slug FROM anime_staff WHERE id='t1') <> 'jose-pena' THEN
+              RAISE EXCEPTION 'url_slug fold wrong for t1: %',
+                (SELECT url_slug FROM anime_staff WHERE id='t1');
+            END IF;
+            IF (SELECT url_slug FROM anime_staff WHERE id='t2') <> 'jurgen-muller-gross' THEN
+              RAISE EXCEPTION 'url_slug fold wrong for t2: %',
+                (SELECT url_slug FROM anime_staff WHERE id='t2');
+            END IF;
+          END $$;
+
+          -- Episode-count triggers, replacing three MySQL triggers.
+          INSERT INTO anime (id) VALUES ('ta');
+          INSERT INTO episodes (id, anime_id) VALUES ('te1','ta'),('te2','ta'),('te3','ta');
+          DO $$
+          BEGIN
+            IF (SELECT episodes FROM anime WHERE id='ta') <> 3 THEN
+              RAISE EXCEPTION 'episode count after insert: %',
+                (SELECT episodes FROM anime WHERE id='ta');
+            END IF;
+          END $$;
+          DELETE FROM episodes WHERE id='te3';
+          DO $$
+          BEGIN
+            IF (SELECT episodes FROM anime WHERE id='ta') <> 2 THEN
+              RAISE EXCEPTION 'episode count after delete: %',
+                (SELECT episodes FROM anime WHERE id='ta');
+            END IF;
+          END $$;
+
+          -- updated_at, replacing ON UPDATE CURRENT_TIMESTAMP, which Postgres has
+          -- no equivalent for. Failure here is silent in production: the column
+          -- simply stops advancing.
+          INSERT INTO tags (name) VALUES ('ci-check');
+          DO $$
+          DECLARE before_ts timestamptz;
+          BEGIN
+            SELECT updated_at INTO before_ts FROM tags WHERE name='ci-check';
+            PERFORM pg_sleep(0.01);
+            UPDATE tags SET name='ci-check' WHERE name='ci-check';
+            IF (SELECT updated_at FROM tags WHERE name='ci-check') <= before_ts THEN
+              RAISE EXCEPTION 'updated_at did not advance on UPDATE';
+            END IF;
+          END $$;
+
+          -- The unique index on tags.name is a constraint, not just a lookup path.
+          -- It was one of a redundant pair during conversion and is the one kept.
+          DO $$
+          BEGIN
+            BEGIN
+              INSERT INTO tags (name) VALUES ('ci-check');
+              RAISE EXCEPTION 'duplicate tag name was accepted';
+            EXCEPTION WHEN unique_violation THEN
+              NULL;
+            END;
+          END $$;
+          SQL
+
+      # Down migrations are usually written and never run. This is the only place
+      # they get executed, and re-running up afterwards proves down left the
+      # database in a state the chain can actually rebuild from.
+      - name: Migrate down, then up again
+        run: |
+          migrate -path "$MIGRATIONS" -database "$DB_URL" down -all
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -c "
+            DO \$\$
+            DECLARE n int;
+            BEGIN
+              SELECT count(*) INTO n FROM information_schema.tables
+                WHERE table_schema='public' AND table_type='BASE TABLE'
+                  AND table_name <> 'schema_migrations';
+              IF n <> 0 THEN
+                RAISE EXCEPTION 'down left % tables behind', n;
+              END IF;
+            END \$\$;"
+          migrate -path "$MIGRATIONS" -database "$DB_URL" up
