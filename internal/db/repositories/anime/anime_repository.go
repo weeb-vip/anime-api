@@ -771,7 +771,7 @@ func (a *AnimeRepository) AiringAnimeWithEpisodes(ctx context.Context, startDate
 		// Use the adjusted start date for end_date filtering to match our broader search
 		adjustedStartDate := startDate.AddDate(0, 0, -1)
 		query = query.Where("anime.id IN (?)", subquery).
-			Where("anime.end_date IS NULL OR anime.end_date >= ?", adjustedStartDate)
+			Where("anime.end_date IS NULL OR anime.end_date >= ?", endDateBound(adjustedStartDate))
 
 	} else if startDate != nil && days != nil {
 		// Subquery for days range
@@ -784,7 +784,7 @@ func (a *AnimeRepository) AiringAnimeWithEpisodes(ctx context.Context, startDate
 		// Use the adjusted start date for end_date filtering to match our broader search
 		adjustedStartDate := startDate.AddDate(0, 0, -1)
 		query = query.Where("anime.id IN (?)", subquery).
-			Where("anime.end_date IS NULL OR anime.end_date >= ?", adjustedStartDate)
+			Where("anime.end_date IS NULL OR anime.end_date >= ?", endDateBound(adjustedStartDate))
 
 	} else {
 		// Default case
@@ -1443,4 +1443,28 @@ func (a *AnimeRepository) FindBySeasonWithFieldSelection(ctx context.Context, se
 func startOfDayIn(t time.Time, loc *time.Location) time.Time {
 	y, m, d := t.In(loc).Date()
 	return time.Date(y, m, d, 0, 0, 0, 0, loc)
+}
+
+// endDateBound renders a time in the format anime.end_date is stored in.
+//
+// end_date is VARCHAR, not a timestamp: migration 000006 converted these columns
+// to strings and they have stayed that way. MySQL coerced a varchar to a date to
+// satisfy `end_date >= ?` and compared them as dates. Postgres refuses --
+//
+//	operator does not exist: character varying >= timestamp with time zone
+//
+// -- so the query errored and currentlyAiring returned nothing whenever a date
+// range was supplied. The no-argument path was unaffected, which is why the
+// failure looked like missing data rather than a broken query.
+//
+// Comparing as text is correct here rather than merely convenient: the stored
+// format is zero-padded and most-significant-first, so lexicographic order is
+// chronological order. Verified against production -- all 11,261 non-null values
+// match this layout exactly, with no empty strings and no other formats.
+//
+// Text comparison also keeps the existing index on end_date usable. Casting the
+// column to a timestamp instead would work but would discard the index, and
+// would fail outright on any row that is not parseable.
+func endDateBound(t time.Time) string {
+	return t.Format("2006-01-02 15:04:05")
 }
