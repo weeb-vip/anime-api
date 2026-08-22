@@ -114,7 +114,7 @@ func (r *animeResolver) Seasons(ctx context.Context, obj *model.Anime) ([]*model
 }
 
 // RelatedAnime is the resolver for the relatedAnime field.
-func (r *animeResolver) RelatedAnime(ctx context.Context, obj *model.Anime, limit *int) ([]*model.Anime, error) {
+func (r *animeResolver) RelatedAnime(ctx context.Context, obj *model.Anime, limit *int) ([]*model.RelatedAnime, error) {
 	return resolvers.RelatedAnimeBySeries(ctx, r.AnimeService, obj, limit)
 }
 

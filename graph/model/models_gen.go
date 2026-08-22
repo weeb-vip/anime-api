@@ -76,23 +76,19 @@ type Anime struct {
 	// so on. Exposed because it is what separates a main entry from a side story
 	// in relatedAnime, where a list of titles alone does not say which is which.
 	Type *string `json:"type,omitempty"`
-	// Other entries in the same series, oldest first, undated last.
+	// Anime connected to this one, oldest first, undated last.
 	//
-	// Derived from a shared TheTVDB series id rather than from any relation the
-	// sources state: TheTVDB gives one series id to a show and everything hanging
-	// off it, so the seasons, OVAs and specials of one franchise share it. That
-	// makes this an editorial grouping rather than an inference -- but also a
-	// plain grouping, so it says these belong together and deliberately does not
-	// claim which is a sequel and which is a side story. Read `type` and
-	// `startDate` for that.
+	// Each entry says how it is connected rather than leaving the caller to
+	// assume, because the kinds are not interchangeable: another entry in the
+	// same series is the same show, while a spin-off or an adaptation is a
+	// different one. Presenting both under a single heading would flatten that.
 	//
-	// Empty for the anime that have no TheTVDB id, which is most of the
-	// catalogue; callers should treat an empty list as "not known", not as
-	// "stands alone".
-	RelatedAnime []*Anime `json:"relatedAnime,omitempty"`
-	CreatedAt    string   `json:"createdAt"`
-	UpdatedAt    string   `json:"updatedAt"`
-	NextEpisode  *Episode `json:"nextEpisode,omitempty"`
+	// Empty for anime we know of no connection for, which is most of the
+	// catalogue; treat an empty list as "not known", not as "stands alone".
+	RelatedAnime []*RelatedAnime `json:"relatedAnime,omitempty"`
+	CreatedAt    string          `json:"createdAt"`
+	UpdatedAt    string          `json:"updatedAt"`
+	NextEpisode  *Episode        `json:"nextEpisode,omitempty"`
 }
 
 func (Anime) IsEntity() {}
@@ -297,6 +293,14 @@ type Fanart struct {
 	SourceURL *string `json:"sourceUrl,omitempty"`
 }
 
+// One anime connected to another, and how.
+type RelatedAnime struct {
+	// The connected anime
+	Anime *Anime `json:"anime"`
+	// How it is connected
+	Relation AnimeRelation `json:"relation"`
+}
+
 // One credit: a character a staff member played, and the anime they played it in.
 type StaffRole struct {
 	// The character performed
@@ -364,6 +368,63 @@ func (e *AirType) UnmarshalGQL(v interface{}) error {
 }
 
 func (e AirType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+// The ways two anime can be connected.
+//
+// Only kinds we can actually establish appear here. Two more are wanted and are
+// absent because the data does not support them yet:
+//
+// A shared source work. Most anime adapt something, and the manga or novel is
+// what ties the adaptations together -- Fruits Basket in 2001 and 2019, Hunter x
+// Hunter in 1999 and 2011, Fullmetal Alchemist and Brotherhood. Those share no
+// TheTVDB series id and frequently no cast, so nothing else finds them. We record
+// `source` as a category ("Manga", "Light novel") and not as an identity, so we
+// know an anime came from a manga but never which one; this needs the work itself
+// modelled and anime pointed at it.
+//
+// A shared creator, the thread joining Serial Experiments Lain and Haibane
+// Renmei. That needs staff credited against an anime by role, and anime_staff
+// holds voice actors with no role column and no direct link to an anime.
+type AnimeRelation string
+
+const (
+	// Another entry in the same series: a season, film, OVA or special sharing
+	// its TheTVDB series id. The same show, not a different one.
+	AnimeRelationSameSeries AnimeRelation = "SAME_SERIES"
+)
+
+var AllAnimeRelation = []AnimeRelation{
+	AnimeRelationSameSeries,
+}
+
+func (e AnimeRelation) IsValid() bool {
+	switch e {
+	case AnimeRelationSameSeries:
+		return true
+	}
+	return false
+}
+
+func (e AnimeRelation) String() string {
+	return string(e)
+}
+
+func (e *AnimeRelation) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = AnimeRelation(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid AnimeRelation", str)
+	}
+	return nil
+}
+
+func (e AnimeRelation) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
