@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS `anime_character`;
+DROP TABLE IF EXISTS anime_character;

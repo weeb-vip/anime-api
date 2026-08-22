@@ -1,8 +1,8 @@
 -- Rollback rating column conversion from DECIMAL to TEXT
 
 -- Step 1: Drop the indexes
-DROP INDEX IF EXISTS idx_anime_rating_id ON anime;
-DROP INDEX IF EXISTS idx_anime_rating_desc ON anime;
+DROP INDEX IF EXISTS idx_anime_rating_id;
+DROP INDEX IF EXISTS idx_anime_rating_desc;
 
 -- Step 2: Add temporary TEXT column
 ALTER TABLE anime ADD COLUMN rating_temp TEXT DEFAULT NULL;
@@ -18,4 +18,6 @@ END;
 ALTER TABLE anime DROP COLUMN rating;
 
 -- Step 5: Rename temporary column back to rating
-ALTER TABLE anime CHANGE COLUMN rating_temp rating TEXT DEFAULT NULL;
+ALTER TABLE anime RENAME COLUMN rating_temp TO rating;
+ALTER TABLE anime ALTER COLUMN rating TYPE TEXT;
+ALTER TABLE anime ALTER COLUMN rating DROP DEFAULT;

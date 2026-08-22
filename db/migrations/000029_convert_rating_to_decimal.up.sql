@@ -10,17 +10,17 @@ SET rating_temp = CASE
     WHEN rating IS NULL OR rating = '' OR rating = 'N/A' OR rating = 'Unknown' THEN NULL
 
     -- Handle numeric ratings (most common case: "8.5", "9.2", etc.)
-    WHEN rating REGEXP '^[0-9]+\\.?[0-9]*$' THEN
+    WHEN rating ~ '^[0-9]+\\.?[0-9]*$' THEN
         CASE
-            WHEN CAST(rating AS DECIMAL(3,1)) BETWEEN 0.0 AND 10.0 THEN CAST(rating AS DECIMAL(3,1))
+            WHEN CAST(rating AS numeric(3,1)) BETWEEN 0.0 AND 10.0 THEN CAST(rating AS numeric(3,1))
             ELSE NULL
         END
 
     -- Handle ratings with extra text (e.g., "8.5/10", "9.2 stars")
-    WHEN rating REGEXP '^([0-9]+\\.?[0-9]*)' THEN
+    WHEN rating ~ '^([0-9]+\\.?[0-9]*)' THEN
         CASE
-            WHEN CAST(SUBSTRING_INDEX(rating, '/', 1) AS DECIMAL(3,1)) BETWEEN 0.0 AND 10.0
-            THEN CAST(SUBSTRING_INDEX(rating, '/', 1) AS DECIMAL(3,1))
+            WHEN CAST(split_part(rating, '/', 1) AS numeric(3,1)) BETWEEN 0.0 AND 10.0
+            THEN CAST(split_part(rating, '/', 1) AS numeric(3,1))
             ELSE NULL
         END
 
@@ -32,7 +32,9 @@ END;
 ALTER TABLE anime DROP COLUMN rating;
 
 -- Step 4: Rename the temporary column to rating
-ALTER TABLE anime CHANGE COLUMN rating_temp rating DECIMAL(3,1) DEFAULT NULL;
+ALTER TABLE anime RENAME COLUMN rating_temp TO rating;
+ALTER TABLE anime ALTER COLUMN rating TYPE numeric(3,1);
+ALTER TABLE anime ALTER COLUMN rating DROP DEFAULT;
 
 -- Step 5: Create optimized index for rating queries
 CREATE INDEX idx_anime_rating_desc ON anime (rating DESC);

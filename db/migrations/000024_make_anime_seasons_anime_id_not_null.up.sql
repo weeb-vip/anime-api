@@ -1,1 +1,2 @@
-ALTER TABLE anime_seasons MODIFY COLUMN anime_id VARCHAR(36) NOT NULL;
+ALTER TABLE anime_seasons ALTER COLUMN anime_id TYPE VARCHAR(36);
+ALTER TABLE anime_seasons ALTER COLUMN anime_id SET NOT NULL;

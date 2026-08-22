@@ -1,12 +1,4 @@
+-- Attaches the DELETE event to the function 000026 defines.
 CREATE TRIGGER update_anime_episode_count_after_delete
-AFTER DELETE ON episodes
-FOR EACH ROW
-BEGIN
-    UPDATE anime
-    SET episodes = (
-        SELECT COUNT(*)
-        FROM episodes
-        WHERE anime_id = OLD.anime_id
-    )
-    WHERE id = OLD.anime_id;
-END;
+  AFTER DELETE ON episodes
+  FOR EACH ROW EXECUTE FUNCTION update_anime_episode_count();

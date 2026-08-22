@@ -1,3 +1,2 @@
-ALTER TABLE anime
-    DROP INDEX idx_anime_mal_id,
-    DROP COLUMN mal_id;
+DROP INDEX IF EXISTS idx_anime_mal_id;
+ALTER TABLE anime DROP COLUMN mal_id;

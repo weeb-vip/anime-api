@@ -2,9 +2,9 @@
 ALTER TABLE anime ADD COLUMN season VARCHAR(50) NULL;
 
 -- Drop indexes
-ALTER TABLE anime_seasons DROP INDEX IDX_anime_id;
-ALTER TABLE anime_seasons DROP INDEX IDX_status;
-ALTER TABLE anime_seasons DROP INDEX IDX_season;
+DROP INDEX IF EXISTS idx_anime_seasons_anime_id;
+DROP INDEX IF EXISTS IDX_status;
+DROP INDEX IF EXISTS IDX_season;
 
 -- Drop anime_seasons table
 DROP TABLE IF EXISTS anime_seasons;

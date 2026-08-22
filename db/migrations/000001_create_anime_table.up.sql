@@ -20,6 +20,6 @@ CREATE TABLE anime
     licensors      text,
     studios        text,
     rating         text,
-    created_at     timestamp,
-    updated_at     timestamp
+    created_at     timestamptz,
+    updated_at     timestamptz
 );

@@ -5,8 +5,8 @@ CREATE TABLE episodes
     episode    int,
     title_en   text,
     title_jp   text,
-    aired      timestamp,
+    aired      timestamptz,
     synopsis   text,
-    created_at timestamp,
-    updated_at timestamp
+    created_at timestamptz,
+    updated_at timestamptz
 );

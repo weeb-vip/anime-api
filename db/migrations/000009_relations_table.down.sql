@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS `anime_relations`;
+DROP TABLE IF EXISTS anime_relations;

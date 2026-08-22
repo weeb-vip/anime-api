@@ -1,1 +1,1 @@
-DROP TRIGGER IF EXISTS update_anime_episode_count_after_update;
+DROP TRIGGER IF EXISTS update_anime_episode_count_after_update ON episodes;

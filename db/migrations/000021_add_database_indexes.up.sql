@@ -1,81 +1,59 @@
--- Add database indexes for improved query performance
+-- Add database indexes for improved query performance.
+--
+-- MySQL had no CREATE INDEX IF NOT EXISTS, so this migration defined a stored
+-- procedure to emulate it and called it once per index. Postgres has the real
+-- thing, so the procedure and its 30 CALLs collapse to 30 plain statements.
+--
+-- Prefix lengths are gone too: MySQL required (status(50)) to index a TEXT
+-- column at all. Postgres indexes text directly, so the truncation those
+-- lengths imposed -- and the partial matches it caused -- simply do not apply.
 
--- Drop procedure if it exists first, then create it
-DROP PROCEDURE IF EXISTS CreateIndexIfNotExists;
+CREATE INDEX IF NOT EXISTS idx_anime_status ON anime (status);
+CREATE INDEX IF NOT EXISTS idx_anime_rating ON anime (rating);
+CREATE INDEX IF NOT EXISTS idx_anime_ranking ON anime (ranking);
+CREATE INDEX IF NOT EXISTS idx_anime_created_at ON anime (created_at);
+CREATE INDEX IF NOT EXISTS idx_anime_type ON anime (type);
+CREATE INDEX IF NOT EXISTS idx_anime_source ON anime (source);
+CREATE INDEX IF NOT EXISTS idx_anime_start_date ON anime (start_date);
+CREATE INDEX IF NOT EXISTS idx_anime_end_date ON anime (end_date);
+CREATE INDEX IF NOT EXISTS idx_anime_anidbid ON anime (anidbid);
+CREATE INDEX IF NOT EXISTS idx_anime_thetvdbid ON anime (thetvdbid);
 
--- Helper procedure to safely create indexes
-DELIMITER //
-CREATE PROCEDURE CreateIndexIfNotExists(
-    IN indexName VARCHAR(255),
-    IN tableName VARCHAR(255), 
-    IN columnDef VARCHAR(255)
-)
+CREATE INDEX IF NOT EXISTS idx_anime_title_en ON anime (title_en);
+CREATE INDEX IF NOT EXISTS idx_anime_title_jp ON anime (title_jp);
+CREATE INDEX IF NOT EXISTS idx_anime_title_romaji ON anime (title_romaji);
+CREATE INDEX IF NOT EXISTS idx_anime_title_kanji ON anime (title_kanji);
+
+CREATE INDEX IF NOT EXISTS idx_episodes_anime_id ON episodes (anime_id);
+CREATE INDEX IF NOT EXISTS idx_episodes_aired ON episodes (aired);
+CREATE INDEX IF NOT EXISTS idx_episodes_episode_number ON episodes (episode);
+CREATE INDEX IF NOT EXISTS idx_episodes_created_at ON episodes (created_at);
+CREATE INDEX IF NOT EXISTS idx_episodes_anime_aired ON episodes (anime_id, aired);
+
+CREATE INDEX IF NOT EXISTS idx_anime_character_anime_id ON anime_character (anime_id);
+CREATE INDEX IF NOT EXISTS idx_anime_character_name ON anime_character (name);
+CREATE INDEX IF NOT EXISTS idx_anime_character_role ON anime_character (role);
+
+CREATE INDEX IF NOT EXISTS idx_anime_staff_given_name ON anime_staff (given_name);
+CREATE INDEX IF NOT EXISTS idx_anime_staff_family_name ON anime_staff (family_name);
+CREATE INDEX IF NOT EXISTS idx_anime_staff_language ON anime_staff (language);
+
+CREATE INDEX IF NOT EXISTS idx_character_staff_character_id ON anime_character_staff_link (character_id);
+CREATE INDEX IF NOT EXISTS idx_character_staff_staff_id ON anime_character_staff_link (staff_id);
+
+CREATE INDEX IF NOT EXISTS idx_anime_seasons_episode_count ON anime_seasons (episode_count);
+CREATE INDEX IF NOT EXISTS idx_anime_seasons_created_at ON anime_seasons (created_at);
+
+-- The original targeted a table called "relations", which does not exist -- the
+-- table 000009 creates is anime_relations. Its own comment hedges with "(if
+-- exists)", so the intent was conditional; that intent is expressed here rather
+-- than the typo reproduced. Guarded because a bare CREATE INDEX on a missing
+-- table is a hard error in Postgres, where MySQL's dynamic SQL only failed at
+-- CALL time.
+DO $$
 BEGIN
-    DECLARE index_exists INT DEFAULT 0;
-    
-    SELECT COUNT(*) INTO index_exists
-    FROM information_schema.statistics 
-    WHERE table_schema = DATABASE() 
-    AND table_name = tableName 
-    AND index_name = indexName;
-    
-    IF index_exists = 0 THEN
-        SET @sql = CONCAT('CREATE INDEX ', indexName, ' ON ', tableName, ' ', columnDef);
-        PREPARE stmt FROM @sql;
-        EXECUTE stmt;
-        DEALLOCATE PREPARE stmt;
-    END IF;
-END//
-DELIMITER ;
-
--- Anime table indexes (TEXT columns need key length specification)
-CALL CreateIndexIfNotExists('idx_anime_status', 'anime', '(status(50))');
-CALL CreateIndexIfNotExists('idx_anime_rating', 'anime', '(rating(20))');
-CALL CreateIndexIfNotExists('idx_anime_ranking', 'anime', '(ranking)');
-CALL CreateIndexIfNotExists('idx_anime_created_at', 'anime', '(created_at)');
-CALL CreateIndexIfNotExists('idx_anime_type', 'anime', '(type)');
-CALL CreateIndexIfNotExists('idx_anime_source', 'anime', '(source(100))');
-CALL CreateIndexIfNotExists('idx_anime_start_date', 'anime', '(start_date)');
-CALL CreateIndexIfNotExists('idx_anime_end_date', 'anime', '(end_date)');
-CALL CreateIndexIfNotExists('idx_anime_anidbid', 'anime', '(anidbid)');
-CALL CreateIndexIfNotExists('idx_anime_thetvdbid', 'anime', '(thetvdbid)');
-
--- Full-text search indexes for title fields
-CALL CreateIndexIfNotExists('idx_anime_title_en', 'anime', '(title_en(255))');
-CALL CreateIndexIfNotExists('idx_anime_title_jp', 'anime', '(title_jp(255))');
-CALL CreateIndexIfNotExists('idx_anime_title_romaji', 'anime', '(title_romaji(255))');
-CALL CreateIndexIfNotExists('idx_anime_title_kanji', 'anime', '(title_kanji(255))');
-
--- Episodes table indexes
-CALL CreateIndexIfNotExists('idx_episodes_anime_id', 'episodes', '(anime_id)');
-CALL CreateIndexIfNotExists('idx_episodes_aired', 'episodes', '(aired)');
-CALL CreateIndexIfNotExists('idx_episodes_episode_number', 'episodes', '(episode)');
-CALL CreateIndexIfNotExists('idx_episodes_created_at', 'episodes', '(created_at)');
-
--- Composite index for episodes by anime and air date
-CALL CreateIndexIfNotExists('idx_episodes_anime_aired', 'episodes', '(anime_id, aired)');
-
--- Anime characters table indexes
-CALL CreateIndexIfNotExists('idx_anime_character_anime_id', 'anime_character', '(anime_id)');
-CALL CreateIndexIfNotExists('idx_anime_character_name', 'anime_character', '(name)');
-CALL CreateIndexIfNotExists('idx_anime_character_role', 'anime_character', '(role)');
-
--- Anime staff table indexes
-CALL CreateIndexIfNotExists('idx_anime_staff_given_name', 'anime_staff', '(given_name)');
-CALL CreateIndexIfNotExists('idx_anime_staff_family_name', 'anime_staff', '(family_name)');
-CALL CreateIndexIfNotExists('idx_anime_staff_language', 'anime_staff', '(language)');
-
--- Anime character staff link table indexes (if exists)
-CALL CreateIndexIfNotExists('idx_character_staff_character_id', 'anime_character_staff_link', '(character_id)');
-CALL CreateIndexIfNotExists('idx_character_staff_staff_id', 'anime_character_staff_link', '(staff_id)');
-
--- Anime seasons table indexes (already has some indexes but adding missing ones)
-CALL CreateIndexIfNotExists('idx_anime_seasons_episode_count', 'anime_seasons', '(episode_count)');
-CALL CreateIndexIfNotExists('idx_anime_seasons_created_at', 'anime_seasons', '(created_at)');
-
--- Relations table indexes (if exists)
-CALL CreateIndexIfNotExists('idx_relations_anime_id', 'relations', '(anime_id)');
-CALL CreateIndexIfNotExists('idx_relations_related_anime_id', 'relations', '(related_anime_id)');
-
--- Drop the helper procedure
-DROP PROCEDURE CreateIndexIfNotExists;
+  IF to_regclass('public.anime_relations') IS NOT NULL THEN
+    CREATE INDEX IF NOT EXISTS idx_relations_anime_id ON anime_relations (anime_id);
+    CREATE INDEX IF NOT EXISTS idx_relations_related_anime_id ON anime_relations (related_anime_id);
+  END IF;
+END $$;

@@ -3,5 +3,5 @@ CREATE TABLE anime_relations (
                                  anime_id VARCHAR(36) NOT NULL,
                                  related_anime_id VARCHAR(36) NOT NULL,
                                  relation_type VARCHAR(30),                         -- e.g., 'sequel', 'prequel', etc.
-                                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                                 created_at timestamptz DEFAULT CURRENT_TIMESTAMP
 );

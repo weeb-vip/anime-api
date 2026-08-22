@@ -1,3 +1,3 @@
 ALTER TABLE anime
-    ADD COLUMN mal_id INT NULL AFTER anidbid,
-    ADD INDEX idx_anime_mal_id (mal_id);
+    ADD COLUMN mal_id INT NULL;
+CREATE INDEX IF NOT EXISTS idx_anime_mal_id ON anime (mal_id);

@@ -13,12 +13,12 @@ on:
   push:
     branches: [ "main" ]
     paths:
-      - 'db/migrations/postgres/**'
+      - 'db/migrations/**'
       - '.github/workflows/migrations.yaml'
   pull_request:
     branches: [ "main" ]
     paths:
-      - 'db/migrations/postgres/**'
+      - 'db/migrations/**'
       - '.github/workflows/migrations.yaml'
 
 jobs:
@@ -44,7 +44,7 @@ jobs:
 
     env:
       DB_URL: postgres://postgres:postgres@localhost:5432/weeb_test?sslmode=disable
-      MIGRATIONS: db/migrations/postgres
+      MIGRATIONS: db/migrations
 
     steps:
       - uses: actions/checkout@v4
@@ -74,14 +74,14 @@ jobs:
             SELECT count(*) INTO n FROM information_schema.tables
               WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
                 AND table_name <> 'schema_migrations';
-            IF n <> 11 THEN
-              RAISE EXCEPTION 'expected 11 tables, found %', n;
+            IF n <> 12 THEN
+              RAISE EXCEPTION 'expected 12 tables, found %', n;
             END IF;
 
             SELECT count(*) INTO n FROM information_schema.columns
               WHERE table_schema = 'public' AND table_name <> 'schema_migrations';
-            IF n <> 130 THEN
-              RAISE EXCEPTION 'expected 130 columns, found %', n;
+            IF n <> 135 THEN
+              RAISE EXCEPTION 'expected 135 columns, found %', n;
             END IF;
 
             -- Three episode-count triggers plus eight updated_at triggers.

@@ -5,7 +5,7 @@
 CREATE INDEX idx_anime_ranking_id ON anime (ranking ASC, id);
 
 -- Composite index for NewestAnime: ORDER BY created_at desc, id
--- Newer anime first (most recent created_at first)
+-- Newer anime (most recent created_at first)
 CREATE INDEX idx_anime_created_at_id ON anime (created_at DESC, id);
 
 -- Note: Rating composite index (idx_anime_rating_id) is already created in migration 000029

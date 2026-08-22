@@ -12,7 +12,7 @@
 --
 -- That is not hypothetical. A slug freed by deleting one anime can be reused by
 -- another, and the two rows are different Kafka keys and so different
--- partitions -- nothing orders the new row's insert after the old row's delete.
+-- partitions -- nothing orders the new row's insert old row's delete.
 -- Under a unique index that ordering lands as a duplicate-key error inside
 -- anime-sync, which stalls the consumer. A plain index serves animeBySlug
 -- lookups just as well without turning a transient ordering quirk into an
