@@ -1,6 +1,8 @@
 package metrics
 
 import (
+	"time"
+
 	"github.com/weeb-vip/anime-api/config"
 	metricsLib "github.com/weeb-vip/go-metrics-lib"
 )
@@ -44,6 +46,22 @@ func (m *AppMetrics) ResolverMetric(duration float64, resolver string, result st
 		Env:      m.defaultTags["env"],
 	}
 	m.metricsImpl.ResolverMetric(duration, labels)
+}
+
+// DatabaseSince records a database operation that began at start.
+//
+// Every repository method used to spell this out as a ten-line
+// DatabaseMetricLabels literal, twice -- once on the error path and once on
+// success. There were 77 such copies, identical but for the table name, and
+// Sonar measured the duplication they produce at 44% of new code across three
+// consecutive pull requests.
+//
+// The labels are the same ones those literals built by hand: Service and Env
+// come from config here rather than from a hardcoded string and
+// GetCurrentEnv(), which read the same config values, so the emitted series are
+// unchanged.
+func (m *AppMetrics) DatabaseSince(start time.Time, table string, method string, result string) {
+	m.DatabaseMetric(float64(time.Since(start).Milliseconds()), table, method, result)
 }
 
 // DatabaseMetric records database operation metrics

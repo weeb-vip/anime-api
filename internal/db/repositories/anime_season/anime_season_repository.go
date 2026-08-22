@@ -2,7 +2,6 @@ package anime_season
 
 import (
 	"context"
-	metrics_lib "github.com/weeb-vip/go-metrics-lib"
 	"github.com/weeb-vip/anime-api/internal/db"
 	"github.com/weeb-vip/anime-api/metrics"
 	"time"
@@ -30,23 +29,11 @@ func (r *AnimeSeasonRepository) FindByAnimeID(ctx context.Context, animeID strin
 	var animeSeasons []*AnimeSeason
 	err := r.db.DB.Where("anime_id = ?", animeID).Find(&animeSeasons).Error
 	if err != nil {
-		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-			Service: "anime-api",
-			Table:   "anime_seasons",
-			Method:  metrics_lib.DatabaseMetricMethodSelect,
-			Result:  metrics_lib.Error,
-			Env:     metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().DatabaseSince(startTime, "anime_seasons", metrics.MethodSelect, metrics.Error)
 		return nil, err
 	}
 
-	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-		Service: "anime-api",
-		Table:   "anime_seasons",
-		Method:  metrics_lib.DatabaseMetricMethodSelect,
-		Result:  metrics_lib.Success,
-		Env:     metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().DatabaseSince(startTime, "anime_seasons", metrics.MethodSelect, metrics.Success)
 	return animeSeasons, nil
 }
 
@@ -56,23 +43,11 @@ func (r *AnimeSeasonRepository) FindBySeason(ctx context.Context, season string)
 	var animeSeasons []*AnimeSeason
 	err := r.db.DB.Where("season = ?", season).Find(&animeSeasons).Error
 	if err != nil {
-		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-			Service: "anime-api",
-			Table:   "anime_seasons",
-			Method:  metrics_lib.DatabaseMetricMethodSelect,
-			Result:  metrics_lib.Error,
-			Env:     metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().DatabaseSince(startTime, "anime_seasons", metrics.MethodSelect, metrics.Error)
 		return nil, err
 	}
 
-	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-		Service: "anime-api",
-		Table:   "anime_seasons",
-		Method:  metrics_lib.DatabaseMetricMethodSelect,
-		Result:  metrics_lib.Success,
-		Env:     metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().DatabaseSince(startTime, "anime_seasons", metrics.MethodSelect, metrics.Success)
 	return animeSeasons, nil
 }
 
@@ -81,23 +56,11 @@ func (r *AnimeSeasonRepository) Create(ctx context.Context, animeSeason *AnimeSe
 
 	err := r.db.DB.Create(animeSeason).Error
 	if err != nil {
-		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-			Service: "anime-api",
-			Table:   "anime_seasons",
-			Method:  metrics_lib.DatabaseMetricMethodInsert,
-			Result:  metrics_lib.Error,
-			Env:     metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().DatabaseSince(startTime, "anime_seasons", metrics.MethodInsert, metrics.Error)
 		return err
 	}
 
-	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-		Service: "anime-api",
-		Table:   "anime_seasons",
-		Method:  metrics_lib.DatabaseMetricMethodInsert,
-		Result:  metrics_lib.Success,
-		Env:     metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().DatabaseSince(startTime, "anime_seasons", metrics.MethodInsert, metrics.Success)
 	return nil
 }
 
@@ -106,23 +69,11 @@ func (r *AnimeSeasonRepository) Update(ctx context.Context, animeSeason *AnimeSe
 
 	err := r.db.DB.Save(animeSeason).Error
 	if err != nil {
-		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-			Service: "anime-api",
-			Table:   "anime_seasons",
-			Method:  metrics_lib.DatabaseMetricMethodUpdate,
-			Result:  metrics_lib.Error,
-			Env:     metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().DatabaseSince(startTime, "anime_seasons", metrics.MethodUpdate, metrics.Error)
 		return err
 	}
 
-	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-		Service: "anime-api",
-		Table:   "anime_seasons",
-		Method:  metrics_lib.DatabaseMetricMethodUpdate,
-		Result:  metrics_lib.Success,
-		Env:     metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().DatabaseSince(startTime, "anime_seasons", metrics.MethodUpdate, metrics.Success)
 	return nil
 }
 
@@ -131,22 +82,10 @@ func (r *AnimeSeasonRepository) Delete(ctx context.Context, id string) error {
 
 	err := r.db.DB.Delete(&AnimeSeason{}, "id = ?", id).Error
 	if err != nil {
-		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-			Service: "anime-api",
-			Table:   "anime_seasons",
-			Method:  metrics_lib.DatabaseMetricMethodDelete,
-			Result:  metrics_lib.Error,
-			Env:     metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().DatabaseSince(startTime, "anime_seasons", metrics.MethodDelete, metrics.Error)
 		return err
 	}
 
-	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-		Service: "anime-api",
-		Table:   "anime_seasons",
-		Method:  metrics_lib.DatabaseMetricMethodDelete,
-		Result:  metrics_lib.Success,
-		Env:     metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().DatabaseSince(startTime, "anime_seasons", metrics.MethodDelete, metrics.Success)
 	return nil
 }

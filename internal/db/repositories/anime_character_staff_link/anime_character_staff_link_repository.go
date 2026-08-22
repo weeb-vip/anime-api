@@ -7,7 +7,6 @@ import (
 	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_character"
 	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_staff"
 	"github.com/weeb-vip/anime-api/metrics"
-	metrics_lib "github.com/weeb-vip/go-metrics-lib"
 )
 
 type AnimeCharacterWithStaff struct {
@@ -97,13 +96,7 @@ func (a *AnimeCharacterStaffLinkRepository) FindAnimeCharacterAndStaffByAnimeId(
 		Scan(&rows).Error
 
 	if err != nil {
-		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-			Service: "anime-api",
-			Table:   "anime_character_staff_link",
-			Method:  metrics_lib.DatabaseMetricMethodSelect,
-			Result:  metrics_lib.Error,
-			Env:     metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().DatabaseSince(startTime, "anime_character_staff_link", metrics.MethodSelect, metrics.Error)
 		return nil, err
 	}
 
@@ -150,13 +143,7 @@ func (a *AnimeCharacterStaffLinkRepository) FindAnimeCharacterAndStaffByAnimeId(
 		result = append(result, char)
 	}
 
-	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-		Service: "anime-api",
-		Table:   "anime_character_staff_link",
-		Method:  metrics_lib.DatabaseMetricMethodSelect,
-		Result:  metrics_lib.Success,
-		Env:     metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().DatabaseSince(startTime, "anime_character_staff_link", metrics.MethodSelect, metrics.Success)
 	return result, nil
 }
 
@@ -187,22 +174,10 @@ func (a *AnimeCharacterStaffLinkRepository) FindCharactersByStaffId(ctx context.
 		Find(&characters).Error
 
 	if err != nil {
-		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-			Service: "anime-api",
-			Table:   "anime_character_staff_link",
-			Method:  metrics_lib.DatabaseMetricMethodSelect,
-			Result:  metrics_lib.Error,
-			Env:     metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().DatabaseSince(startTime, "anime_character_staff_link", metrics.MethodSelect, metrics.Error)
 		return nil, err
 	}
 
-	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-		Service: "anime-api",
-		Table:   "anime_character_staff_link",
-		Method:  metrics_lib.DatabaseMetricMethodSelect,
-		Result:  metrics_lib.Success,
-		Env:     metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().DatabaseSince(startTime, "anime_character_staff_link", metrics.MethodSelect, metrics.Success)
 	return characters, nil
 }

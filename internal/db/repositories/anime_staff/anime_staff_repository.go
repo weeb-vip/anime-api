@@ -6,7 +6,6 @@ import (
 
 	"github.com/weeb-vip/anime-api/internal/db"
 	"github.com/weeb-vip/anime-api/metrics"
-	metrics_lib "github.com/weeb-vip/go-metrics-lib"
 )
 
 type AnimeStaffRepositoryImpl interface {
@@ -28,23 +27,11 @@ func (a *AnimeStaffRepository) FindStaffByID(ctx context.Context, id string) (*A
 	var staff AnimeStaff
 	err := a.db.DB.WithContext(ctx).Where("id = ?", id).First(&staff).Error
 	if err != nil {
-		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-			Service: "anime-api",
-			Table:   "anime_staff",
-			Method:  metrics_lib.DatabaseMetricMethodSelect,
-			Result:  metrics_lib.Error,
-			Env:     metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().DatabaseSince(startTime, "anime_staff", metrics.MethodSelect, metrics.Error)
 		return nil, err
 	}
 
-	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-		Service: "anime-api",
-		Table:   "anime_staff",
-		Method:  metrics_lib.DatabaseMetricMethodSelect,
-		Result:  metrics_lib.Success,
-		Env:     metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().DatabaseSince(startTime, "anime_staff", metrics.MethodSelect, metrics.Success)
 	return &staff, nil
 }
 
@@ -66,22 +53,10 @@ func (a *AnimeStaffRepository) FindStaffBySlug(ctx context.Context, slug string)
 	var staff AnimeStaff
 	err := a.db.DB.WithContext(ctx).Where("url_slug = ?", slug).First(&staff).Error
 	if err != nil {
-		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-			Service: "anime-api",
-			Table:   "anime_staff",
-			Method:  metrics_lib.DatabaseMetricMethodSelect,
-			Result:  metrics_lib.Error,
-			Env:     metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().DatabaseSince(startTime, "anime_staff", metrics.MethodSelect, metrics.Error)
 		return nil, err
 	}
 
-	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-		Service: "anime-api",
-		Table:   "anime_staff",
-		Method:  metrics_lib.DatabaseMetricMethodSelect,
-		Result:  metrics_lib.Success,
-		Env:     metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().DatabaseSince(startTime, "anime_staff", metrics.MethodSelect, metrics.Success)
 	return &staff, nil
 }

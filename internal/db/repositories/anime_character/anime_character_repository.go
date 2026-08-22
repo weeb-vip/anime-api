@@ -5,7 +5,6 @@ import (
 	"time"
 	"github.com/weeb-vip/anime-api/internal/db"
 	"github.com/weeb-vip/anime-api/metrics"
-	metrics_lib "github.com/weeb-vip/go-metrics-lib"
 )
 
 type AnimeCharacterRepositoryImpl interface {
@@ -26,22 +25,10 @@ func (a *AnimeCharacterRepository) FindAnimearacterById(ctx context.Context, id 
 	var animeCharacter AnimeCharacter
 	err := a.db.DB.WithContext(ctx).Where("id = ?", id).First(&animeCharacter).Error
 	if err != nil {
-		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-			Service: "anime-api",
-			Table:   "anime_characters",
-			Method:  metrics_lib.DatabaseMetricMethodSelect,
-			Result:  metrics_lib.Error,
-			Env:     metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().DatabaseSince(startTime, "anime_characters", metrics.MethodSelect, metrics.Error)
 		return nil, err
 	}
 
-	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-		Service: "anime-api",
-		Table:   "anime_characters",
-		Method:  metrics_lib.DatabaseMetricMethodSelect,
-		Result:  metrics_lib.Success,
-		Env:     metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().DatabaseSince(startTime, "anime_characters", metrics.MethodSelect, metrics.Success)
 	return &animeCharacter, nil
 }
