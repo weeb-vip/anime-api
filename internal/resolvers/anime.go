@@ -721,7 +721,7 @@ func DBSearchAnime(ctx context.Context, animeService anime.AnimeServiceImpl, que
 // -- the largest in the catalogue holds 78 anime, and a Pokemon page returning
 // all of them would be a wall of links and a much larger response than the
 // caller expected.
-func RelatedAnimeBySeries(ctx context.Context, animeService anime.AnimeServiceImpl, obj *model.Anime, limit *int) ([]*model.Anime, error) {
+func RelatedAnimeBySeries(ctx context.Context, animeService anime.AnimeServiceImpl, obj *model.Anime, limit *int) ([]*model.RelatedAnime, error) {
 	tracer := tracing.GetTracer(ctx)
 	ctx, span := tracer.Start(ctx, "RelatedAnimeBySeries",
 		trace.WithAttributes(
@@ -736,7 +736,7 @@ func RelatedAnimeBySeries(ctx context.Context, animeService anime.AnimeServiceIm
 	// catalogue has never been enriched with one.
 	if obj.Thetvdbid == nil || *obj.Thetvdbid == "" {
 		span.SetAttributes(attribute.Bool("anime.has_series_id", false))
-		return []*model.Anime{}, nil
+		return []*model.RelatedAnime{}, nil
 	}
 
 	resultLimit := 25
@@ -750,7 +750,7 @@ func RelatedAnimeBySeries(ctx context.Context, animeService anime.AnimeServiceIm
 		return nil, err
 	}
 
-	related := make([]*model.Anime, 0, len(found))
+	related := make([]*model.RelatedAnime, 0, len(found))
 	for _, entity := range found {
 		if entity == nil {
 			continue
@@ -760,7 +760,14 @@ func RelatedAnimeBySeries(ctx context.Context, animeService anime.AnimeServiceIm
 			span.RecordError(err)
 			return nil, err
 		}
-		related = append(related, transformed)
+		// Everything this resolver finds is found the same way, so the kind is
+		// constant here. It is carried per entry rather than per list because
+		// the next signal will not be: matching on shared cast or a shared
+		// creator will return entries of a different kind from the same query.
+		related = append(related, &model.RelatedAnime{
+			Anime:    transformed,
+			Relation: model.AnimeRelationSameSeries,
+		})
 	}
 
 	span.SetAttributes(attribute.Int("anime.related_count", len(related)))

@@ -146,24 +146,57 @@ type Anime @key(fields: "id") {
     type: String
 
     """
-    Other entries in the same series, oldest first, undated last.
+    Anime connected to this one, oldest first, undated last.
 
-    Derived from a shared TheTVDB series id rather than from any relation the
-    sources state: TheTVDB gives one series id to a show and everything hanging
-    off it, so the seasons, OVAs and specials of one franchise share it. That
-    makes this an editorial grouping rather than an inference -- but also a
-    plain grouping, so it says these belong together and deliberately does not
-    claim which is a sequel and which is a side story. Read `type` and
-    `startDate` for that.
+    Each entry says how it is connected rather than leaving the caller to
+    assume, because the kinds are not interchangeable: another entry in the
+    same series is the same show, while a spin-off or an adaptation is a
+    different one. Presenting both under a single heading would flatten that.
 
-    Empty for the anime that have no TheTVDB id, which is most of the
-    catalogue; callers should treat an empty list as "not known", not as
-    "stands alone".
+    Empty for anime we know of no connection for, which is most of the
+    catalogue; treat an empty list as "not known", not as "stands alone".
     """
-    relatedAnime(limit: Int): [Anime!] @goField(forceResolver: true)
+    relatedAnime(limit: Int): [RelatedAnime!] @goField(forceResolver: true)
     createdAt: String!
     updatedAt: String!
     nextEpisode: Episode @goField(forceResolver: true )
+}
+
+"""
+One anime connected to another, and how.
+"""
+type RelatedAnime {
+    "The connected anime"
+    anime: Anime!
+
+    "How it is connected"
+    relation: AnimeRelation!
+}
+
+"""
+The ways two anime can be connected.
+
+Only kinds we can actually establish appear here. Two more are wanted and are
+absent because the data does not support them yet:
+
+A shared source work. Most anime adapt something, and the manga or novel is
+what ties the adaptations together -- Fruits Basket in 2001 and 2019, Hunter x
+Hunter in 1999 and 2011, Fullmetal Alchemist and Brotherhood. Those share no
+TheTVDB series id and frequently no cast, so nothing else finds them. We record
+`source` as a category ("Manga", "Light novel") and not as an identity, so we
+know an anime came from a manga but never which one; this needs the work itself
+modelled and anime pointed at it.
+
+A shared creator, the thread joining Serial Experiments Lain and Haibane
+Renmei. That needs staff credited against an anime by role, and anime_staff
+holds voice actors with no role column and no direct link to an anime.
+"""
+enum AnimeRelation {
+    """
+    Another entry in the same series: a season, film, OVA or special sharing
+    its TheTVDB series id. The same show, not a different one.
+    """
+    SAME_SERIES
 }
 
 type AnimeSeason {
