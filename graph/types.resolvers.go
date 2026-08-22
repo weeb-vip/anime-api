@@ -113,6 +113,11 @@ func (r *animeResolver) Seasons(ctx context.Context, obj *model.Anime) ([]*model
 	return resolvers.AnimeSeasons(ctx, r.AnimeSeasonService, animeID)
 }
 
+// RelatedAnime is the resolver for the relatedAnime field.
+func (r *animeResolver) RelatedAnime(ctx context.Context, obj *model.Anime, limit *int) ([]*model.Anime, error) {
+	return resolvers.RelatedAnimeBySeries(ctx, r.AnimeService, obj, limit)
+}
+
 // NextEpisode is the resolver for the nextEpisode field.
 func (r *animeResolver) NextEpisode(ctx context.Context, obj *model.Anime) (*model.Episode, error) {
 	if obj.NextEpisode != nil {

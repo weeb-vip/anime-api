@@ -71,10 +71,28 @@ type Anime struct {
 	// Fanart / visuals gathered for this anime
 	Fanart []*Fanart `json:"fanart,omitempty"`
 	// Anime seasons
-	Seasons     []*AnimeSeason `json:"seasons,omitempty"`
-	CreatedAt   string         `json:"createdAt"`
-	UpdatedAt   string         `json:"updatedAt"`
-	NextEpisode *Episode       `json:"nextEpisode,omitempty"`
+	Seasons []*AnimeSeason `json:"seasons,omitempty"`
+	// Record type as the source classifies it -- TV, Movie, OVA, ONA, Special and
+	// so on. Exposed because it is what separates a main entry from a side story
+	// in relatedAnime, where a list of titles alone does not say which is which.
+	Type *string `json:"type,omitempty"`
+	// Other entries in the same series, oldest first, undated last.
+	//
+	// Derived from a shared TheTVDB series id rather than from any relation the
+	// sources state: TheTVDB gives one series id to a show and everything hanging
+	// off it, so the seasons, OVAs and specials of one franchise share it. That
+	// makes this an editorial grouping rather than an inference -- but also a
+	// plain grouping, so it says these belong together and deliberately does not
+	// claim which is a sequel and which is a side story. Read `type` and
+	// `startDate` for that.
+	//
+	// Empty for the anime that have no TheTVDB id, which is most of the
+	// catalogue; callers should treat an empty list as "not known", not as
+	// "stands alone".
+	RelatedAnime []*Anime `json:"relatedAnime,omitempty"`
+	CreatedAt    string   `json:"createdAt"`
+	UpdatedAt    string   `json:"updatedAt"`
+	NextEpisode  *Episode `json:"nextEpisode,omitempty"`
 }
 
 func (Anime) IsEntity() {}
