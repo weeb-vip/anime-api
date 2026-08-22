@@ -129,14 +129,16 @@ CREATE INDEX idx_character_staff ON anime_character_staff_link (character_id, st
 CREATE INDEX idx_character_staff_staff_id ON anime_character_staff_link (staff_id);
 
 -- ----------------------------------------------------------------------
-CREATE TABLE anime_relations (
-  id char(36) NOT NULL,
-  anime_id varchar(36) NOT NULL,
-  related_anime_id varchar(36) NOT NULL,
-  relation_type varchar(30),
-  created_at timestamptz DEFAULT now(),
-  PRIMARY KEY (id)
-);
+-- anime_relations is deliberately absent.
+--
+-- 000009 creates it, and prod is at migration 38 with dirty=0, so it applied --
+-- yet the table does not exist in PlanetScale. It was dropped out of band at
+-- some point and nothing missed it, because no Go code references it: the
+-- relatedAnime resolver matches on thetvdbid, not on this table.
+--
+-- Carrying it into Postgres would recreate a table that production spent years
+-- without and no code reads. Left out, and this note left in so the next person
+-- diffing the migrations against this file knows it was a decision.
 
 
 -- ----------------------------------------------------------------------
@@ -350,10 +352,8 @@ CREATE TRIGGER update_anime_episode_count_after_delete
   FOR EACH ROW EXECUTE FUNCTION update_anime_episode_count();
 
 -- ----------------------------------------------------------------------
--- 000021 tried to index a table named 'relations'. The table is
--- anime_relations (000009), so these two indexes were never created -- not
--- here and not in production, where that migration must have failed at the
--- same line. Created correctly here rather than faithfully reproducing the
--- typo.
-CREATE INDEX idx_relations_anime_id ON anime_relations (anime_id);
-CREATE INDEX idx_relations_related_anime_id ON anime_relations (related_anime_id);
+-- 000021 tried to create idx_relations_anime_id and idx_relations_related_anime_id
+-- on a table named 'relations'. The table it meant was anime_relations, so those
+-- indexes never existed. They are not recreated here, because the table they
+-- would sit on is deliberately absent -- see the note where it would have been
+-- defined.

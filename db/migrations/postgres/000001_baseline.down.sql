@@ -15,7 +15,6 @@ DROP TABLE IF EXISTS anime_character;
 DROP TABLE IF EXISTS anime_staff;
 DROP TABLE IF EXISTS anime_streaming_platform;
 DROP TABLE IF EXISTS anime_seasons;
-DROP TABLE IF EXISTS anime_relations;
 DROP TABLE IF EXISTS anime_schedule;
 DROP TABLE IF EXISTS episode_air_time;
 DROP TABLE IF EXISTS episodes;
