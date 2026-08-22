@@ -28,3 +28,14 @@ const (
 	ComponentService    = "service"
 	ComponentRepository = "repository"
 )
+
+// ResultFor maps an error to the Result label.
+//
+// Replaces a map[bool]string{true: Success, false: Error}[err == nil] idiom
+// that allocated a map on every query it measured.
+func ResultFor(err error) string {
+	if err != nil {
+		return Error
+	}
+	return Success
+}

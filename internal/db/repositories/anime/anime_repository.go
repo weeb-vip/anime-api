@@ -10,7 +10,6 @@ import (
 	animeEpisode "github.com/weeb-vip/anime-api/internal/db/repositories/anime_episode"
 	"github.com/weeb-vip/anime-api/metrics"
 	"github.com/weeb-vip/anime-api/tracing"
-	metrics_lib "github.com/weeb-vip/go-metrics-lib"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
@@ -89,23 +88,11 @@ func (a *AnimeRepository) FindAll(ctx context.Context) ([]*Anime, error) {
 	var animes []*Anime
 	err := a.db.DB.WithContext(ctx).Find(&animes).Error
 	if err != nil {
-		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-			Service: "anime-api",
-			Table:   "anime",
-			Method:  metrics_lib.DatabaseMetricMethodSelect,
-			Result:  metrics_lib.Error,
-			Env:     metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Error)
 		return nil, err
 	}
 
-	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-		Service: "anime-api",
-		Table:   "anime",
-		Method:  metrics_lib.DatabaseMetricMethodSelect,
-		Result:  metrics_lib.Success,
-		Env:     metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Success)
 	return animes, nil
 }
 
@@ -117,23 +104,11 @@ func (a *AnimeRepository) FindAllWithEpisodes(ctx context.Context) ([]*Anime, er
 		return db.Order("episode ASC")
 	}).Find(&animes).Error
 	if err != nil {
-		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-			Service: "anime-api",
-			Table:   "anime",
-			Method:  metrics_lib.DatabaseMetricMethodSelect,
-			Result:  metrics_lib.Error,
-			Env:     metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Error)
 		return nil, err
 	}
 
-	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-		Service: "anime-api",
-		Table:   "anime",
-		Method:  metrics_lib.DatabaseMetricMethodSelect,
-		Result:  metrics_lib.Success,
-		Env:     metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Success)
 	return animes, nil
 }
 
@@ -240,23 +215,11 @@ func (a *AnimeRepository) FindByIdWithEpisodes(ctx context.Context, id string) (
 		return db.Order("episode ASC")
 	}).Where("id = ?", id).First(&anime).Error
 	if err != nil {
-		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-			Service: "anime-api",
-			Table:   "anime",
-			Method:  metrics_lib.DatabaseMetricMethodSelect,
-			Result:  metrics_lib.Error,
-			Env:     metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Error)
 		return nil, err
 	}
 
-	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-		Service: "anime-api",
-		Table:   "anime",
-		Method:  metrics_lib.DatabaseMetricMethodSelect,
-		Result:  metrics_lib.Success,
-		Env:     metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Success)
 
 	// Store in cache if available
 	if a.cache != nil {
@@ -273,23 +236,11 @@ func (a *AnimeRepository) FindByName(ctx context.Context, name string) ([]*Anime
 	var animes []*Anime
 	err := a.db.DB.WithContext(ctx).Where("name = ?", name).Find(&animes).Error
 	if err != nil {
-		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-			Service: "anime-api",
-			Table:   "anime",
-			Method:  metrics_lib.DatabaseMetricMethodSelect,
-			Result:  metrics_lib.Error,
-			Env:     metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Error)
 		return nil, err
 	}
 
-	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-		Service: "anime-api",
-		Table:   "anime",
-		Method:  metrics_lib.DatabaseMetricMethodSelect,
-		Result:  metrics_lib.Success,
-		Env:     metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Success)
 	return animes, nil
 }
 
@@ -299,23 +250,11 @@ func (a *AnimeRepository) FindByType(ctx context.Context, recordType RECORD_TYPE
 	var animes []*Anime
 	err := a.db.DB.WithContext(ctx).Where("type = ?", recordType).Find(&animes).Error
 	if err != nil {
-		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-			Service: "anime-api",
-			Table:   "anime",
-			Method:  metrics_lib.DatabaseMetricMethodSelect,
-			Result:  metrics_lib.Error,
-			Env:     metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Error)
 		return nil, err
 	}
 
-	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-		Service: "anime-api",
-		Table:   "anime",
-		Method:  metrics_lib.DatabaseMetricMethodSelect,
-		Result:  metrics_lib.Success,
-		Env:     metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Success)
 	return animes, nil
 }
 
@@ -326,23 +265,11 @@ func (a *AnimeRepository) FindByStatus(ctx context.Context, status string) ([]*A
 	err := a.db.DB.WithContext(ctx).Where("status = ?", status).Find(&animes).Error
 	if err != nil {
 
-		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-			Service: "anime-api",
-			Table:   "anime",
-			Method:  metrics_lib.DatabaseMetricMethodSelect,
-			Result:  metrics_lib.Error,
-			Env:     metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Error)
 		return nil, err
 	}
 
-	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-		Service: "anime-api",
-		Table:   "anime",
-		Method:  metrics_lib.DatabaseMetricMethodSelect,
-		Result:  metrics_lib.Success,
-		Env:     metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Success)
 	return animes, nil
 }
 
@@ -352,23 +279,11 @@ func (a *AnimeRepository) FindBySource(ctx context.Context, source string) ([]*A
 	var animes []*Anime
 	err := a.db.DB.WithContext(ctx).Where("source = ?", source).Find(&animes).Error
 	if err != nil {
-		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-			Service: "anime-api",
-			Table:   "anime",
-			Method:  metrics_lib.DatabaseMetricMethodSelect,
-			Result:  metrics_lib.Error,
-			Env:     metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Error)
 		return nil, err
 	}
 
-	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-		Service: "anime-api",
-		Table:   "anime",
-		Method:  metrics_lib.DatabaseMetricMethodSelect,
-		Result:  metrics_lib.Success,
-		Env:     metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Success)
 	return animes, nil
 }
 
@@ -378,23 +293,11 @@ func (a *AnimeRepository) FindByGenre(ctx context.Context, genre string) ([]*Ani
 	var animes []*Anime
 	err := a.db.DB.WithContext(ctx).Where("genre = ?", genre).Find(&animes).Error
 	if err != nil {
-		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-			Service: "anime-api",
-			Table:   "anime",
-			Method:  metrics_lib.DatabaseMetricMethodSelect,
-			Result:  metrics_lib.Error,
-			Env:     metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Error)
 		return nil, err
 	}
 
-	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-		Service: "anime-api",
-		Table:   "anime",
-		Method:  metrics_lib.DatabaseMetricMethodSelect,
-		Result:  metrics_lib.Success,
-		Env:     metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Success)
 	return animes, nil
 }
 
@@ -405,23 +308,11 @@ func (a *AnimeRepository) FindByStudio(ctx context.Context, studio string) ([]*A
 	err := a.db.DB.WithContext(ctx).Where("studio = ?", studio).Find(&animes).Error
 	if err != nil {
 
-		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-			Service: "anime-api",
-			Table:   "anime",
-			Method:  metrics_lib.DatabaseMetricMethodSelect,
-			Result:  metrics_lib.Error,
-			Env:     metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Error)
 		return nil, err
 	}
 
-	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-		Service: "anime-api",
-		Table:   "anime",
-		Method:  metrics_lib.DatabaseMetricMethodSelect,
-		Result:  metrics_lib.Success,
-		Env:     metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Success)
 	return animes, nil
 }
 
@@ -431,23 +322,11 @@ func (a *AnimeRepository) FindByLicensors(ctx context.Context, licensors string)
 	var animes []*Anime
 	err := a.db.DB.WithContext(ctx).Where("licensors = ?", licensors).Find(&animes).Error
 	if err != nil {
-		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-			Service: "anime-api",
-			Table:   "anime",
-			Method:  metrics_lib.DatabaseMetricMethodSelect,
-			Result:  metrics_lib.Error,
-			Env:     metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Error)
 		return nil, err
 	}
 
-	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-		Service: "anime-api",
-		Table:   "anime",
-		Method:  metrics_lib.DatabaseMetricMethodSelect,
-		Result:  metrics_lib.Success,
-		Env:     metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Success)
 	return animes, nil
 }
 
@@ -457,23 +336,11 @@ func (a *AnimeRepository) FindByRating(ctx context.Context, rating string) ([]*A
 	var animes []*Anime
 	err := a.db.DB.WithContext(ctx).Where("rating = ?", rating).Find(&animes).Error
 	if err != nil {
-		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-			Service: "anime-api",
-			Table:   "anime",
-			Method:  metrics_lib.DatabaseMetricMethodSelect,
-			Result:  metrics_lib.Error,
-			Env:     metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Error)
 		return nil, err
 	}
 
-	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-		Service: "anime-api",
-		Table:   "anime",
-		Method:  metrics_lib.DatabaseMetricMethodSelect,
-		Result:  metrics_lib.Success,
-		Env:     metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Success)
 	return animes, nil
 }
 
@@ -483,23 +350,11 @@ func (a *AnimeRepository) FindByYear(ctx context.Context, year int) ([]*Anime, e
 	var animes []*Anime
 	err := a.db.DB.WithContext(ctx).Where("year = ?", year).Find(&animes).Error
 	if err != nil {
-		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-			Service: "anime-api",
-			Table:   "anime",
-			Method:  metrics_lib.DatabaseMetricMethodSelect,
-			Result:  metrics_lib.Error,
-			Env:     metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Error)
 		return nil, err
 	}
 
-	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-		Service: "anime-api",
-		Table:   "anime",
-		Method:  metrics_lib.DatabaseMetricMethodSelect,
-		Result:  metrics_lib.Success,
-		Env:     metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Success)
 	return animes, nil
 }
 
@@ -521,23 +376,11 @@ func (a *AnimeRepository) TopRatedAnime(ctx context.Context, limit int) ([]*Anim
 	// Use numeric rating for better performance - automatically excludes NULL ratings (N/A)
 	err := a.db.DB.WithContext(ctx).Where("rating IS NOT NULL").Order("rating desc, id").Limit(limit).Find(&animes).Error
 	if err != nil {
-		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-			Service: "anime-api",
-			Table:   "anime",
-			Method:  metrics_lib.DatabaseMetricMethodSelect,
-			Result:  metrics_lib.Error,
-			Env:     metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Error)
 		return nil, err
 	}
 
-	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-		Service: "anime-api",
-		Table:   "anime",
-		Method:  metrics_lib.DatabaseMetricMethodSelect,
-		Result:  metrics_lib.Success,
-		Env:     metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Success)
 
 	// Store in cache if available
 	if a.cache != nil {
@@ -566,23 +409,11 @@ func (a *AnimeRepository) MostPopularAnime(ctx context.Context, limit int) ([]*A
 	// Order by ranking asc (lower ranking = more popular) - only include anime with rankings
 	err := a.db.DB.WithContext(ctx).Where("ranking IS NOT NULL").Order("ranking asc, id").Limit(limit).Find(&animes).Error
 	if err != nil {
-		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-			Service: "anime-api",
-			Table:   "anime",
-			Method:  metrics_lib.DatabaseMetricMethodSelect,
-			Result:  metrics_lib.Error,
-			Env:     metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Error)
 		return nil, err
 	}
 
-	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-		Service: "anime-api",
-		Table:   "anime",
-		Method:  metrics_lib.DatabaseMetricMethodSelect,
-		Result:  metrics_lib.Success,
-		Env:     metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Success)
 	return animes, nil
 }
 
@@ -593,23 +424,11 @@ func (a *AnimeRepository) NewestAnime(ctx context.Context, limit int) ([]*Anime,
 	// Order by created_at desc (newest first) - all anime have created_at so no WHERE needed
 	err := a.db.DB.WithContext(ctx).Order("created_at desc, id").Limit(limit).Find(&animes).Error
 	if err != nil {
-		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-			Service: "anime-api",
-			Table:   "anime",
-			Method:  metrics_lib.DatabaseMetricMethodSelect,
-			Result:  metrics_lib.Error,
-			Env:     metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Error)
 		return nil, err
 	}
 
-	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-		Service: "anime-api",
-		Table:   "anime",
-		Method:  metrics_lib.DatabaseMetricMethodSelect,
-		Result:  metrics_lib.Success,
-		Env:     metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Success)
 	return animes, nil
 }
 
@@ -633,13 +452,7 @@ func (a *AnimeRepository) AiringAnime(ctx context.Context) ([]*AnimeWithNextEpis
 		Order("e.next_aired").
 		Scan(&animes).Error
 
-	metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-		Service: "anime-api",
-		Table:   "anime",
-		Method:  metrics_lib.DatabaseMetricMethodSelect,
-		Result:  map[bool]string{true: metrics_lib.Success, false: metrics_lib.Error}[err == nil],
-		Env:     metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.ResultFor(err))
 
 	if err != nil {
 		return nil, err
@@ -666,23 +479,11 @@ func (a *AnimeRepository) SearchAnime(ctx context.Context, search string, page i
 	var animes []*Anime
 	err := a.db.DB.WithContext(ctx).Where("title_en LIKE ? OR title_jp LIKE ? OR title_synonyms LIKE ? OR title_romaji LIKE ? OR title_kanji LIKE ?", "%"+search+"%", "%"+search+"%", "%"+search+"%", "%"+search+"%", "%"+search+"%").Limit(limit).Offset((page - 1) * limit).Find(&animes).Error
 	if err != nil {
-		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-			Service: "anime-api",
-			Table:   "anime",
-			Method:  metrics_lib.DatabaseMetricMethodSelect,
-			Result:  metrics_lib.Error,
-			Env:     metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Error)
 		return nil, err
 	}
 
-	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-		Service: "anime-api",
-		Table:   "anime",
-		Method:  metrics_lib.DatabaseMetricMethodSelect,
-		Result:  metrics_lib.Success,
-		Env:     metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Success)
 	return animes, nil
 }
 
@@ -722,13 +523,7 @@ func (a *AnimeRepository) AiringAnimeDays(ctx context.Context, startDate *time.T
 		animes[i].NextEpisode = &nextEpisode
 	}
 
-	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-		Service: "anime-api",
-		Table:   "anime",
-		Method:  metrics_lib.DatabaseMetricMethodSelect,
-		Result:  metrics_lib.Success,
-		Env:     metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Success)
 	return animes, nil
 }
 
@@ -769,13 +564,7 @@ func (a *AnimeRepository) AiringAnimeEndDate(ctx context.Context, startDate *tim
 		animes[i].NextEpisode = &nextEpisode
 	}
 
-	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-		Service: "anime-api",
-		Table:   "anime",
-		Method:  metrics_lib.DatabaseMetricMethodSelect,
-		Result:  metrics_lib.Success,
-		Env:     metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Success)
 
 	return animes, nil
 }
@@ -788,23 +577,11 @@ func (a *AnimeRepository) FindByNameWithEpisodes(ctx context.Context, name strin
 		return db.Order("episode ASC")
 	}).Where("name = ?", name).Find(&animes).Error
 	if err != nil {
-		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-			Service: "anime-api",
-			Table:   "anime",
-			Method:  metrics_lib.DatabaseMetricMethodSelect,
-			Result:  metrics_lib.Error,
-			Env:     metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Error)
 		return nil, err
 	}
 
-	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-		Service: "anime-api",
-		Table:   "anime",
-		Method:  metrics_lib.DatabaseMetricMethodSelect,
-		Result:  metrics_lib.Success,
-		Env:     metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Success)
 	return animes, nil
 }
 
@@ -816,23 +593,11 @@ func (a *AnimeRepository) FindByTypeWithEpisodes(ctx context.Context, recordType
 		return db.Order("episode ASC")
 	}).Where("type = ?", recordType).Find(&animes).Error
 	if err != nil {
-		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-			Service: "anime-api",
-			Table:   "anime",
-			Method:  metrics_lib.DatabaseMetricMethodSelect,
-			Result:  metrics_lib.Error,
-			Env:     metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Error)
 		return nil, err
 	}
 
-	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-		Service: "anime-api",
-		Table:   "anime",
-		Method:  metrics_lib.DatabaseMetricMethodSelect,
-		Result:  metrics_lib.Success,
-		Env:     metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Success)
 	return animes, nil
 }
 
@@ -844,23 +609,11 @@ func (a *AnimeRepository) FindByStatusWithEpisodes(ctx context.Context, status s
 		return db.Order("episode ASC")
 	}).Where("status = ?", status).Find(&animes).Error
 	if err != nil {
-		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-			Service: "anime-api",
-			Table:   "anime",
-			Method:  metrics_lib.DatabaseMetricMethodSelect,
-			Result:  metrics_lib.Error,
-			Env:     metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Error)
 		return nil, err
 	}
 
-	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-		Service: "anime-api",
-		Table:   "anime",
-		Method:  metrics_lib.DatabaseMetricMethodSelect,
-		Result:  metrics_lib.Success,
-		Env:     metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Success)
 	return animes, nil
 }
 
@@ -872,23 +625,11 @@ func (a *AnimeRepository) TopRatedAnimeWithEpisodes(ctx context.Context, limit i
 		return db.Order("episode ASC")
 	}).Where("rating IS NOT NULL").Order("rating desc, id").Limit(limit).Find(&animes).Error
 	if err != nil {
-		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-			Service: "anime-api",
-			Table:   "anime",
-			Method:  metrics_lib.DatabaseMetricMethodSelect,
-			Result:  metrics_lib.Error,
-			Env:     metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Error)
 		return nil, err
 	}
 
-	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-		Service: "anime-api",
-		Table:   "anime",
-		Method:  metrics_lib.DatabaseMetricMethodSelect,
-		Result:  metrics_lib.Success,
-		Env:     metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Success)
 	return animes, nil
 }
 
@@ -900,23 +641,11 @@ func (a *AnimeRepository) MostPopularAnimeWithEpisodes(ctx context.Context, limi
 		return db.Order("episode ASC")
 	}).Where("ranking IS NOT NULL").Order("ranking asc, id").Limit(limit).Find(&animes).Error
 	if err != nil {
-		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-			Service: "anime-api",
-			Table:   "anime",
-			Method:  metrics_lib.DatabaseMetricMethodSelect,
-			Result:  metrics_lib.Error,
-			Env:     metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Error)
 		return nil, err
 	}
 
-	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-		Service: "anime-api",
-		Table:   "anime",
-		Method:  metrics_lib.DatabaseMetricMethodSelect,
-		Result:  metrics_lib.Success,
-		Env:     metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Success)
 	return animes, nil
 }
 
@@ -928,23 +657,11 @@ func (a *AnimeRepository) NewestAnimeWithEpisodes(ctx context.Context, limit int
 		return db.Order("episode ASC")
 	}).Order("created_at desc, id").Limit(limit).Find(&animes).Error
 	if err != nil {
-		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-			Service: "anime-api",
-			Table:   "anime",
-			Method:  metrics_lib.DatabaseMetricMethodSelect,
-			Result:  metrics_lib.Error,
-			Env:     metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Error)
 		return nil, err
 	}
 
-	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-		Service: "anime-api",
-		Table:   "anime",
-		Method:  metrics_lib.DatabaseMetricMethodSelect,
-		Result:  metrics_lib.Success,
-		Env:     metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Success)
 	return animes, nil
 }
 
@@ -967,23 +684,11 @@ func (a *AnimeRepository) SearchAnimeWithEpisodes(ctx context.Context, search st
 		return db.Order("episode ASC")
 	}).Where("title_en LIKE ? OR title_jp LIKE ? OR title_synonyms LIKE ? OR title_romaji LIKE ? OR title_kanji LIKE ?", "%"+search+"%", "%"+search+"%", "%"+search+"%", "%"+search+"%", "%"+search+"%").Limit(limit).Offset((page - 1) * limit).Find(&animes).Error
 	if err != nil {
-		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-			Service: "anime-api",
-			Table:   "anime",
-			Method:  metrics_lib.DatabaseMetricMethodSelect,
-			Result:  metrics_lib.Error,
-			Env:     metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Error)
 		return nil, err
 	}
 
-	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-		Service: "anime-api",
-		Table:   "anime",
-		Method:  metrics_lib.DatabaseMetricMethodSelect,
-		Result:  metrics_lib.Success,
-		Env:     metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Success)
 
 	// Store in cache if available
 	if a.cache != nil {
@@ -1094,13 +799,7 @@ func (a *AnimeRepository) AiringAnimeWithEpisodes(ctx context.Context, startDate
 
 	err := query.Find(&animes).Error
 
-	metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-		Service: "anime-api",
-		Table:   "anime",
-		Method:  metrics_lib.DatabaseMetricMethodSelect,
-		Result:  map[bool]string{true: metrics_lib.Success, false: metrics_lib.Error}[err == nil],
-		Env:     metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.ResultFor(err))
 
 	// Complete database query tracing
 	dbQuerySpan.SetAttributes(
@@ -1215,13 +914,7 @@ func (a *AnimeRepository) FindBySeasonWithEpisodes(ctx context.Context, season s
 		Find(&results).Error
 
 	if err != nil {
-		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-			Service: "anime-api",
-			Table:   "anime_seasons",
-			Method:  metrics_lib.DatabaseMetricMethodSelect,
-			Result:  metrics_lib.Error,
-			Env:     metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().DatabaseSince(startTime, "anime_seasons", metrics.MethodSelect, metrics.Error)
 		return nil, err
 	}
 
@@ -1284,13 +977,7 @@ func (a *AnimeRepository) FindBySeasonWithEpisodes(ctx context.Context, season s
 		animes = append(animes, anime)
 	}
 
-	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-		Service: "anime-api",
-		Table:   "anime_seasons",
-		Method:  metrics_lib.DatabaseMetricMethodSelect,
-		Result:  metrics_lib.Success,
-		Env:     metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().DatabaseSince(startTime, "anime_seasons", metrics.MethodSelect, metrics.Success)
 
 	return animes, nil
 }
@@ -1302,23 +989,11 @@ func (a *AnimeRepository) FindByIDs(ctx context.Context, ids []string) ([]*Anime
 	var animes []*Anime
 	err := a.db.DB.WithContext(ctx).Where("id IN ?", ids).Find(&animes).Error
 	if err != nil {
-		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-			Service: "anime-api",
-			Table:   "anime",
-			Method:  metrics_lib.DatabaseMetricMethodSelect,
-			Result:  metrics_lib.Error,
-			Env:     metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Error)
 		return nil, err
 	}
 
-	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-		Service: "anime-api",
-		Table:   "anime",
-		Method:  metrics_lib.DatabaseMetricMethodSelect,
-		Result:  metrics_lib.Success,
-		Env:     metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Success)
 	return animes, nil
 }
 
@@ -1347,23 +1022,11 @@ func (a *AnimeRepository) FindBySeriesID(ctx context.Context, seriesID string, e
 		Find(&animes).Error
 
 	if err != nil {
-		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-			Service: "anime-api",
-			Table:   "anime",
-			Method:  metrics_lib.DatabaseMetricMethodSelect,
-			Result:  metrics_lib.Error,
-			Env:     metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Error)
 		return nil, err
 	}
 
-	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-		Service: "anime-api",
-		Table:   "anime",
-		Method:  metrics_lib.DatabaseMetricMethodSelect,
-		Result:  metrics_lib.Success,
-		Env:     metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Success)
 	return animes, nil
 }
 
@@ -1379,13 +1042,7 @@ func (a *AnimeRepository) FindByIDsWithEpisodes(ctx context.Context, ids []strin
 		Find(&animes).Error
 
 	if err != nil {
-		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-			Service: "anime-api",
-			Table:   "anime",
-			Method:  metrics_lib.DatabaseMetricMethodSelect,
-			Result:  metrics_lib.Error,
-			Env:     metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Error)
 		return nil, err
 	}
 
@@ -1397,13 +1054,7 @@ func (a *AnimeRepository) FindByIDsWithEpisodes(ctx context.Context, ids []strin
 		Find(&episodes).Error
 
 	if err != nil {
-		_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-			Service: "anime-api",
-			Table:   "anime_episodes",
-			Method:  metrics_lib.DatabaseMetricMethodSelect,
-			Result:  metrics_lib.Error,
-			Env:     metrics.GetCurrentEnv(),
-		})
+		metrics.GetAppMetrics().DatabaseSince(startTime, "anime_episodes", metrics.MethodSelect, metrics.Error)
 		return nil, err
 	}
 
@@ -1423,13 +1074,7 @@ func (a *AnimeRepository) FindByIDsWithEpisodes(ctx context.Context, ids []strin
 		}
 	}
 
-	_ = metrics.NewMetricsInstance().DatabaseMetric(float64(time.Since(startTime).Milliseconds()), metrics_lib.DatabaseMetricLabels{
-		Service: "anime-api",
-		Table:   "anime",
-		Method:  metrics_lib.DatabaseMetricMethodSelect,
-		Result:  metrics_lib.Success,
-		Env:     metrics.GetCurrentEnv(),
-	})
+	metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Success)
 	return animes, nil
 }
 
