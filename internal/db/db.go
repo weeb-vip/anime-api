@@ -6,7 +6,7 @@ import (
 
 	"github.com/weeb-vip/anime-api/config"
 	"github.com/weeb-vip/anime-api/metrics"
-	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
@@ -15,9 +15,10 @@ type DB struct {
 }
 
 func NewDatabase(cfg config.DBConfig) *DB {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local&tls=%s&interpolateParams=true&multiStatements=true", cfg.User, cfg.Password, cfg.Host, cfg.Port, cfg.DataBase, cfg.SSLMode)
+	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
+		cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.DataBase, cfg.SSLMode)
 
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: NewTracedLogger(),
 	})
 	if err != nil {
@@ -43,7 +44,8 @@ func NewDatabase(cfg config.DBConfig) *DB {
 	sqlDB.SetMaxIdleConns(10)
 
 	// Set maximum lifetime of a connection
-	// MySQL wait_timeout is typically 8 hours, so we set this lower
+	// Kept well under any server-side idle timeout so the pool never hands out a
+	// connection the server has already closed.
 	sqlDB.SetConnMaxLifetime(5 * time.Minute)
 
 	// Set maximum idle time for a connection
