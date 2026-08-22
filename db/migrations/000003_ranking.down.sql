@@ -1,2 +1,2 @@
 ALTER TABLE anime
-    DROP COLUMN `ranking`;
+    DROP COLUMN ranking;
