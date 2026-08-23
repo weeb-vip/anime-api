@@ -50,10 +50,29 @@ func NewDatabase(cfg config.DBConfig) *DB {
 	sqlDB.SetMaxOpenConns(5)
 	sqlDB.SetMaxIdleConns(5)
 
-	// Long enough that connections survive quiet periods and get reused, short
-	// enough that a failover or DNS change is picked up without a restart.
-	sqlDB.SetConnMaxLifetime(30 * time.Minute)
-	sqlDB.SetConnMaxIdleTime(10 * time.Minute)
+	// Connections are kept for hours because building one is expensive here.
+	//
+	// Measured against the production RDS instance: opening a connection costs
+	// 6-52 seconds, while queries on an already-open connection cost about 7ms.
+	// The gap is TLS and SCRAM authentication, both CPU-bound, on a db.t4g.micro
+	// whose CPU credit balance sits at zero. Reconnecting is not a small cost
+	// paid occasionally, it is the single most expensive thing the service does.
+	//
+	// The old 10 minute idle timeout emptied the pool during any quiet period,
+	// so the next visitor after a lull paid that price -- which is exactly the
+	// 45 second homepage load. Holding connections through quiet periods is
+	// what removes it.
+	//
+	// It also preserves the statement cache. pgx v5 defaults to
+	// QueryExecModeCacheStatement and caches prepared statements per
+	// connection, so closing a connection discards its cached plans too. The
+	// same query then re-plans from cold: 666ms on first execution against 5ms
+	// on the second.
+	//
+	// Four hours rather than never, so a failover or DNS change is still picked
+	// up without needing a restart.
+	sqlDB.SetConnMaxLifetime(4 * time.Hour)
+	sqlDB.SetConnMaxIdleTime(1 * time.Hour)
 
 	// Initialize connection pool metrics collection
 	poolMetrics := metrics.NewConnectionPoolMetrics(db)
