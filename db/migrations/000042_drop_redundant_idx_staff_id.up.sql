@@ -1,0 +1,19 @@
+-- Drops idx_staff_id on anime_character_staff_link (staff_id).
+--
+-- Duplicate of idx_character_staff_staff_id, which has the same definition and
+-- is the one actually being used (6,327 scans against this one's zero). The
+-- used index is kept: staff_id is not a prefix of idx_character_staff, so
+-- something must still index it.
+--
+-- Reclaims 10 MB.
+--
+-- CONCURRENTLY, and alone in this file. golang-migrate hands the whole file to
+-- one Exec, and Postgres runs a multi-statement simple query as an implicit
+-- transaction -- where this is rejected outright with "DROP INDEX CONCURRENTLY
+-- cannot run inside a transaction block". One statement per file is what keeps
+-- it out of a transaction.
+--
+-- It matters here: a plain DROP INDEX takes ACCESS EXCLUSIVE, and
+-- anime_character_staff_link is taking tens of thousands of sequential scans,
+-- so the drop would queue behind one and block every reader after it.
+DROP INDEX CONCURRENTLY IF EXISTS idx_staff_id;
