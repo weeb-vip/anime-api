@@ -1,0 +1,34 @@
+-- Schema-qualifies the body of immutable_unaccent so a major version upgrade
+-- can rebuild the generated column that depends on it.
+--
+-- The function was created in 000038 as:
+--
+--   SELECT unaccent('unaccent', $1)
+--
+-- which resolves fine in normal use, because public is on the search_path.
+-- pg_upgrade is not normal use. It restores the schema with pg_restore under a
+-- restricted search_path, and the generated column on anime_staff.url_slug
+-- calls this function, so recreating that table runs the body with nothing on
+-- the path:
+--
+--   ERROR:  function unaccent(unknown, text) does not exist
+--   LINE 1:  SELECT unaccent('unaccent', $1)
+--   CONTEXT: SQL function "immutable_unaccent" during inlining
+--
+-- That is the exact error RDS reported when 16.4 -> 18.4 was attempted:
+-- "Database instance is in a state that cannot be upgraded". The upgrade rolled
+-- back cleanly and the instance stayed on 16.4, but it cannot succeed until
+-- this is fixed.
+--
+-- Both names have to be qualified. public.unaccent is the function; the
+-- 'public.unaccent'::regdictionary cast is the text search dictionary it takes,
+-- which is looked up on the search_path in exactly the same way and fails in
+-- exactly the same place.
+--
+-- CREATE OR REPLACE rather than DROP and recreate: the generated column depends
+-- on this function by identity, so dropping it would require dropping the
+-- column. Replacing the body leaves stored values untouched -- they are not
+-- recomputed -- and the semantics are unchanged, so old and new rows agree.
+CREATE OR REPLACE FUNCTION immutable_unaccent(text) RETURNS text
+  LANGUAGE sql IMMUTABLE STRICT PARALLEL SAFE AS
+$$ SELECT public.unaccent('public.unaccent'::regdictionary, $1) $$;
