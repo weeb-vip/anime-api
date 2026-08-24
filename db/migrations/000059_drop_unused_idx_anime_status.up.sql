@@ -1,0 +1,12 @@
+-- Drops idx_anime_status on anime (status).
+--
+-- Same as 000058: FindByStatus has no caller outside the repository and is not
+-- in the schema.
+--
+-- Reclaims 696 kB.
+--
+-- CONCURRENTLY, and alone in this file. golang-migrate hands the whole file to
+-- one Exec, and Postgres runs a multi-statement simple query as an implicit
+-- transaction -- where this is rejected with "DROP INDEX CONCURRENTLY cannot
+-- run inside a transaction block". One statement per file keeps it out of one.
+DROP INDEX CONCURRENTLY IF EXISTS idx_anime_status;

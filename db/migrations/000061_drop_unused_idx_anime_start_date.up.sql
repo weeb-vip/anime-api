@@ -1,0 +1,15 @@
+-- Drops idx_anime_start_date on anime (start_date).
+--
+-- start_date appears in no WHERE clause and no ORDER BY in the repository. It is
+-- selected and returned, nothing more.
+--
+-- Note this is not the airing-window query: that filters on end_date and is
+-- served by idx_anime_end_date_id, which stays.
+--
+-- Reclaims 1152 kB.
+--
+-- CONCURRENTLY, and alone in this file. golang-migrate hands the whole file to
+-- one Exec, and Postgres runs a multi-statement simple query as an implicit
+-- transaction -- where this is rejected with "DROP INDEX CONCURRENTLY cannot
+-- run inside a transaction block". One statement per file keeps it out of one.
+DROP INDEX CONCURRENTLY IF EXISTS idx_anime_start_date;

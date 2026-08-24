@@ -1,0 +1,16 @@
+-- Drops idx_anime_type on anime (type).
+--
+-- The only query filtering on type is FindByType (and FindByTypeWithEpisodes),
+-- which has no caller outside the repository and is not exposed in the GraphQL
+-- schema. The index supports a method nothing can reach.
+--
+-- Worth restoring alongside the method if it is ever wired up -- unlike the
+-- title indexes above, this one would work.
+--
+-- Reclaims 608 kB.
+--
+-- CONCURRENTLY, and alone in this file. golang-migrate hands the whole file to
+-- one Exec, and Postgres runs a multi-statement simple query as an implicit
+-- transaction -- where this is rejected with "DROP INDEX CONCURRENTLY cannot
+-- run inside a transaction block". One statement per file keeps it out of one.
+DROP INDEX CONCURRENTLY IF EXISTS idx_anime_type;

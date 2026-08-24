@@ -1,0 +1,18 @@
+-- Drops idx_anime_title_en on anime (title_en).
+--
+-- Search is the only thing that touches this column, and it uses a leading
+-- wildcard:
+--
+--   WHERE title_en LIKE '%term%' OR title_jp LIKE '%term%' OR ...
+--
+-- A btree cannot answer that. The index is not merely unused, it is incapable
+-- of being used by the only query that reads the column, which is why it had
+-- zero scans over the whole window before the upgrade reset the counters.
+--
+-- Reclaims 2416 kB.
+--
+-- CONCURRENTLY, and alone in this file. golang-migrate hands the whole file to
+-- one Exec, and Postgres runs a multi-statement simple query as an implicit
+-- transaction -- where this is rejected with "DROP INDEX CONCURRENTLY cannot
+-- run inside a transaction block". One statement per file keeps it out of one.
+DROP INDEX CONCURRENTLY IF EXISTS idx_anime_title_en;
