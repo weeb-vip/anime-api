@@ -1,0 +1,14 @@
+-- Drops idx_anime_mal_id on anime (mal_id).
+--
+-- mal_id is only ever selected, never filtered on: it appears in the field
+-- selection map and in SELECT lists, and in no WHERE clause anywhere in the
+-- repository. An index on a column nothing searches by is maintained on every
+-- write and read by nothing.
+--
+-- Reclaims 1440 kB.
+--
+-- CONCURRENTLY, and alone in this file. golang-migrate hands the whole file to
+-- one Exec, and Postgres runs a multi-statement simple query as an implicit
+-- transaction -- where this is rejected with "DROP INDEX CONCURRENTLY cannot
+-- run inside a transaction block". One statement per file keeps it out of one.
+DROP INDEX CONCURRENTLY IF EXISTS idx_anime_mal_id;
