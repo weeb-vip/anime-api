@@ -54,6 +54,13 @@ ALTER TABLE "anime" ADD COLUMN IF NOT EXISTS "source_work_id" varchar(36);
 -- adapted from the same work, which is the relation itself.
 CREATE INDEX IF NOT EXISTS "idx_anime_source_work_id" ON "anime" ("source_work_id");
 
+-- Every table here carries this trigger, so work does too. The sync service
+-- writes updated_at from the CDC event, but a manual correction applied
+-- directly to the read store would otherwise leave the column stale, and
+-- nothing downstream could tell the row had changed.
+CREATE TRIGGER work_set_updated_at BEFORE UPDATE ON "work"
+  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
 -- No foreign key, matching the scraper. CDC makes no ordering promise across
 -- tables, so an anime routinely arrives before the work it points at; anime-sync
 -- already discards foreign key violations for exactly this reason, and a

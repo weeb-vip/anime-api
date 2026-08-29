@@ -74,17 +74,17 @@ jobs:
             SELECT count(*) INTO n FROM information_schema.tables
               WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
                 AND table_name <> 'schema_migrations';
-            IF n <> 14 THEN
-              RAISE EXCEPTION 'expected 14 tables, found %', n;
+            IF n <> 15 THEN
+              RAISE EXCEPTION 'expected 15 tables, found %', n;
             END IF;
 
             SELECT count(*) INTO n FROM information_schema.columns
               WHERE table_schema = 'public' AND table_name <> 'schema_migrations';
-            IF n <> 156 THEN
-              RAISE EXCEPTION 'expected 156 columns, found %', n;
+            IF n <> 179 THEN
+              RAISE EXCEPTION 'expected 179 columns, found %', n;
             END IF;
 
-            -- Three episode-count triggers plus eight updated_at triggers.
+            -- Three episode-count triggers plus ten updated_at triggers.
             SELECT count(*) INTO n FROM information_schema.triggers
               WHERE trigger_schema = 'public';
             IF n < 11 THEN
