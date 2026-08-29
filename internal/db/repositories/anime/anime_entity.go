@@ -6,13 +6,13 @@ import (
 )
 
 type Anime struct {
-	ID            string       `gorm:"column:id;type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
-	AnidbID       *string      `gorm:"column:anidbid;null" json:"anidbid"`
-	MalID         *int         `gorm:"column:mal_id;null" json:"mal_id"`
-	TheTVDBID     *string      `gorm:"column:thetvdbid;null" json:"thetvdbid"`
+	ID        string  `gorm:"column:id;type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
+	AnidbID   *string `gorm:"column:anidbid;null" json:"anidbid"`
+	MalID     *int    `gorm:"column:mal_id;null" json:"mal_id"`
+	TheTVDBID *string `gorm:"column:thetvdbid;null" json:"thetvdbid"`
 	// The work this anime adapts, when known. Null for originals and for
 	// sources MAL does not cover, which is most of the catalogue.
-	SourceWorkID  *string      `gorm:"column:source_work_id;null" json:"source_work_id"`
+	SourceWorkID *string `gorm:"column:source_work_id;null" json:"source_work_id"`
 	// UrlSlug is the public URL segment, generated in postgres and carried
 	// here by CDC. Nullable while the backfill is still in flight.
 	UrlSlug       *string      `gorm:"column:url_slug;null" json:"url_slug"`
@@ -53,9 +53,7 @@ type AnimeWithNextEpisode struct {
 	AnidbID       *string                    `gorm:"column:anidbid;null" json:"anidbid"`
 	MalID         *int                       `gorm:"column:mal_id;null" json:"mal_id"`
 	TheTVDBID     *string                    `gorm:"column:thetvdbid;null" json:"thetvdbid"`
-	// The work this anime adapts, when known. Null for originals and for
-	// sources MAL does not cover, which is most of the catalogue.
-	SourceWorkID  *string      `gorm:"column:source_work_id;null" json:"source_work_id"`
+	SourceWorkID  *string                    `gorm:"column:source_work_id;null" json:"source_work_id"`
 	UrlSlug       *string                    `gorm:"column:url_slug;null" json:"url_slug"`
 	Type          *RECORD_TYPE               `gorm:"column:type;type:text;default:Anime" json:"type"`
 	TitleEn       *string                    `gorm:"column:title_en;null" json:"title_en"`
