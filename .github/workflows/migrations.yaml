@@ -80,8 +80,8 @@ jobs:
 
             SELECT count(*) INTO n FROM information_schema.columns
               WHERE table_schema = 'public' AND table_name <> 'schema_migrations';
-            IF n <> 179 THEN
-              RAISE EXCEPTION 'expected 179 columns, found %', n;
+            IF n <> 180 THEN
+              RAISE EXCEPTION 'expected 180 columns, found %', n;
             END IF;
 
             -- Three episode-count triggers plus ten updated_at triggers.
