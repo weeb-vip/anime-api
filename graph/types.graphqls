@@ -89,6 +89,13 @@ type Anime @key(fields: "id") {
     Exposed because relatedAnime resolves SHARED_SOURCE from it.
     """
     sourceWorkId: String
+
+    """
+    The work this anime adapts, resolved. Null for originals and for sources
+    MyAnimeList's manga database does not cover, which together are most of the
+    catalogue.
+    """
+    sourceWork: Work @goField(forceResolver: true)
     """
     Public URL segment for the anime, e.g. "cowboy-bebop". Derived from the
     title, with a year and type appended only where several anime would
@@ -169,6 +176,82 @@ type Anime @key(fields: "id") {
     createdAt: String!
     updatedAt: String!
     nextEpisode: Episode @goField(forceResolver: true )
+}
+
+"""
+A source work: the manga, light novel or novel an anime is adapted from.
+
+One type for the whole family, discriminated by `type`. MyAnimeList serves them
+from a single namespace at /manga/<id> and their fields are identical apart from
+demographic, so splitting them into separate types would mean near-copies and a
+caller having to guess which to ask for.
+
+The public URL follows the same reasoning: /manga/<slug> for all of them, with
+the type shown on the page. `type` is data that can be corrected upstream, and a
+URL that moved when a work was reclassified would break every link to it.
+"""
+type Work {
+    id: ID!
+
+    "MyAnimeList's id for this work. Null for works from any other source."
+    malId: Int
+
+    """
+    Which kind of work this is: MANGA, LIGHT_NOVEL, NOVEL, WEB_MANGA,
+    WEB_NOVEL, ONE_SHOT, DOUJINSHI, MANHWA, MANHUA or FOUR_KOMA.
+
+    A plain string rather than an enum: MyAnimeList adds labels without warning,
+    and an unrecognised one should render as itself rather than fail the query.
+    """
+    type: String!
+
+    "Public URL segment. Assigned once and never rewritten."
+    urlSlug: String
+
+    titleEn: String
+    titleJp: String
+    titleSynonyms: [String!]
+    synopsis: String
+    imageUrl: String
+
+    "Publication status as the source reports it."
+    status: String
+    volumes: Int
+    chapters: Int
+    publishedFrom: String
+    publishedTo: String
+
+    "Target readership -- Shounen, Seinen, Josei. Absent on light novels."
+    demographic: String
+
+    "The magazine it ran in, when it ran in one."
+    serialization: String
+
+    "Credited authors, surname first as the source writes them."
+    authors: [String!]
+
+    score: Float
+    ranking: Int
+    members: Int
+    favorites: Int
+
+    """
+    Every anime adapted from this work, oldest first.
+
+    This is the point of modelling works at all: Fruits Basket in 2001 and 2019,
+    Hunter x Hunter in 1999 and 2011. Those share no TheTVDB series id and often
+    no cast, so nothing else relates them to each other.
+
+    Usually empty, and increasingly so. MyAnimeList holds over sixty thousand
+    manga against roughly ten thousand anime adapted from one, so most works
+    have never been adapted and never will be. Empty is the ordinary case here,
+    not a missing relation -- a page rendering this needs a real empty state
+    rather than an apology.
+    """
+    adaptations(limit: Int): [Anime!] @goField(forceResolver: true)
+
+    createdAt: String!
+    updatedAt: String!
 }
 
 """

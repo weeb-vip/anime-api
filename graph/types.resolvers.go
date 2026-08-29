@@ -14,6 +14,11 @@ import (
 	"github.com/weeb-vip/anime-api/internal/resolvers"
 )
 
+// SourceWork is the resolver for the sourceWork field.
+func (r *animeResolver) SourceWork(ctx context.Context, obj *model.Anime) (*model.Work, error) {
+	return resolvers.SourceWorkForAnime(ctx, r.WorkService, obj)
+}
+
 // Tags is the resolver for the tags field.
 func (r *animeResolver) Tags(ctx context.Context, obj *model.Anime) ([]string, error) {
 	// Check if tags are already preloaded
@@ -182,6 +187,11 @@ func (r *userAnimeResolver) Anime(ctx context.Context, obj *model.UserAnime) (*m
 	return resolvers.AnimeByID(ctx, r.AnimeService, animeID)
 }
 
+// Adaptations is the resolver for the adaptations field.
+func (r *workResolver) Adaptations(ctx context.Context, obj *model.Work, limit *int) ([]*model.Anime, error) {
+	return resolvers.AdaptationsForWork(ctx, r.AnimeService, obj, limit)
+}
+
 // Anime returns generated.AnimeResolver implementation.
 func (r *Resolver) Anime() generated.AnimeResolver { return &animeResolver{r} }
 
@@ -197,11 +207,15 @@ func (r *Resolver) Episode() generated.EpisodeResolver { return &episodeResolver
 // UserAnime returns generated.UserAnimeResolver implementation.
 func (r *Resolver) UserAnime() generated.UserAnimeResolver { return &userAnimeResolver{r} }
 
+// Work returns generated.WorkResolver implementation.
+func (r *Resolver) Work() generated.WorkResolver { return &workResolver{r} }
+
 type animeResolver struct{ *Resolver }
 type animeStaffResolver struct{ *Resolver }
 type apiInfoResolver struct{ *Resolver }
 type episodeResolver struct{ *Resolver }
 type userAnimeResolver struct{ *Resolver }
+type workResolver struct{ *Resolver }
 
 // !!! WARNING !!!
 // The code below was going to be deleted when updating resolvers. It has been copied here so you have

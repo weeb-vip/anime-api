@@ -35,4 +35,13 @@ type Query {
     staff(id: ID!): AnimeStaff
     "Look a staff member up by their public URL slug. Null when no one claims it."
     staffBySlug(slug: String!): AnimeStaff
+    """
+    Look a source work up by its public URL slug -- the manga, light novel or
+    novel behind /manga/<slug>. Null when no work claims it.
+
+    One query for the whole family rather than one per type, because they are
+    one table discriminated by `type`, exactly as MyAnimeList serves them from
+    a single namespace.
+    """
+    workBySlug(slug: String!): Work
 }

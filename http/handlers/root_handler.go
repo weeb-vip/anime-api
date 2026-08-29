@@ -14,22 +14,24 @@ import (
 	anime2 "github.com/weeb-vip/anime-api/internal/db/repositories/anime"
 	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_character"
 	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_character_staff_link"
-	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_staff"
 	anime3 "github.com/weeb-vip/anime-api/internal/db/repositories/anime_episode"
-	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_schedule"
 	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_fanart"
+	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_schedule"
 	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_season"
+	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_staff"
 	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_streaming_platform"
 	"github.com/weeb-vip/anime-api/internal/db/repositories/anime_tag"
 	"github.com/weeb-vip/anime-api/internal/db/repositories/episode_air_time"
+	workrepo "github.com/weeb-vip/anime-api/internal/db/repositories/work"
 	"github.com/weeb-vip/anime-api/internal/directives"
 	"github.com/weeb-vip/anime-api/internal/logger"
 	"github.com/weeb-vip/anime-api/internal/services/anime"
 	anime_character2 "github.com/weeb-vip/anime-api/internal/services/anime_character"
 	anime_character_staff_link2 "github.com/weeb-vip/anime-api/internal/services/anime_character_staff_link"
-	anime_staff2 "github.com/weeb-vip/anime-api/internal/services/anime_staff"
 	anime_season_service "github.com/weeb-vip/anime-api/internal/services/anime_season"
+	anime_staff2 "github.com/weeb-vip/anime-api/internal/services/anime_staff"
 	"github.com/weeb-vip/anime-api/internal/services/episodes"
+	workservice "github.com/weeb-vip/anime-api/internal/services/work"
 )
 
 func BuildRootHandler(conf config.Config) http.Handler {
@@ -90,6 +92,7 @@ func BuildRootHandler(conf config.Config) http.Handler {
 	animeStreamingPlatformRepository := anime_streaming_platform.NewAnimeStreamingPlatformRepository(database)
 	animeFanartRepository := anime_fanart.NewAnimeFanartRepository(database)
 	episodeAirTimeRepository := episode_air_time.NewEpisodeAirTimeRepository(database)
+	workService := workservice.NewWorkService(workrepo.NewWorkRepository(database))
 	resolvers := &graph.Resolver{
 		Config:                             conf,
 		AnimeService:                       animeService,
@@ -103,6 +106,7 @@ func BuildRootHandler(conf config.Config) http.Handler {
 		AnimeStreamingPlatformRepository:   animeStreamingPlatformRepository,
 		AnimeFanartRepository:              animeFanartRepository,
 		EpisodeAirTimeRepository:           episodeAirTimeRepository,
+		WorkService:                        workService,
 	}
 
 	cfg := generated.Config{Resolvers: resolvers, Directives: directives.GetDirectives()}
@@ -163,6 +167,7 @@ func BuildRootHandlerWithContext(ctx context.Context, conf config.Config) http.H
 	animeStreamingPlatformRepository := anime_streaming_platform.NewAnimeStreamingPlatformRepository(database)
 	animeFanartRepository := anime_fanart.NewAnimeFanartRepository(database)
 	episodeAirTimeRepository := episode_air_time.NewEpisodeAirTimeRepository(database)
+	workService := workservice.NewWorkService(workrepo.NewWorkRepository(database))
 	resolvers := &graph.Resolver{
 		Config:                             conf,
 		AnimeService:                       animeService,
@@ -176,6 +181,7 @@ func BuildRootHandlerWithContext(ctx context.Context, conf config.Config) http.H
 		AnimeStreamingPlatformRepository:   animeStreamingPlatformRepository,
 		AnimeFanartRepository:              animeFanartRepository,
 		EpisodeAirTimeRepository:           episodeAirTimeRepository,
+		WorkService:                        workService,
 		CacheService:                       cacheService,
 		Context:                            ctx,
 	}

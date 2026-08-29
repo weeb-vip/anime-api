@@ -23,6 +23,10 @@ type Anime struct {
 	//
 	// Exposed because relatedAnime resolves SHARED_SOURCE from it.
 	SourceWorkID *string `json:"sourceWorkId,omitempty"`
+	// The work this anime adapts, resolved. Null for originals and for sources
+	// MyAnimeList's manga database does not cover, which together are most of the
+	// catalogue.
+	SourceWork *Work `json:"sourceWork,omitempty"`
 	// Public URL segment for the anime, e.g. "cowboy-bebop". Derived from the
 	// title, with a year and type appended only where several anime would
 	// otherwise claim the same slug. Null for records the backfill has not
@@ -332,6 +336,65 @@ type UserAnime struct {
 }
 
 func (UserAnime) IsEntity() {}
+
+// A source work: the manga, light novel or novel an anime is adapted from.
+//
+// One type for the whole family, discriminated by `type`. MyAnimeList serves them
+// from a single namespace at /manga/<id> and their fields are identical apart from
+// demographic, so splitting them into separate types would mean near-copies and a
+// caller having to guess which to ask for.
+//
+// The public URL follows the same reasoning: /manga/<slug> for all of them, with
+// the type shown on the page. `type` is data that can be corrected upstream, and a
+// URL that moved when a work was reclassified would break every link to it.
+type Work struct {
+	ID string `json:"id"`
+	// MyAnimeList's id for this work. Null for works from any other source.
+	MalID *int `json:"malId,omitempty"`
+	// Which kind of work this is: MANGA, LIGHT_NOVEL, NOVEL, WEB_MANGA,
+	// WEB_NOVEL, ONE_SHOT, DOUJINSHI, MANHWA, MANHUA or FOUR_KOMA.
+	//
+	// A plain string rather than an enum: MyAnimeList adds labels without warning,
+	// and an unrecognised one should render as itself rather than fail the query.
+	Type string `json:"type"`
+	// Public URL segment. Assigned once and never rewritten.
+	URLSlug       *string  `json:"urlSlug,omitempty"`
+	TitleEn       *string  `json:"titleEn,omitempty"`
+	TitleJp       *string  `json:"titleJp,omitempty"`
+	TitleSynonyms []string `json:"titleSynonyms,omitempty"`
+	Synopsis      *string  `json:"synopsis,omitempty"`
+	ImageURL      *string  `json:"imageUrl,omitempty"`
+	// Publication status as the source reports it.
+	Status        *string `json:"status,omitempty"`
+	Volumes       *int    `json:"volumes,omitempty"`
+	Chapters      *int    `json:"chapters,omitempty"`
+	PublishedFrom *string `json:"publishedFrom,omitempty"`
+	PublishedTo   *string `json:"publishedTo,omitempty"`
+	// Target readership -- Shounen, Seinen, Josei. Absent on light novels.
+	Demographic *string `json:"demographic,omitempty"`
+	// The magazine it ran in, when it ran in one.
+	Serialization *string `json:"serialization,omitempty"`
+	// Credited authors, surname first as the source writes them.
+	Authors   []string `json:"authors,omitempty"`
+	Score     *float64 `json:"score,omitempty"`
+	Ranking   *int     `json:"ranking,omitempty"`
+	Members   *int     `json:"members,omitempty"`
+	Favorites *int     `json:"favorites,omitempty"`
+	// Every anime adapted from this work, oldest first.
+	//
+	// This is the point of modelling works at all: Fruits Basket in 2001 and 2019,
+	// Hunter x Hunter in 1999 and 2011. Those share no TheTVDB series id and often
+	// no cast, so nothing else relates them to each other.
+	//
+	// Usually empty, and increasingly so. MyAnimeList holds over sixty thousand
+	// manga against roughly ten thousand anime adapted from one, so most works
+	// have never been adapted and never will be. Empty is the ordinary case here,
+	// not a missing relation -- a page rendering this needs a real empty state
+	// rather than an apology.
+	Adaptations []*Anime `json:"adaptations,omitempty"`
+	CreatedAt   string   `json:"createdAt"`
+	UpdatedAt   string   `json:"updatedAt"`
+}
 
 // Air type for schedule times (raw Japanese broadcast, subtitled, dubbed)
 type AirType string

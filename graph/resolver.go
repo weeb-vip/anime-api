@@ -14,9 +14,10 @@ import (
 	"github.com/weeb-vip/anime-api/internal/services/anime"
 	"github.com/weeb-vip/anime-api/internal/services/anime_character"
 	anime_character_staff_link2 "github.com/weeb-vip/anime-api/internal/services/anime_character_staff_link"
-	"github.com/weeb-vip/anime-api/internal/services/anime_staff"
 	"github.com/weeb-vip/anime-api/internal/services/anime_season"
+	"github.com/weeb-vip/anime-api/internal/services/anime_staff"
 	"github.com/weeb-vip/anime-api/internal/services/episodes"
+	"github.com/weeb-vip/anime-api/internal/services/work"
 )
 
 // This file will not be regenerated automatically.
@@ -39,6 +40,7 @@ type Resolver struct {
 	AnimeCharacterWithStaffLinkService anime_character_staff_link2.AnimeCharacterStaffLinkImpl
 	AnimeStaffService                  anime_staff.AnimeStaffServiceImpl
 	AnimeSeasonService                 anime_season.AnimeSeasonServiceImpl
+	WorkService                        work.WorkServiceImpl
 	AnimeTagRepository                 anime_tag.AnimeTagRepositoryImpl
 	AnimeScheduleRepository            anime_schedule.AnimeScheduleRepositoryImpl
 	AnimeStreamingPlatformRepository   anime_streaming_platform.AnimeStreamingPlatformRepositoryImpl
