@@ -17,6 +17,12 @@ type Anime struct {
 	Anidbid *string `json:"anidbid,omitempty"`
 	// TheTVDB ID of the anime
 	Thetvdbid *string `json:"thetvdbid,omitempty"`
+	// The work this anime adapts, when we know it -- the manga or novel, not the
+	// category `source` gives. Null for originals and for sources MyAnimeList's
+	// manga database does not cover, which together are most of the catalogue.
+	//
+	// Exposed because relatedAnime resolves SHARED_SOURCE from it.
+	SourceWorkID *string `json:"sourceWorkId,omitempty"`
 	// Public URL segment for the anime, e.g. "cowboy-bebop". Derived from the
 	// title, with a year and type appended only where several anime would
 	// otherwise claim the same slug. Null for records the backfill has not
@@ -373,16 +379,8 @@ func (e AirType) MarshalGQL(w io.Writer) {
 
 // The ways two anime can be connected.
 //
-// Only kinds we can actually establish appear here. Two more are wanted and are
-// absent because the data does not support them yet:
-//
-// A shared source work. Most anime adapt something, and the manga or novel is
-// what ties the adaptations together -- Fruits Basket in 2001 and 2019, Hunter x
-// Hunter in 1999 and 2011, Fullmetal Alchemist and Brotherhood. Those share no
-// TheTVDB series id and frequently no cast, so nothing else finds them. We record
-// `source` as a category ("Manga", "Light novel") and not as an identity, so we
-// know an anime came from a manga but never which one; this needs the work itself
-// modelled and anime pointed at it.
+// Only kinds we can actually establish appear here. One more is wanted and is
+// absent because the data does not support it yet:
 //
 // A shared creator, the thread joining Serial Experiments Lain and Haibane
 // Renmei. That needs staff credited against an anime by role, and anime_staff
@@ -393,15 +391,26 @@ const (
 	// Another entry in the same series: a season, film, OVA or special sharing
 	// its TheTVDB series id. The same show, not a different one.
 	AnimeRelationSameSeries AnimeRelation = "SAME_SERIES"
+	// A separate adaptation of the same source work -- Fruits Basket in 2001 and
+	// 2019, Hunter x Hunter in 1999 and 2011, Fullmetal Alchemist and
+	// Brotherhood.
+	//
+	// A different show, not another entry in one: these are distinct productions,
+	// often years and a studio apart, telling the same story again. They share no
+	// TheTVDB series id and frequently no cast, which is why SAME_SERIES cannot
+	// reach them and why the source work had to be modelled as an identity rather
+	// than the category `source` records.
+	AnimeRelationSharedSource AnimeRelation = "SHARED_SOURCE"
 )
 
 var AllAnimeRelation = []AnimeRelation{
 	AnimeRelationSameSeries,
+	AnimeRelationSharedSource,
 }
 
 func (e AnimeRelation) IsValid() bool {
 	switch e {
-	case AnimeRelationSameSeries:
+	case AnimeRelationSameSeries, AnimeRelationSharedSource:
 		return true
 	}
 	return false

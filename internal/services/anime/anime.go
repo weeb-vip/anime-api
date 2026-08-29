@@ -16,6 +16,7 @@ type AnimeServiceImpl interface {
 	AnimeByIDWithEpisodes(ctx context.Context, id string) (*anime.Anime, error)
 	AnimeByIDs(ctx context.Context, ids []string) ([]*anime.Anime, error)
 	RelatedAnimeBySeriesID(ctx context.Context, seriesID string, excludeID string, limit int) ([]*anime.Anime, error)
+	RelatedAnimeBySourceWorkID(ctx context.Context, workID string, excludeID string, limit int) ([]*anime.Anime, error)
 	AnimeByIDsWithEpisodes(ctx context.Context, ids []string) ([]*anime.Anime, error)
 	TopRatedAnime(ctx context.Context, limit int) ([]*anime.Anime, error)
 	TopRatedAnimeWithEpisodes(ctx context.Context, limit int) ([]*anime.Anime, error)
@@ -262,4 +263,11 @@ func (a *AnimeService) RelatedAnimeBySeriesID(ctx context.Context, seriesID stri
 	defer span.End()
 
 	return a.Repository.FindBySeriesID(ctx, seriesID, excludeID, limit)
+}
+
+func (a *AnimeService) RelatedAnimeBySourceWorkID(ctx context.Context, workID string, excludeID string, limit int) ([]*anime.Anime, error) {
+	ctx, span := a.startServiceSpan(ctx, "RelatedAnimeBySourceWorkID")
+	defer span.End()
+
+	return a.Repository.FindBySourceWorkID(ctx, workID, excludeID, limit)
 }

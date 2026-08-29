@@ -76,6 +76,7 @@ type ComplexityRoot struct {
 		Seasons            func(childComplexity int) int
 		Slug               func(childComplexity int) int
 		Source             func(childComplexity int) int
+		SourceWorkID       func(childComplexity int) int
 		StartDate          func(childComplexity int) int
 		StreamingPlatforms func(childComplexity int) int
 		Studios            func(childComplexity int) int
@@ -463,6 +464,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Anime.Source(childComplexity), true
+
+	case "Anime.sourceWorkId":
+		if e.complexity.Anime.SourceWorkID == nil {
+			break
+		}
+
+		return e.complexity.Anime.SourceWorkID(childComplexity), true
 
 	case "Anime.startDate":
 		if e.complexity.Anime.StartDate == nil {
@@ -1579,6 +1587,15 @@ type Anime @key(fields: "id") {
     anidbid: String
     "TheTVDB ID of the anime"
     thetvdbid: String
+
+    """
+    The work this anime adapts, when we know it -- the manga or novel, not the
+    category ` + "`" + `source` + "`" + ` gives. Null for originals and for sources MyAnimeList's
+    manga database does not cover, which together are most of the catalogue.
+
+    Exposed because relatedAnime resolves SHARED_SOURCE from it.
+    """
+    sourceWorkId: String
     """
     Public URL segment for the anime, e.g. "cowboy-bebop". Derived from the
     title, with a year and type appended only where several anime would
@@ -1675,16 +1692,8 @@ type RelatedAnime {
 """
 The ways two anime can be connected.
 
-Only kinds we can actually establish appear here. Two more are wanted and are
-absent because the data does not support them yet:
-
-A shared source work. Most anime adapt something, and the manga or novel is
-what ties the adaptations together -- Fruits Basket in 2001 and 2019, Hunter x
-Hunter in 1999 and 2011, Fullmetal Alchemist and Brotherhood. Those share no
-TheTVDB series id and frequently no cast, so nothing else finds them. We record
-` + "`" + `source` + "`" + ` as a category ("Manga", "Light novel") and not as an identity, so we
-know an anime came from a manga but never which one; this needs the work itself
-modelled and anime pointed at it.
+Only kinds we can actually establish appear here. One more is wanted and is
+absent because the data does not support it yet:
 
 A shared creator, the thread joining Serial Experiments Lain and Haibane
 Renmei. That needs staff credited against an anime by role, and anime_staff
@@ -1696,6 +1705,19 @@ enum AnimeRelation {
     its TheTVDB series id. The same show, not a different one.
     """
     SAME_SERIES
+
+    """
+    A separate adaptation of the same source work -- Fruits Basket in 2001 and
+    2019, Hunter x Hunter in 1999 and 2011, Fullmetal Alchemist and
+    Brotherhood.
+
+    A different show, not another entry in one: these are distinct productions,
+    often years and a studio apart, telling the same story again. They share no
+    TheTVDB series id and frequently no cast, which is why SAME_SERIES cannot
+    reach them and why the source work had to be modelled as an identity rather
+    than the category ` + "`" + `source` + "`" + ` records.
+    """
+    SHARED_SOURCE
 }
 
 type AnimeSeason {
@@ -2486,6 +2508,47 @@ func (ec *executionContext) _Anime_thetvdbid(ctx context.Context, field graphql.
 }
 
 func (ec *executionContext) fieldContext_Anime_thetvdbid(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Anime",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Anime_sourceWorkId(ctx context.Context, field graphql.CollectedField, obj *model.Anime) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Anime_sourceWorkId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SourceWorkID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Anime_sourceWorkId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Anime",
 		Field:      field,
@@ -6261,6 +6324,8 @@ func (ec *executionContext) fieldContext_Entity_findAnimeByID(ctx context.Contex
 				return ec.fieldContext_Anime_anidbid(ctx, field)
 			case "thetvdbid":
 				return ec.fieldContext_Anime_thetvdbid(ctx, field)
+			case "sourceWorkId":
+				return ec.fieldContext_Anime_sourceWorkId(ctx, field)
 			case "slug":
 				return ec.fieldContext_Anime_slug(ctx, field)
 			case "titleEn":
@@ -7257,6 +7322,8 @@ func (ec *executionContext) fieldContext_Query_dbSearch(ctx context.Context, fie
 				return ec.fieldContext_Anime_anidbid(ctx, field)
 			case "thetvdbid":
 				return ec.fieldContext_Anime_thetvdbid(ctx, field)
+			case "sourceWorkId":
+				return ec.fieldContext_Anime_sourceWorkId(ctx, field)
 			case "slug":
 				return ec.fieldContext_Anime_slug(ctx, field)
 			case "titleEn":
@@ -7432,6 +7499,8 @@ func (ec *executionContext) fieldContext_Query_anime(ctx context.Context, field 
 				return ec.fieldContext_Anime_anidbid(ctx, field)
 			case "thetvdbid":
 				return ec.fieldContext_Anime_thetvdbid(ctx, field)
+			case "sourceWorkId":
+				return ec.fieldContext_Anime_sourceWorkId(ctx, field)
 			case "slug":
 				return ec.fieldContext_Anime_slug(ctx, field)
 			case "titleEn":
@@ -7554,6 +7623,8 @@ func (ec *executionContext) fieldContext_Query_animeBySlug(ctx context.Context, 
 				return ec.fieldContext_Anime_anidbid(ctx, field)
 			case "thetvdbid":
 				return ec.fieldContext_Anime_thetvdbid(ctx, field)
+			case "sourceWorkId":
+				return ec.fieldContext_Anime_sourceWorkId(ctx, field)
 			case "slug":
 				return ec.fieldContext_Anime_slug(ctx, field)
 			case "titleEn":
@@ -7676,6 +7747,8 @@ func (ec *executionContext) fieldContext_Query_newestAnime(ctx context.Context, 
 				return ec.fieldContext_Anime_anidbid(ctx, field)
 			case "thetvdbid":
 				return ec.fieldContext_Anime_thetvdbid(ctx, field)
+			case "sourceWorkId":
+				return ec.fieldContext_Anime_sourceWorkId(ctx, field)
 			case "slug":
 				return ec.fieldContext_Anime_slug(ctx, field)
 			case "titleEn":
@@ -7798,6 +7871,8 @@ func (ec *executionContext) fieldContext_Query_topRatedAnime(ctx context.Context
 				return ec.fieldContext_Anime_anidbid(ctx, field)
 			case "thetvdbid":
 				return ec.fieldContext_Anime_thetvdbid(ctx, field)
+			case "sourceWorkId":
+				return ec.fieldContext_Anime_sourceWorkId(ctx, field)
 			case "slug":
 				return ec.fieldContext_Anime_slug(ctx, field)
 			case "titleEn":
@@ -7920,6 +7995,8 @@ func (ec *executionContext) fieldContext_Query_mostPopularAnime(ctx context.Cont
 				return ec.fieldContext_Anime_anidbid(ctx, field)
 			case "thetvdbid":
 				return ec.fieldContext_Anime_thetvdbid(ctx, field)
+			case "sourceWorkId":
+				return ec.fieldContext_Anime_sourceWorkId(ctx, field)
 			case "slug":
 				return ec.fieldContext_Anime_slug(ctx, field)
 			case "titleEn":
@@ -8197,6 +8274,8 @@ func (ec *executionContext) fieldContext_Query_currentlyAiring(ctx context.Conte
 				return ec.fieldContext_Anime_anidbid(ctx, field)
 			case "thetvdbid":
 				return ec.fieldContext_Anime_thetvdbid(ctx, field)
+			case "sourceWorkId":
+				return ec.fieldContext_Anime_sourceWorkId(ctx, field)
 			case "slug":
 				return ec.fieldContext_Anime_slug(ctx, field)
 			case "titleEn":
@@ -8319,6 +8398,8 @@ func (ec *executionContext) fieldContext_Query_animeBySeasons(ctx context.Contex
 				return ec.fieldContext_Anime_anidbid(ctx, field)
 			case "thetvdbid":
 				return ec.fieldContext_Anime_thetvdbid(ctx, field)
+			case "sourceWorkId":
+				return ec.fieldContext_Anime_sourceWorkId(ctx, field)
 			case "slug":
 				return ec.fieldContext_Anime_slug(ctx, field)
 			case "titleEn":
@@ -8441,6 +8522,8 @@ func (ec *executionContext) fieldContext_Query_animeBySeasonAndYear(ctx context.
 				return ec.fieldContext_Anime_anidbid(ctx, field)
 			case "thetvdbid":
 				return ec.fieldContext_Anime_thetvdbid(ctx, field)
+			case "sourceWorkId":
+				return ec.fieldContext_Anime_sourceWorkId(ctx, field)
 			case "slug":
 				return ec.fieldContext_Anime_slug(ctx, field)
 			case "titleEn":
@@ -9024,6 +9107,8 @@ func (ec *executionContext) fieldContext_RelatedAnime_anime(ctx context.Context,
 				return ec.fieldContext_Anime_anidbid(ctx, field)
 			case "thetvdbid":
 				return ec.fieldContext_Anime_thetvdbid(ctx, field)
+			case "sourceWorkId":
+				return ec.fieldContext_Anime_sourceWorkId(ctx, field)
 			case "slug":
 				return ec.fieldContext_Anime_slug(ctx, field)
 			case "titleEn":
@@ -9259,6 +9344,8 @@ func (ec *executionContext) fieldContext_StaffRole_anime(ctx context.Context, fi
 				return ec.fieldContext_Anime_anidbid(ctx, field)
 			case "thetvdbid":
 				return ec.fieldContext_Anime_thetvdbid(ctx, field)
+			case "sourceWorkId":
+				return ec.fieldContext_Anime_sourceWorkId(ctx, field)
 			case "slug":
 				return ec.fieldContext_Anime_slug(ctx, field)
 			case "titleEn":
@@ -9543,6 +9630,8 @@ func (ec *executionContext) fieldContext_UserAnime_anime(ctx context.Context, fi
 				return ec.fieldContext_Anime_anidbid(ctx, field)
 			case "thetvdbid":
 				return ec.fieldContext_Anime_thetvdbid(ctx, field)
+			case "sourceWorkId":
+				return ec.fieldContext_Anime_sourceWorkId(ctx, field)
 			case "slug":
 				return ec.fieldContext_Anime_slug(ctx, field)
 			case "titleEn":
@@ -11623,6 +11712,8 @@ func (ec *executionContext) _Anime(ctx context.Context, sel ast.SelectionSet, ob
 			out.Values[i] = ec._Anime_anidbid(ctx, field, obj)
 		case "thetvdbid":
 			out.Values[i] = ec._Anime_thetvdbid(ctx, field, obj)
+		case "sourceWorkId":
+			out.Values[i] = ec._Anime_sourceWorkId(ctx, field, obj)
 		case "slug":
 			out.Values[i] = ec._Anime_slug(ctx, field, obj)
 		case "titleEn":
