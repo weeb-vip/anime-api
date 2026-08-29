@@ -36,6 +36,7 @@ type AnimeRepositoryImpl interface {
 	FindBySlug(ctx context.Context, slug string) (*Anime, error)
 	FindByIDs(ctx context.Context, ids []string) ([]*Anime, error)
 	FindBySeriesID(ctx context.Context, seriesID string, excludeID string, limit int) ([]*Anime, error)
+	FindBySourceWorkID(ctx context.Context, workID string, excludeID string, limit int) ([]*Anime, error)
 	FindByIDsWithEpisodes(ctx context.Context, ids []string) ([]*Anime, error)
 	FindByName(ctx context.Context, name string) ([]*Anime, error)
 	FindByNameWithEpisodes(ctx context.Context, name string) ([]*Anime, error)
@@ -988,6 +989,43 @@ func (a *AnimeRepository) FindByIDs(ctx context.Context, ids []string) ([]*Anime
 
 	var animes []*Anime
 	err := a.db.DB.WithContext(ctx).Where("id IN ?", ids).Find(&animes).Error
+	if err != nil {
+		metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Error)
+		return nil, err
+	}
+
+	metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Success)
+	return animes, nil
+}
+
+// FindBySourceWorkID returns the other anime adapted from the same work,
+// oldest first with undated entries last.
+//
+// This is the signal TheTVDB cannot provide. Re-adaptations of one manga are
+// separate productions years apart -- Fruits Basket in 2001 and 2019, Hunter x
+// Hunter in 1999 and 2011 -- so they carry different series ids and usually a
+// different cast. The source work is what they actually share.
+//
+// The empty-string guard matters for the same reason it does on series id:
+// source_work_id is nullable, and '' = '' is true, so a blank value would
+// relate every blank-valued anime to every other one and look like a working
+// feature.
+//
+// Served by idx_anime_source_work_id from migration 000063.
+func (a *AnimeRepository) FindBySourceWorkID(ctx context.Context, workID string, excludeID string, limit int) ([]*Anime, error) {
+	startTime := time.Now()
+
+	if workID == "" {
+		return []*Anime{}, nil
+	}
+
+	var animes []*Anime
+	err := a.db.DB.WithContext(ctx).
+		Where("source_work_id = ? AND id <> ?", workID, excludeID).
+		Order("start_date IS NULL, start_date ASC").
+		Limit(limit).
+		Find(&animes).Error
+
 	if err != nil {
 		metrics.GetAppMetrics().DatabaseSince(startTime, "anime", metrics.MethodSelect, metrics.Error)
 		return nil, err

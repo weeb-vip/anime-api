@@ -123,6 +123,7 @@ func transformAnimeToGraphQL(animeEntity anime2.Anime) (*model.Anime, error) {
 		ID:            animeEntity.ID,
 		Anidbid:       animeEntity.AnidbID,
 		Thetvdbid:     animeEntity.TheTVDBID,
+		SourceWorkID:  animeEntity.SourceWorkID,
 		Slug:          animeEntity.UrlSlug,
 		Type:          recordTypeToString(animeEntity.Type),
 		MalID:         animeEntity.MalID,
@@ -230,6 +231,7 @@ func transformAnimeToGraphQLWithEpisode(animeEntity anime2.AnimeWithNextEpisode)
 		ID:            animeEntity.ID,
 		Anidbid:       animeEntity.AnidbID,
 		Thetvdbid:     animeEntity.TheTVDBID,
+		SourceWorkID:  animeEntity.SourceWorkID,
 		Slug:          animeEntity.UrlSlug,
 		Type:          recordTypeToString(animeEntity.Type),
 		MalID:         animeEntity.MalID,
@@ -714,61 +716,95 @@ func DBSearchAnime(ctx context.Context, animeService anime.AnimeServiceImpl, que
 	return animes, nil
 }
 
-// RelatedAnimeBySeries resolves Anime.relatedAnime: the other entries sharing
-// this anime's TheTVDB series id.
+// RelatedAnimeFor resolves Anime.relatedAnime from every signal we have.
+//
+// Two, currently. Sharing a TheTVDB series id means the same show -- a season,
+// film or special. Sharing a source work means a separate adaptation of the
+// same story: Fruits Basket in 2001 and 2019, Hunter x Hunter in 1999 and
+// 2011. Those carry different series ids and usually a different cast, which
+// is exactly why the first signal cannot reach them.
+//
+// Series matches are gathered first and win any tie. An anime can legitimately
+// match both -- the seasons of one adaptation share a series id and a source
+// work -- and "another entry in this series" is the more specific truth about
+// such a pair than "a separate adaptation".
 //
 // A default limit rather than none, because the groups are not uniformly small
-// -- the largest in the catalogue holds 78 anime, and a Pokemon page returning
-// all of them would be a wall of links and a much larger response than the
-// caller expected.
-func RelatedAnimeBySeries(ctx context.Context, animeService anime.AnimeServiceImpl, obj *model.Anime, limit *int) ([]*model.RelatedAnime, error) {
+// -- the largest series in the catalogue holds 78 anime, and a Pokemon page
+// returning all of them would be a wall of links and a much larger response
+// than the caller expected.
+func RelatedAnimeFor(ctx context.Context, animeService anime.AnimeServiceImpl, obj *model.Anime, limit *int) ([]*model.RelatedAnime, error) {
 	tracer := tracing.GetTracer(ctx)
-	ctx, span := tracer.Start(ctx, "RelatedAnimeBySeries",
+	ctx, span := tracer.Start(ctx, "RelatedAnimeFor",
 		trace.WithAttributes(
 			attribute.String("anime.id", obj.ID),
-			attribute.String("resolver.name", "RelatedAnimeBySeries"),
+			attribute.String("resolver.name", "RelatedAnimeFor"),
 		),
 		tracing.GetEnvironmentAttribute(),
 	)
 	defer span.End()
-
-	// No series id means nothing to group on. Not an error: most of the
-	// catalogue has never been enriched with one.
-	if obj.Thetvdbid == nil || *obj.Thetvdbid == "" {
-		span.SetAttributes(attribute.Bool("anime.has_series_id", false))
-		return []*model.RelatedAnime{}, nil
-	}
 
 	resultLimit := 25
 	if limit != nil && *limit > 0 {
 		resultLimit = *limit
 	}
 
-	found, err := animeService.RelatedAnimeBySeriesID(ctx, *obj.Thetvdbid, obj.ID, resultLimit)
-	if err != nil {
-		span.RecordError(err)
-		return nil, err
+	related := make([]*model.RelatedAnime, 0, resultLimit)
+	// The anime itself is excluded by the queries, but it also guards against a
+	// row pointing at its own work being counted twice.
+	seen := map[string]bool{obj.ID: true}
+
+	appendFound := func(found []*anime2.Anime, relation model.AnimeRelation) error {
+		for _, entity := range found {
+			if entity == nil || seen[entity.ID] {
+				continue
+			}
+			if len(related) >= resultLimit {
+				return nil
+			}
+			transformed, err := transformAnimeToGraphQL(*entity)
+			if err != nil {
+				span.RecordError(err)
+				return err
+			}
+			seen[entity.ID] = true
+			// Carried per entry rather than per list: the two signals return
+			// different kinds from the same call.
+			related = append(related, &model.RelatedAnime{
+				Anime:    transformed,
+				Relation: relation,
+			})
+		}
+		return nil
 	}
 
-	related := make([]*model.RelatedAnime, 0, len(found))
-	for _, entity := range found {
-		if entity == nil {
-			continue
-		}
-		transformed, err := transformAnimeToGraphQL(*entity)
+	// No series id means nothing to group on. Not an error: most of the
+	// catalogue has never been enriched with one.
+	hasSeries := obj.Thetvdbid != nil && *obj.Thetvdbid != ""
+	if hasSeries {
+		found, err := animeService.RelatedAnimeBySeriesID(ctx, *obj.Thetvdbid, obj.ID, resultLimit)
 		if err != nil {
 			span.RecordError(err)
 			return nil, err
 		}
-		// Everything this resolver finds is found the same way, so the kind is
-		// constant here. It is carried per entry rather than per list because
-		// the next signal will not be: matching on shared cast or a shared
-		// creator will return entries of a different kind from the same query.
-		related = append(related, &model.RelatedAnime{
-			Anime:    transformed,
-			Relation: model.AnimeRelationSameSeries,
-		})
+		if err := appendFound(found, model.AnimeRelationSameSeries); err != nil {
+			return nil, err
+		}
 	}
+	span.SetAttributes(attribute.Bool("anime.has_series_id", hasSeries))
+
+	hasWork := obj.SourceWorkID != nil && *obj.SourceWorkID != ""
+	if hasWork && len(related) < resultLimit {
+		found, err := animeService.RelatedAnimeBySourceWorkID(ctx, *obj.SourceWorkID, obj.ID, resultLimit)
+		if err != nil {
+			span.RecordError(err)
+			return nil, err
+		}
+		if err := appendFound(found, model.AnimeRelationSharedSource); err != nil {
+			return nil, err
+		}
+	}
+	span.SetAttributes(attribute.Bool("anime.has_source_work", hasWork))
 
 	span.SetAttributes(attribute.Int("anime.related_count", len(related)))
 	return related, nil

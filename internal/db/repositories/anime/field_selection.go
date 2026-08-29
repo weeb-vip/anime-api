@@ -37,6 +37,7 @@ func (fs *FieldSelection) BuildSelectClause(tableName string) string {
 		"id":            "id",
 		"anidbid":       "anidbid",
 		"thetvdbid":     "thetvdbid",
+		"sourceWorkId":  "source_work_id",
 		// Unmapped fields are silently dropped from the SELECT, so a field
 		// missing here comes back null with no error anywhere -- which is how
 		// animeBySeasons served slug: null while every other resolver worked.
