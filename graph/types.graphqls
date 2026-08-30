@@ -190,7 +190,11 @@ The public URL follows the same reasoning: /manga/<slug> for all of them, with
 the type shown on the page. `type` is data that can be corrected upstream, and a
 URL that moved when a work was reclassified would break every link to it.
 """
-type Work {
+# A federated entity, so other subgraphs can hang their own fields off a work
+# the way list-service hangs userAnime off an Anime. Nothing here changes for
+# existing callers: adding a key is additive, and the work still resolves
+# through workBySlug exactly as before.
+type Work @key(fields: "id") {
     id: ID!
 
     "MyAnimeList's id for this work. Null for works from any other source."

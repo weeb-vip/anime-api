@@ -87,6 +87,40 @@ func WorkBySlug(ctx context.Context, workService work.WorkServiceImpl, slug stri
 	return transformWorkToGraphQL(*found), nil
 }
 
+// WorkByID resolves a work from a federation reference.
+//
+// The router calls this when another subgraph returns a Work it does not own --
+// list-service extending it with the viewer's reading progress, for instance.
+// It is the same lookup workBySlug performs, keyed on id because that is what a
+// federation key carries.
+//
+// A missing work is nil rather than an error, matching WorkBySlug: the id comes
+// from another service's row, which can point at something this store has not
+// received yet.
+func WorkByID(ctx context.Context, workService work.WorkServiceImpl, id string) (*model.Work, error) {
+	tracer := tracing.GetTracer(ctx)
+	ctx, span := tracer.Start(ctx, "WorkByID",
+		trace.WithAttributes(
+			attribute.String("work.id", id),
+			attribute.String("resolver.name", "WorkByID"),
+		),
+		tracing.GetEnvironmentAttribute(),
+	)
+	defer span.End()
+
+	found, err := workService.FindByID(ctx, id)
+	if err != nil {
+		span.RecordError(err)
+		return nil, err
+	}
+	if found == nil {
+		span.SetAttributes(attribute.Bool("work.found", false))
+		return nil, nil
+	}
+
+	return transformWorkToGraphQL(*found), nil
+}
+
 // SourceWorkForAnime resolves Anime.sourceWork.
 //
 // Null is the ordinary answer. Two thirds of the catalogue is either original

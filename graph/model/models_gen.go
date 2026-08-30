@@ -396,6 +396,8 @@ type Work struct {
 	UpdatedAt   string   `json:"updatedAt"`
 }
 
+func (Work) IsEntity() {}
+
 // Air type for schedule times (raw Japanese broadcast, subtitled, dubbed)
 type AirType string
 

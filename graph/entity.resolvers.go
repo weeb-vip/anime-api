@@ -10,6 +10,7 @@ import (
 
 	"github.com/weeb-vip/anime-api/graph/generated"
 	"github.com/weeb-vip/anime-api/graph/model"
+	"github.com/weeb-vip/anime-api/internal/resolvers"
 )
 
 // FindAnimeByID is the resolver for the findAnimeByID field.
@@ -28,6 +29,16 @@ func (r *entityResolver) FindUserAnimeByAnimeID(ctx context.Context, animeID str
 	return &model.UserAnime{
 		AnimeID: animeID,
 	}, nil
+}
+
+// FindWorkByID is the resolver for the findWorkByID field.
+//
+// Implemented, unlike the Anime and Episode reference resolvers above: those
+// panic because nothing resolves an Anime through this subgraph -- anime-api
+// owns it and serves it from its own queries. A Work reference does arrive
+// here, from any subgraph that hangs a field off a work it does not own.
+func (r *entityResolver) FindWorkByID(ctx context.Context, id string) (*model.Work, error) {
+	return resolvers.WorkByID(ctx, r.WorkService, id)
 }
 
 // Entity returns generated.EntityResolver implementation.
