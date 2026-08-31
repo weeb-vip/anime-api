@@ -187,6 +187,11 @@ func (r *userAnimeResolver) Anime(ctx context.Context, obj *model.UserAnime) (*m
 	return resolvers.AnimeByID(ctx, r.AnimeService, animeID)
 }
 
+// Work is the resolver for the work field.
+func (r *userWorkResolver) Work(ctx context.Context, obj *model.UserWork) (*model.Work, error) {
+	return resolvers.WorkByID(ctx, r.WorkService, obj.WorkID)
+}
+
 // Adaptations is the resolver for the adaptations field.
 func (r *workResolver) Adaptations(ctx context.Context, obj *model.Work, limit *int) ([]*model.Anime, error) {
 	return resolvers.AdaptationsForWork(ctx, r.AnimeService, obj, limit)
@@ -207,6 +212,9 @@ func (r *Resolver) Episode() generated.EpisodeResolver { return &episodeResolver
 // UserAnime returns generated.UserAnimeResolver implementation.
 func (r *Resolver) UserAnime() generated.UserAnimeResolver { return &userAnimeResolver{r} }
 
+// UserWork returns generated.UserWorkResolver implementation.
+func (r *Resolver) UserWork() generated.UserWorkResolver { return &userWorkResolver{r} }
+
 // Work returns generated.WorkResolver implementation.
 func (r *Resolver) Work() generated.WorkResolver { return &workResolver{r} }
 
@@ -215,6 +223,7 @@ type animeStaffResolver struct{ *Resolver }
 type apiInfoResolver struct{ *Resolver }
 type episodeResolver struct{ *Resolver }
 type userAnimeResolver struct{ *Resolver }
+type userWorkResolver struct{ *Resolver }
 type workResolver struct{ *Resolver }
 
 // !!! WARNING !!!
