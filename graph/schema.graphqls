@@ -44,4 +44,19 @@ type Query {
     a single namespace.
     """
     workBySlug(slug: String!): Work
+    """
+    Works still being serialised, most widely read first.
+
+    The reading counterpart of currentlyAiring, and deliberately ranked by
+    members rather than by how recently a work started. Popularity takes years
+    to accumulate, so ranking anything recent by it surfaces only obscurities:
+    of the works whose first chapter landed in the past year, the most read has
+    a few thousand members against eighty thousand for the ongoing series people
+    actually follow.
+
+    Ordered by members rather than score because this answers "what is everyone
+    reading", not "what is best" -- and score is absent on roughly one work in
+    ten while members never is.
+    """
+    currentlyPublishingWorks(limit: Int): [Work!]
 }

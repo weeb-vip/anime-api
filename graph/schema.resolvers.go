@@ -93,6 +93,11 @@ func (r *queryResolver) WorkBySlug(ctx context.Context, slug string) (*model.Wor
 	return resolvers.WorkBySlug(ctx, r.WorkService, slug)
 }
 
+// CurrentlyPublishingWorks is the resolver for the currentlyPublishingWorks field.
+func (r *queryResolver) CurrentlyPublishingWorks(ctx context.Context, limit *int) ([]*model.Work, error) {
+	return resolvers.CurrentlyPublishingWorks(ctx, r.WorkService, limit)
+}
+
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
