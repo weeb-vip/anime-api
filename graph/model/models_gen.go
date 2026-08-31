@@ -337,6 +337,13 @@ type UserAnime struct {
 
 func (UserAnime) IsEntity() {}
 
+type UserWork struct {
+	WorkID string `json:"workID"`
+	Work   *Work  `json:"work,omitempty"`
+}
+
+func (UserWork) IsEntity() {}
+
 // A source work: the manga, light novel or novel an anime is adapted from.
 //
 // One type for the whole family, discriminated by `type`. MyAnimeList serves them

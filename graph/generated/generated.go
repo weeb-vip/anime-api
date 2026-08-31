@@ -45,6 +45,7 @@ type ResolverRoot interface {
 	Episode() EpisodeResolver
 	Query() QueryResolver
 	UserAnime() UserAnimeResolver
+	UserWork() UserWorkResolver
 	Work() WorkResolver
 }
 
@@ -170,6 +171,7 @@ type ComplexityRoot struct {
 		FindAnimeByID          func(childComplexity int, id string) int
 		FindEpisodeByAnimeID   func(childComplexity int, animeID *string) int
 		FindUserAnimeByAnimeID func(childComplexity int, animeID string) int
+		FindUserWorkByWorkID   func(childComplexity int, workID string) int
 		FindWorkByID           func(childComplexity int, id string) int
 	}
 
@@ -242,6 +244,11 @@ type ComplexityRoot struct {
 		AnimeID func(childComplexity int) int
 	}
 
+	UserWork struct {
+		Work   func(childComplexity int) int
+		WorkID func(childComplexity int) int
+	}
+
 	Work struct {
 		Adaptations   func(childComplexity int, limit *int) int
 		Authors       func(childComplexity int) int
@@ -300,6 +307,7 @@ type EntityResolver interface {
 	FindAnimeByID(ctx context.Context, id string) (*model.Anime, error)
 	FindEpisodeByAnimeID(ctx context.Context, animeID *string) (*model.Episode, error)
 	FindUserAnimeByAnimeID(ctx context.Context, animeID string) (*model.UserAnime, error)
+	FindUserWorkByWorkID(ctx context.Context, workID string) (*model.UserWork, error)
 	FindWorkByID(ctx context.Context, id string) (*model.Work, error)
 }
 type EpisodeResolver interface {
@@ -326,6 +334,9 @@ type QueryResolver interface {
 }
 type UserAnimeResolver interface {
 	Anime(ctx context.Context, obj *model.UserAnime) (*model.Anime, error)
+}
+type UserWorkResolver interface {
+	Work(ctx context.Context, obj *model.UserWork) (*model.Work, error)
 }
 type WorkResolver interface {
 	Adaptations(ctx context.Context, obj *model.Work, limit *int) ([]*model.Anime, error)
@@ -1003,6 +1014,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Entity.FindUserAnimeByAnimeID(childComplexity, args["animeID"].(string)), true
 
+	case "Entity.findUserWorkByWorkID":
+		if e.complexity.Entity.FindUserWorkByWorkID == nil {
+			break
+		}
+
+		args, err := ec.field_Entity_findUserWorkByWorkID_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Entity.FindUserWorkByWorkID(childComplexity, args["workID"].(string)), true
+
 	case "Entity.findWorkByID":
 		if e.complexity.Entity.FindWorkByID == nil {
 			break
@@ -1414,6 +1437,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.UserAnime.AnimeID(childComplexity), true
+
+	case "UserWork.work":
+		if e.complexity.UserWork.Work == nil {
+			break
+		}
+
+		return e.complexity.UserWork.Work(childComplexity), true
+
+	case "UserWork.workID":
+		if e.complexity.UserWork.WorkID == nil {
+			break
+		}
+
+		return e.complexity.UserWork.WorkID(childComplexity), true
 
 	case "Work.adaptations":
 		if e.complexity.Work.Adaptations == nil {
@@ -2161,6 +2198,15 @@ extend type UserAnime @key(fields: "animeID") {
     anime: Anime @goField(forceResolver: true)
 }
 
+# The reading counterpart of the UserAnime extension above: a work on someone's
+# shelf, resolved to the work it points at. list-service owns UserWork and holds
+# only the workID; the title, cover and slug a reading list renders come from
+# here, exactly as an anime watchlist gets its show details.
+extend type UserWork @key(fields: "workID") {
+    workID: String! @external
+    work: Work @goField(forceResolver: true)
+}
+
 type AnimeCharacter {
     "Unique identifier for the character"
     id: ID!
@@ -2304,13 +2350,14 @@ type CharacterWithStaff {
 `, BuiltIn: true},
 	{Name: "../../federation/entity.graphql", Input: `
 # a union of all types that use the @key directive
-union _Entity = Anime | Episode | UserAnime | Work
+union _Entity = Anime | Episode | UserAnime | UserWork | Work
 
 # fake type to build resolver interfaces for users to implement
 type Entity {
 		findAnimeByID(id: ID!,): Anime!
 	findEpisodeByAnimeID(animeID: String,): Episode!
 	findUserAnimeByAnimeID(animeID: String!,): UserAnime!
+	findUserWorkByWorkID(workID: String!,): UserWork!
 	findWorkByID(id: ID!,): Work!
 
 }
@@ -2445,6 +2492,21 @@ func (ec *executionContext) field_Entity_findUserAnimeByAnimeID_args(ctx context
 		}
 	}
 	args["animeID"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Entity_findUserWorkByWorkID_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["workID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["workID"] = arg0
 	return args, nil
 }
 
@@ -7067,6 +7129,67 @@ func (ec *executionContext) fieldContext_Entity_findUserAnimeByAnimeID(ctx conte
 	return fc, nil
 }
 
+func (ec *executionContext) _Entity_findUserWorkByWorkID(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Entity_findUserWorkByWorkID(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Entity().FindUserWorkByWorkID(rctx, fc.Args["workID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.UserWork)
+	fc.Result = res
+	return ec.marshalNUserWork2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐUserWork(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Entity_findUserWorkByWorkID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Entity",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "workID":
+				return ec.fieldContext_UserWork_workID(ctx, field)
+			case "work":
+				return ec.fieldContext_UserWork_work(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UserWork", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Entity_findUserWorkByWorkID_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Entity_findWorkByID(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Entity_findWorkByID(ctx, field)
 	if err != nil {
@@ -10555,6 +10678,141 @@ func (ec *executionContext) fieldContext_UserAnime_anime(ctx context.Context, fi
 	return fc, nil
 }
 
+func (ec *executionContext) _UserWork_workID(ctx context.Context, field graphql.CollectedField, obj *model.UserWork) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserWork_workID(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.WorkID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserWork_workID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserWork",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserWork_work(ctx context.Context, field graphql.CollectedField, obj *model.UserWork) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserWork_work(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.UserWork().Work(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Work)
+	fc.Result = res
+	return ec.marshalOWork2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐWork(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserWork_work(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserWork",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Work_id(ctx, field)
+			case "malId":
+				return ec.fieldContext_Work_malId(ctx, field)
+			case "type":
+				return ec.fieldContext_Work_type(ctx, field)
+			case "urlSlug":
+				return ec.fieldContext_Work_urlSlug(ctx, field)
+			case "titleEn":
+				return ec.fieldContext_Work_titleEn(ctx, field)
+			case "titleJp":
+				return ec.fieldContext_Work_titleJp(ctx, field)
+			case "titleSynonyms":
+				return ec.fieldContext_Work_titleSynonyms(ctx, field)
+			case "synopsis":
+				return ec.fieldContext_Work_synopsis(ctx, field)
+			case "imageUrl":
+				return ec.fieldContext_Work_imageUrl(ctx, field)
+			case "status":
+				return ec.fieldContext_Work_status(ctx, field)
+			case "volumes":
+				return ec.fieldContext_Work_volumes(ctx, field)
+			case "chapters":
+				return ec.fieldContext_Work_chapters(ctx, field)
+			case "publishedFrom":
+				return ec.fieldContext_Work_publishedFrom(ctx, field)
+			case "publishedTo":
+				return ec.fieldContext_Work_publishedTo(ctx, field)
+			case "demographic":
+				return ec.fieldContext_Work_demographic(ctx, field)
+			case "serialization":
+				return ec.fieldContext_Work_serialization(ctx, field)
+			case "authors":
+				return ec.fieldContext_Work_authors(ctx, field)
+			case "score":
+				return ec.fieldContext_Work_score(ctx, field)
+			case "ranking":
+				return ec.fieldContext_Work_ranking(ctx, field)
+			case "members":
+				return ec.fieldContext_Work_members(ctx, field)
+			case "favorites":
+				return ec.fieldContext_Work_favorites(ctx, field)
+			case "adaptations":
+				return ec.fieldContext_Work_adaptations(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Work_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Work_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Work", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Work_id(ctx context.Context, field graphql.CollectedField, obj *model.Work) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Work_id(ctx, field)
 	if err != nil {
@@ -13618,6 +13876,13 @@ func (ec *executionContext) __Entity(ctx context.Context, sel ast.SelectionSet, 
 			return graphql.Null
 		}
 		return ec._UserAnime(ctx, sel, obj)
+	case model.UserWork:
+		return ec._UserWork(ctx, sel, &obj)
+	case *model.UserWork:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._UserWork(ctx, sel, obj)
 	case model.Work:
 		return ec._Work(ctx, sel, &obj)
 	case *model.Work:
@@ -14565,6 +14830,28 @@ func (ec *executionContext) _Entity(ctx context.Context, sel ast.SelectionSet) g
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "findUserWorkByWorkID":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Entity_findUserWorkByWorkID(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "findWorkByID":
 			field := field
 
@@ -15427,6 +15714,78 @@ func (ec *executionContext) _UserAnime(ctx context.Context, sel ast.SelectionSet
 	return out
 }
 
+var userWorkImplementors = []string{"UserWork", "_Entity"}
+
+func (ec *executionContext) _UserWork(ctx context.Context, sel ast.SelectionSet, obj *model.UserWork) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, userWorkImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UserWork")
+		case "workID":
+			out.Values[i] = ec._UserWork_workID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "work":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._UserWork_work(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var workImplementors = []string{"Work", "_Entity"}
 
 func (ec *executionContext) _Work(ctx context.Context, sel ast.SelectionSet, obj *model.Work) graphql.Marshaler {
@@ -16197,6 +16556,20 @@ func (ec *executionContext) marshalNUserAnime2ᚖgithubᚗcomᚋweebᚑvipᚋani
 		return graphql.Null
 	}
 	return ec._UserAnime(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNUserWork2githubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐUserWork(ctx context.Context, sel ast.SelectionSet, v model.UserWork) graphql.Marshaler {
+	return ec._UserWork(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNUserWork2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐUserWork(ctx context.Context, sel ast.SelectionSet, v *model.UserWork) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._UserWork(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNWork2githubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐWork(ctx context.Context, sel ast.SelectionSet, v model.Work) graphql.Marshaler {

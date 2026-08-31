@@ -31,6 +31,18 @@ func (r *entityResolver) FindUserAnimeByAnimeID(ctx context.Context, animeID str
 	}, nil
 }
 
+// FindUserWorkByWorkID is the resolver for the findUserWorkByWorkID field.
+//
+// The reading counterpart of FindUserAnimeByAnimeID. It builds a stub carrying
+// only the key the router handed over; the work field resolver does the actual
+// lookup. No checks here -- this is federation plumbing, not a request the
+// viewer made.
+func (r *entityResolver) FindUserWorkByWorkID(ctx context.Context, workID string) (*model.UserWork, error) {
+	return &model.UserWork{
+		WorkID: workID,
+	}, nil
+}
+
 // FindWorkByID is the resolver for the findWorkByID field.
 //
 // Implemented, unlike the Anime and Episode reference resolvers above: those

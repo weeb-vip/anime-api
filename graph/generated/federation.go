@@ -140,6 +140,26 @@ func (ec *executionContext) __resolve_entities(ctx context.Context, representati
 				list[idx[i]] = entity
 				return nil
 			}
+		case "UserWork":
+			resolverName, err := entityResolverNameForUserWork(ctx, rep)
+			if err != nil {
+				return fmt.Errorf(`finding resolver for Entity "UserWork": %w`, err)
+			}
+			switch resolverName {
+
+			case "findUserWorkByWorkID":
+				id0, err := ec.unmarshalNString2string(ctx, rep["workID"])
+				if err != nil {
+					return fmt.Errorf(`unmarshalling param 0 for findUserWorkByWorkID(): %w`, err)
+				}
+				entity, err := ec.resolvers.Entity().FindUserWorkByWorkID(ctx, id0)
+				if err != nil {
+					return fmt.Errorf(`resolving Entity "UserWork": %w`, err)
+				}
+
+				list[idx[i]] = entity
+				return nil
+			}
 		case "Work":
 			resolverName, err := entityResolverNameForWork(ctx, rep)
 			if err != nil {
@@ -278,6 +298,23 @@ func entityResolverNameForUserAnime(ctx context.Context, rep map[string]interfac
 		return "findUserAnimeByAnimeID", nil
 	}
 	return "", fmt.Errorf("%w for UserAnime", ErrTypeNotFound)
+}
+
+func entityResolverNameForUserWork(ctx context.Context, rep map[string]interface{}) (string, error) {
+	for {
+		var (
+			m   map[string]interface{}
+			val interface{}
+			ok  bool
+		)
+		_ = val
+		m = rep
+		if _, ok = m["workID"]; !ok {
+			break
+		}
+		return "findUserWorkByWorkID", nil
+	}
+	return "", fmt.Errorf("%w for UserWork", ErrTypeNotFound)
 }
 
 func entityResolverNameForWork(ctx context.Context, rep map[string]interface{}) (string, error) {

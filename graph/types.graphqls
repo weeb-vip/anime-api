@@ -374,6 +374,15 @@ extend type UserAnime @key(fields: "animeID") {
     anime: Anime @goField(forceResolver: true)
 }
 
+# The reading counterpart of the UserAnime extension above: a work on someone's
+# shelf, resolved to the work it points at. list-service owns UserWork and holds
+# only the workID; the title, cover and slug a reading list renders come from
+# here, exactly as an anime watchlist gets its show details.
+extend type UserWork @key(fields: "workID") {
+    workID: String! @external
+    work: Work @goField(forceResolver: true)
+}
+
 type AnimeCharacter {
     "Unique identifier for the character"
     id: ID!
