@@ -15,6 +15,7 @@ type WorkServiceImpl interface {
 	FindByID(ctx context.Context, id string) (*workrepo.Work, error)
 	FindBySlug(ctx context.Context, slug string) (*workrepo.Work, error)
 	FindByIDs(ctx context.Context, ids []string) ([]*workrepo.Work, error)
+	CurrentlyPublishing(ctx context.Context, limit int) ([]*workrepo.Work, error)
 }
 
 type WorkService struct {
@@ -69,4 +70,14 @@ func (s *WorkService) FindByIDs(ctx context.Context, ids []string) ([]*workrepo.
 	defer span.Finish()
 
 	return s.Repository.FindByIDs(spanCtx, ids)
+}
+
+func (s *WorkService) CurrentlyPublishing(ctx context.Context, limit int) ([]*workrepo.Work, error) {
+	span, spanCtx := tracer.StartSpanFromContext(ctx, "CurrentlyPublishing")
+	span.SetTag("service", "work")
+	span.SetTag("type", "service")
+	span.SetTag("environment", tracing.GetEnvironmentTag())
+	defer span.Finish()
+
+	return s.Repository.CurrentlyPublishing(spanCtx, limit)
 }

@@ -202,3 +202,48 @@ func AdaptationsForWork(ctx context.Context, animeService anime.AnimeServiceImpl
 	span.SetAttributes(attribute.Int("work.adaptation_count", len(adaptations)))
 	return adaptations, nil
 }
+
+// CurrentlyPublishingWorks backs the homepage's reading row.
+//
+// The counterpart of the currently-airing row above it: what someone can pick
+// up and keep following, rather than a shelf of finished classics that never
+// changes. An empty list is a valid answer -- it means the scraper has not
+// reached any ongoing series yet, not that anything failed.
+func CurrentlyPublishingWorks(ctx context.Context, workService work.WorkServiceImpl, limit *int) ([]*model.Work, error) {
+	tracer := tracing.GetTracer(ctx)
+	ctx, span := tracer.Start(ctx, "CurrentlyPublishingWorks",
+		trace.WithAttributes(
+			attribute.String("resolver.name", "CurrentlyPublishingWorks"),
+		),
+		tracing.GetEnvironmentAttribute(),
+	)
+	defer span.End()
+
+	// Capped as well as defaulted: this feeds a horizontal row, and an
+	// unbounded limit would let one caller pull the whole table through the
+	// router for a strip nobody scrolls that far along.
+	resultLimit := 12
+	if limit != nil && *limit > 0 {
+		resultLimit = *limit
+	}
+	if resultLimit > 50 {
+		resultLimit = 50
+	}
+
+	found, err := workService.CurrentlyPublishing(ctx, resultLimit)
+	if err != nil {
+		span.RecordError(err)
+		return nil, err
+	}
+
+	works := make([]*model.Work, 0, len(found))
+	for _, entity := range found {
+		if entity == nil {
+			continue
+		}
+		works = append(works, transformWorkToGraphQL(*entity))
+	}
+
+	span.SetAttributes(attribute.Int("work.count", len(works)))
+	return works, nil
+}
