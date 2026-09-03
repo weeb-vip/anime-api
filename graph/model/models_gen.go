@@ -423,12 +423,20 @@ type WorkPage struct {
 // these pages answer "show me everything", and the manga shelf alone is 53,000
 // entries. A caller that cannot ask for page 40 cannot render the page at all.
 type WorksInput struct {
-	// Which kind to list: MANGA, LIGHT_NOVEL, MANHWA and so on. Required, because
-	// every caller so far is a per-type page and an unfiltered listing of the
-	// whole 81,000-row family is not a page anyone has asked for. It stays a
-	// string for the same reason Work.type does -- MyAnimeList adds labels
-	// without warning.
-	Type string `json:"type"`
+	// Which kinds to list: MANGA, LIGHT_NOVEL, MANHWA and so on. Strings for the
+	// same reason Work.type is one -- MyAnimeList adds labels without warning.
+	//
+	// A list rather than one kind because the shelves readers actually want are
+	// groups: light novels and novels are one shelf to a reader even though the
+	// scraper tells them apart. Omit it to mean every kind.
+	Types []string `json:"types,omitempty"`
+	// Kinds to leave out, applied after `types`.
+	//
+	// This is how a caller says "everything else". Spelling that as an inclusive
+	// list of the other seven kinds would quietly drop rows the day MyAnimeList
+	// invents an eighth -- and the page that means "everything else" is exactly
+	// the one that should absorb it. Exclusion keeps that true without a deploy.
+	ExcludeTypes []string `json:"excludeTypes,omitempty"`
 	// Zero-based, matching AnimeSearchInput.
 	Page *int `json:"page,omitempty"`
 	// Defaults to 24, capped at 100.

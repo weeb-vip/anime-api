@@ -5,6 +5,8 @@ import (
 	"strings"
 	"time"
 
+	"gorm.io/gorm"
+
 	"github.com/weeb-vip/anime-api/internal/db"
 	"github.com/weeb-vip/anime-api/metrics"
 )
@@ -14,8 +16,8 @@ type WorkRepositoryImpl interface {
 	FindBySlug(ctx context.Context, slug string) (*Work, error)
 	FindByIDs(ctx context.Context, ids []string) ([]*Work, error)
 	CurrentlyPublishing(ctx context.Context, limit int) ([]*Work, error)
-	FindByType(ctx context.Context, workType string, offset int, limit int, sortBy string) ([]*Work, error)
-	CountByType(ctx context.Context, workType string) (int64, error)
+	FindByTypes(ctx context.Context, types []string, excludeTypes []string, offset int, limit int, sortBy string) ([]*Work, error)
+	CountByTypes(ctx context.Context, types []string, excludeTypes []string) (int64, error)
 }
 
 type WorkRepository struct {
@@ -161,17 +163,34 @@ func orderForSort(sortBy string) string {
 	}
 }
 
-// FindByType lists one kind of work, ordered and paged.
+// scopeTypes applies the include and exclude lists.
 //
-// Backs the /manga and /light-novels browse pages. Served by
-// idx_work_type_members from migration 000066 for the default ordering; the
-// other three sorts fall back to a scan of the type's rows, which is the
-// trade this makes deliberately -- indexing all four would be four indexes on
-// a table that is written by a scraper running for days at a time.
-func (r *WorkRepository) FindByType(ctx context.Context, workType string, offset int, limit int, sortBy string) ([]*Work, error) {
+// Shared by the page query and the count so the two can never disagree about
+// what is on the shelf -- a total that counts rows the page cannot show is a
+// pager that runs off the end.
+func scopeTypes(q *gorm.DB, types []string, excludeTypes []string) *gorm.DB {
+	if len(types) > 0 {
+		q = q.Where("type IN ?", types)
+	}
+	if len(excludeTypes) > 0 {
+		q = q.Where("type NOT IN ?", excludeTypes)
+	}
+
+	return q
+}
+
+// FindByTypes lists works of the given kinds, ordered and paged.
+//
+// Backs the /manga and /light-novels browse pages. The include case is served
+// by idx_work_type_members from migration 000066 for the default ordering. The
+// exclude case -- "everything that is not a novel" -- matches most of the
+// table, so it reads the same index and filters rather than seeking within it;
+// that is the honest cost of a shelf defined by what it is not, and it is
+// bounded by the page size.
+func (r *WorkRepository) FindByTypes(ctx context.Context, types []string, excludeTypes []string, offset int, limit int, sortBy string) ([]*Work, error) {
 	startTime := time.Now()
 
-	if workType == "" || limit <= 0 {
+	if limit <= 0 {
 		return []*Work{}, nil
 	}
 	if offset < 0 {
@@ -179,8 +198,7 @@ func (r *WorkRepository) FindByType(ctx context.Context, workType string, offset
 	}
 
 	var found []*Work
-	err := r.db.DB.WithContext(ctx).
-		Where("type = ?", workType).
+	err := scopeTypes(r.db.DB.WithContext(ctx), types, excludeTypes).
 		Order(orderForSort(sortBy)).
 		Offset(offset).
 		Limit(limit).
@@ -194,22 +212,16 @@ func (r *WorkRepository) FindByType(ctx context.Context, workType string, offset
 	return found, nil
 }
 
-// CountByType is the total behind the pager.
+// CountByTypes is the total behind the pager.
 //
 // A second query rather than a window function on the page above, because the
 // count does not change between pages and the page query is the one that has
 // to stay cheap.
-func (r *WorkRepository) CountByType(ctx context.Context, workType string) (int64, error) {
+func (r *WorkRepository) CountByTypes(ctx context.Context, types []string, excludeTypes []string) (int64, error) {
 	startTime := time.Now()
 
-	if workType == "" {
-		return 0, nil
-	}
-
 	var total int64
-	err := r.db.DB.WithContext(ctx).
-		Model(&Work{}).
-		Where("type = ?", workType).
+	err := scopeTypes(r.db.DB.WithContext(ctx).Model(&Work{}), types, excludeTypes).
 		Count(&total).Error
 	if err != nil {
 		metrics.GetAppMetrics().DatabaseSince(startTime, "work", metrics.MethodSelect, metrics.Error)
