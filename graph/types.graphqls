@@ -370,13 +370,23 @@ entries. A caller that cannot ask for page 40 cannot render the page at all.
 """
 input WorksInput {
     """
-    Which kind to list: MANGA, LIGHT_NOVEL, MANHWA and so on. Required, because
-    every caller so far is a per-type page and an unfiltered listing of the
-    whole 81,000-row family is not a page anyone has asked for. It stays a
-    string for the same reason Work.type does -- MyAnimeList adds labels
-    without warning.
+    Which kinds to list: MANGA, LIGHT_NOVEL, MANHWA and so on. Strings for the
+    same reason Work.type is one -- MyAnimeList adds labels without warning.
+
+    A list rather than one kind because the shelves readers actually want are
+    groups: light novels and novels are one shelf to a reader even though the
+    scraper tells them apart. Omit it to mean every kind.
     """
-    type: String!
+    types: [String!]
+    """
+    Kinds to leave out, applied after `types`.
+
+    This is how a caller says "everything else". Spelling that as an inclusive
+    list of the other seven kinds would quietly drop rows the day MyAnimeList
+    invents an eighth -- and the page that means "everything else" is exactly
+    the one that should absorb it. Exclusion keeps that true without a deploy.
+    """
+    excludeTypes: [String!]
     "Zero-based, matching AnimeSearchInput."
     page: Int
     "Defaults to 24, capped at 100."

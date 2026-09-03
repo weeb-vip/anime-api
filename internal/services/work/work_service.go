@@ -16,8 +16,8 @@ type WorkServiceImpl interface {
 	FindBySlug(ctx context.Context, slug string) (*workrepo.Work, error)
 	FindByIDs(ctx context.Context, ids []string) ([]*workrepo.Work, error)
 	CurrentlyPublishing(ctx context.Context, limit int) ([]*workrepo.Work, error)
-	FindByType(ctx context.Context, workType string, offset int, limit int, sortBy string) ([]*workrepo.Work, error)
-	CountByType(ctx context.Context, workType string) (int64, error)
+	FindByTypes(ctx context.Context, types []string, excludeTypes []string, offset int, limit int, sortBy string) ([]*workrepo.Work, error)
+	CountByTypes(ctx context.Context, types []string, excludeTypes []string) (int64, error)
 }
 
 type WorkService struct {
@@ -84,22 +84,22 @@ func (s *WorkService) CurrentlyPublishing(ctx context.Context, limit int) ([]*wo
 	return s.Repository.CurrentlyPublishing(spanCtx, limit)
 }
 
-func (s *WorkService) FindByType(ctx context.Context, workType string, offset int, limit int, sortBy string) ([]*workrepo.Work, error) {
-	span, spanCtx := tracer.StartSpanFromContext(ctx, "FindByType")
+func (s *WorkService) FindByTypes(ctx context.Context, types []string, excludeTypes []string, offset int, limit int, sortBy string) ([]*workrepo.Work, error) {
+	span, spanCtx := tracer.StartSpanFromContext(ctx, "FindByTypes")
 	span.SetTag("service", "work")
 	span.SetTag("type", "service")
 	span.SetTag("environment", tracing.GetEnvironmentTag())
 	defer span.Finish()
 
-	return s.Repository.FindByType(spanCtx, workType, offset, limit, sortBy)
+	return s.Repository.FindByTypes(spanCtx, types, excludeTypes, offset, limit, sortBy)
 }
 
-func (s *WorkService) CountByType(ctx context.Context, workType string) (int64, error) {
-	span, spanCtx := tracer.StartSpanFromContext(ctx, "CountByType")
+func (s *WorkService) CountByTypes(ctx context.Context, types []string, excludeTypes []string) (int64, error) {
+	span, spanCtx := tracer.StartSpanFromContext(ctx, "CountByTypes")
 	span.SetTag("service", "work")
 	span.SetTag("type", "service")
 	span.SetTag("environment", tracing.GetEnvironmentTag())
 	defer span.Finish()
 
-	return s.Repository.CountByType(spanCtx, workType)
+	return s.Repository.CountByTypes(spanCtx, types, excludeTypes)
 }

@@ -250,16 +250,18 @@ func CurrentlyPublishingWorks(ctx context.Context, workService work.WorkServiceI
 
 // Works backs the /manga and /light-novels browse pages.
 //
-// The type is passed through as given rather than validated against a list.
-// Work.type is a scraped label -- the schema says so -- and a type nobody has
+// Types are passed through as given rather than validated against a list.
+// Work.type is a scraped label -- the schema says so -- and a kind nobody has
 // heard of should come back as an empty page, which is true, rather than as an
-// error the page has to special-case.
+// error the page has to special-case. Both lists are optional; omitting each
+// means "every kind" and "exclude nothing" respectively.
 func Works(ctx context.Context, workService work.WorkServiceImpl, input model.WorksInput) (*model.WorkPage, error) {
 	tracer := tracing.GetTracer(ctx)
 	ctx, span := tracer.Start(ctx, "Works",
 		trace.WithAttributes(
 			attribute.String("resolver.name", "Works"),
-			attribute.String("work.type", input.Type),
+			attribute.StringSlice("work.types", input.Types),
+			attribute.StringSlice("work.exclude_types", input.ExcludeTypes),
 		),
 		tracing.GetEnvironmentAttribute(),
 	)
@@ -285,13 +287,13 @@ func Works(ctx context.Context, workService work.WorkServiceImpl, input model.Wo
 		sortBy = *input.SortBy
 	}
 
-	total, err := workService.CountByType(ctx, input.Type)
+	total, err := workService.CountByTypes(ctx, input.Types, input.ExcludeTypes)
 	if err != nil {
 		span.RecordError(err)
 		return nil, err
 	}
 
-	found, err := workService.FindByType(ctx, input.Type, page*perPage, perPage, sortBy)
+	found, err := workService.FindByTypes(ctx, input.Types, input.ExcludeTypes, page*perPage, perPage, sortBy)
 	if err != nil {
 		span.RecordError(err)
 		return nil, err
