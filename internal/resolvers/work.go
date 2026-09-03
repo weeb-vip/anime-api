@@ -247,3 +247,73 @@ func CurrentlyPublishingWorks(ctx context.Context, workService work.WorkServiceI
 	span.SetAttributes(attribute.Int("work.count", len(works)))
 	return works, nil
 }
+
+// Works backs the /manga and /light-novels browse pages.
+//
+// The type is passed through as given rather than validated against a list.
+// Work.type is a scraped label -- the schema says so -- and a type nobody has
+// heard of should come back as an empty page, which is true, rather than as an
+// error the page has to special-case.
+func Works(ctx context.Context, workService work.WorkServiceImpl, input model.WorksInput) (*model.WorkPage, error) {
+	tracer := tracing.GetTracer(ctx)
+	ctx, span := tracer.Start(ctx, "Works",
+		trace.WithAttributes(
+			attribute.String("resolver.name", "Works"),
+			attribute.String("work.type", input.Type),
+		),
+		tracing.GetEnvironmentAttribute(),
+	)
+	defer span.End()
+
+	// Capped for the same reason CurrentlyPublishingWorks is: without it one
+	// caller can pull all 53,000 manga through the router in a single request.
+	perPage := 24
+	if input.PerPage != nil && *input.PerPage > 0 {
+		perPage = *input.PerPage
+	}
+	if perPage > 100 {
+		perPage = 100
+	}
+
+	page := 0
+	if input.Page != nil && *input.Page > 0 {
+		page = *input.Page
+	}
+
+	sortBy := ""
+	if input.SortBy != nil {
+		sortBy = *input.SortBy
+	}
+
+	total, err := workService.CountByType(ctx, input.Type)
+	if err != nil {
+		span.RecordError(err)
+		return nil, err
+	}
+
+	found, err := workService.FindByType(ctx, input.Type, page*perPage, perPage, sortBy)
+	if err != nil {
+		span.RecordError(err)
+		return nil, err
+	}
+
+	works := make([]*model.Work, 0, len(found))
+	for _, entity := range found {
+		if entity == nil {
+			continue
+		}
+		works = append(works, transformWorkToGraphQL(*entity))
+	}
+
+	span.SetAttributes(
+		attribute.Int("work.count", len(works)),
+		attribute.Int("work.total", int(total)),
+	)
+
+	return &model.WorkPage{
+		Works:   works,
+		Total:   int(total),
+		Page:    page,
+		PerPage: perPage,
+	}, nil
+}
