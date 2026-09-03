@@ -147,7 +147,15 @@ func orderForSort(sortBy string) string {
 		// COALESCE because title_en is null on the works the scraper has not
 		// caught up with; sorting on it alone would group them all together
 		// under whatever nulls-last does rather than by the name shown.
-		return "lower(coalesce(nullif(title_en, ''), nullif(title_romaji, ''), title_jp)) asc nulls last, id"
+		//
+		// title_en and title_jp only. The scraper's `work` also has a
+		// title_romaji, and this ordering originally reached for it -- but
+		// that column was never added to the read store, so the query failed
+		// outright with `column "title_romaji" does not exist`. It is not
+		// missed: since the manga heading fix, title_en carries the romanised
+		// name whenever there is no English one, which is the case this
+		// coalesce exists for.
+		return "lower(coalesce(nullif(title_en, ''), title_jp)) asc nulls last, id"
 	default:
 		return "members desc nulls last, id"
 	}
