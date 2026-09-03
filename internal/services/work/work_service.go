@@ -16,6 +16,8 @@ type WorkServiceImpl interface {
 	FindBySlug(ctx context.Context, slug string) (*workrepo.Work, error)
 	FindByIDs(ctx context.Context, ids []string) ([]*workrepo.Work, error)
 	CurrentlyPublishing(ctx context.Context, limit int) ([]*workrepo.Work, error)
+	FindByType(ctx context.Context, workType string, offset int, limit int, sortBy string) ([]*workrepo.Work, error)
+	CountByType(ctx context.Context, workType string) (int64, error)
 }
 
 type WorkService struct {
@@ -80,4 +82,24 @@ func (s *WorkService) CurrentlyPublishing(ctx context.Context, limit int) ([]*wo
 	defer span.Finish()
 
 	return s.Repository.CurrentlyPublishing(spanCtx, limit)
+}
+
+func (s *WorkService) FindByType(ctx context.Context, workType string, offset int, limit int, sortBy string) ([]*workrepo.Work, error) {
+	span, spanCtx := tracer.StartSpanFromContext(ctx, "FindByType")
+	span.SetTag("service", "work")
+	span.SetTag("type", "service")
+	span.SetTag("environment", tracing.GetEnvironmentTag())
+	defer span.Finish()
+
+	return s.Repository.FindByType(spanCtx, workType, offset, limit, sortBy)
+}
+
+func (s *WorkService) CountByType(ctx context.Context, workType string) (int64, error) {
+	span, spanCtx := tracer.StartSpanFromContext(ctx, "CountByType")
+	span.SetTag("service", "work")
+	span.SetTag("type", "service")
+	span.SetTag("environment", tracing.GetEnvironmentTag())
+	defer span.Finish()
+
+	return s.Repository.CountByType(spanCtx, workType)
 }

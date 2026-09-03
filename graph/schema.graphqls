@@ -59,4 +59,13 @@ type Query {
     ten while members never is.
     """
     currentlyPublishingWorks(limit: Int): [Work!]
+    """
+    Works of one kind, paged -- the browse pages behind /manga and
+    /light-novels.
+
+    Separate from currentlyPublishingWorks rather than an argument on it: that
+    one answers "what is running now" and is deliberately capped at a row's
+    worth, while this one walks the whole shelf and has to page.
+    """
+    works(input: WorksInput!): WorkPage!
 }

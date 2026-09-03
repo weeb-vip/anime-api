@@ -405,6 +405,43 @@ type Work struct {
 
 func (Work) IsEntity() {}
 
+// One page of works, with the total so a caller can render pagination.
+//
+// `total` is the count for the whole type, not for the page -- the number the
+// page needs to say "1 of 2,219".
+type WorkPage struct {
+	Works   []*Work `json:"works"`
+	Total   int     `json:"total"`
+	Page    int     `json:"page"`
+	PerPage int     `json:"perPage"`
+}
+
+// A page of works of one kind -- what /manga and /light-novels browse.
+//
+// Paged rather than limited, unlike every other work query here. The reading row
+// on the homepage answers "what should I pick up", which twelve rows satisfy;
+// these pages answer "show me everything", and the manga shelf alone is 53,000
+// entries. A caller that cannot ask for page 40 cannot render the page at all.
+type WorksInput struct {
+	// Which kind to list: MANGA, LIGHT_NOVEL, MANHWA and so on. Required, because
+	// every caller so far is a per-type page and an unfiltered listing of the
+	// whole 81,000-row family is not a page anyone has asked for. It stays a
+	// string for the same reason Work.type does -- MyAnimeList adds labels
+	// without warning.
+	Type string `json:"type"`
+	// Zero-based, matching AnimeSearchInput.
+	Page *int `json:"page,omitempty"`
+	// Defaults to 24, capped at 100.
+	PerPage *int `json:"perPage,omitempty"`
+	// POPULARITY (members, the default), SCORE, NEWEST or TITLE.
+	//
+	// Popularity leads because it is the only one of the four that every row has.
+	// Score is absent on roughly one work in ten and publishedFrom on more than
+	// that, so sorting by either silently buries whatever the scraper has not
+	// filled in yet.
+	SortBy *string `json:"sortBy,omitempty"`
+}
+
 // Air type for schedule times (raw Japanese broadcast, subtitled, dubbed)
 type AirType string
 

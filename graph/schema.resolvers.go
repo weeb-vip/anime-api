@@ -98,6 +98,11 @@ func (r *queryResolver) CurrentlyPublishingWorks(ctx context.Context, limit *int
 	return resolvers.CurrentlyPublishingWorks(ctx, r.WorkService, limit)
 }
 
+// Works is the resolver for the works field.
+func (r *queryResolver) Works(ctx context.Context, input model.WorksInput) (*model.WorkPage, error) {
+	return resolvers.Works(ctx, r.WorkService, input)
+}
+
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
