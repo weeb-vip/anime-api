@@ -17,6 +17,7 @@ require (
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.11.1
 	github.com/vektah/gqlparser/v2 v2.5.16
+	github.com/vikstrous/dataloadgen v0.0.10
 	github.com/weeb-vip/go-metrics-lib v1.0.3
 	github.com/weeb-vip/go-tracing-lib v1.0.0
 	go.opentelemetry.io/otel v1.38.0

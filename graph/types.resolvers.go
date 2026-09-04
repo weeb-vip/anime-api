@@ -183,8 +183,9 @@ func (r *episodeResolver) AirTimes(ctx context.Context, obj *model.Episode) ([]*
 
 // Anime is the resolver for the anime field.
 func (r *userAnimeResolver) Anime(ctx context.Context, obj *model.UserAnime) (*model.Anime, error) {
-	animeID := obj.AnimeID
-	return resolvers.AnimeByID(ctx, r.AnimeService, animeID)
+	// Batched: the router resolves this field once per watchlist entry, and one
+	// query per entry is what made a page of 24 cost 24 round trips.
+	return resolvers.AnimeByIDBatched(ctx, r.AnimeService, obj.AnimeID)
 }
 
 // Work is the resolver for the work field.
