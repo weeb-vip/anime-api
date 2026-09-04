@@ -1,0 +1,16 @@
+-- Which season of its series an anime is.
+--
+-- MyAnimeList files each broadcast run as its own anime; TheTVDB keeps them as
+-- seasons of one series. The scraper derives which is which and mirrors it onto
+-- its own anime row, and CDC carries it here like any other column.
+--
+-- Deliberately not called `season`. That word already means the broadcast
+-- season in this schema -- SPRING_2026, anime_seasons, animeBySeasons -- and
+-- this table has had a `season` column added (000017) and dropped (000018)
+-- once already. A reader seeing `season` here should keep thinking "Spring".
+--
+-- Nullable, and the null is load-bearing: null means the season is unknown and
+-- renders as nothing, while 0 is TheTVDB's specials season and renders as
+-- "Special". The scraper refuses to guess rather than filling this in, so most
+-- of the catalogue will keep a null.
+ALTER TABLE "anime" ADD COLUMN IF NOT EXISTS "season_number" integer;

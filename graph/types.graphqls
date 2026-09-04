@@ -162,6 +162,21 @@ type Anime @key(fields: "id") {
     type: String
 
     """
+    Which season of its series this is, when we know.
+
+    MyAnimeList files each broadcast run as its own anime while TheTVDB keeps
+    them as seasons of one series, so two entries can share a thetvdbid and
+    differ only in which run they are. This is that number, derived from the
+    air dates the two sources agree on.
+
+    Null means unknown, and most of the catalogue is null: the derivation
+    refuses rather than guessing, and two thirds of our anime carry no
+    thetvdbid at all. 0 is not unknown -- it is TheTVDB\'s specials season,
+    which a caller should render as "Special" rather than as season zero.
+    """
+    seasonNumber: Int
+
+    """
     Anime connected to this one, oldest first, undated last.
 
     Each entry says how it is connected rather than leaving the caller to

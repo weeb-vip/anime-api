@@ -75,6 +75,7 @@ type ComplexityRoot struct {
 		Rating             func(childComplexity int) int
 		RelatedAnime       func(childComplexity int, limit *int) int
 		ScheduleInfo       func(childComplexity int) int
+		SeasonNumber       func(childComplexity int) int
 		Seasons            func(childComplexity int) int
 		Slug               func(childComplexity int) int
 		Source             func(childComplexity int) int
@@ -503,6 +504,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Anime.ScheduleInfo(childComplexity), true
+
+	case "Anime.seasonNumber":
+		if e.complexity.Anime.SeasonNumber == nil {
+			break
+		}
+
+		return e.complexity.Anime.SeasonNumber(childComplexity), true
 
 	case "Anime.seasons":
 		if e.complexity.Anime.Seasons == nil {
@@ -2043,6 +2051,21 @@ type Anime @key(fields: "id") {
     in relatedAnime, where a list of titles alone does not say which is which.
     """
     type: String
+
+    """
+    Which season of its series this is, when we know.
+
+    MyAnimeList files each broadcast run as its own anime while TheTVDB keeps
+    them as seasons of one series, so two entries can share a thetvdbid and
+    differ only in which run they are. This is that number, derived from the
+    air dates the two sources agree on.
+
+    Null means unknown, and most of the catalogue is null: the derivation
+    refuses rather than guessing, and two thirds of our anime carry no
+    thetvdbid at all. 0 is not unknown -- it is TheTVDB\'s specials season,
+    which a caller should render as "Special" rather than as season zero.
+    """
+    seasonNumber: Int
 
     """
     Anime connected to this one, oldest first, undated last.
@@ -4447,6 +4470,47 @@ func (ec *executionContext) fieldContext_Anime_type(ctx context.Context, field g
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Anime_seasonNumber(ctx context.Context, field graphql.CollectedField, obj *model.Anime) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Anime_seasonNumber(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SeasonNumber, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Anime_seasonNumber(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Anime",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -7092,6 +7156,8 @@ func (ec *executionContext) fieldContext_Entity_findAnimeByID(ctx context.Contex
 				return ec.fieldContext_Anime_seasons(ctx, field)
 			case "type":
 				return ec.fieldContext_Anime_type(ctx, field)
+			case "seasonNumber":
+				return ec.fieldContext_Anime_seasonNumber(ctx, field)
 			case "relatedAnime":
 				return ec.fieldContext_Anime_relatedAnime(ctx, field)
 			case "createdAt":
@@ -8258,6 +8324,8 @@ func (ec *executionContext) fieldContext_Query_dbSearch(ctx context.Context, fie
 				return ec.fieldContext_Anime_seasons(ctx, field)
 			case "type":
 				return ec.fieldContext_Anime_type(ctx, field)
+			case "seasonNumber":
+				return ec.fieldContext_Anime_seasonNumber(ctx, field)
 			case "relatedAnime":
 				return ec.fieldContext_Anime_relatedAnime(ctx, field)
 			case "createdAt":
@@ -8437,6 +8505,8 @@ func (ec *executionContext) fieldContext_Query_anime(ctx context.Context, field 
 				return ec.fieldContext_Anime_seasons(ctx, field)
 			case "type":
 				return ec.fieldContext_Anime_type(ctx, field)
+			case "seasonNumber":
+				return ec.fieldContext_Anime_seasonNumber(ctx, field)
 			case "relatedAnime":
 				return ec.fieldContext_Anime_relatedAnime(ctx, field)
 			case "createdAt":
@@ -8563,6 +8633,8 @@ func (ec *executionContext) fieldContext_Query_animeBySlug(ctx context.Context, 
 				return ec.fieldContext_Anime_seasons(ctx, field)
 			case "type":
 				return ec.fieldContext_Anime_type(ctx, field)
+			case "seasonNumber":
+				return ec.fieldContext_Anime_seasonNumber(ctx, field)
 			case "relatedAnime":
 				return ec.fieldContext_Anime_relatedAnime(ctx, field)
 			case "createdAt":
@@ -8689,6 +8761,8 @@ func (ec *executionContext) fieldContext_Query_newestAnime(ctx context.Context, 
 				return ec.fieldContext_Anime_seasons(ctx, field)
 			case "type":
 				return ec.fieldContext_Anime_type(ctx, field)
+			case "seasonNumber":
+				return ec.fieldContext_Anime_seasonNumber(ctx, field)
 			case "relatedAnime":
 				return ec.fieldContext_Anime_relatedAnime(ctx, field)
 			case "createdAt":
@@ -8815,6 +8889,8 @@ func (ec *executionContext) fieldContext_Query_topRatedAnime(ctx context.Context
 				return ec.fieldContext_Anime_seasons(ctx, field)
 			case "type":
 				return ec.fieldContext_Anime_type(ctx, field)
+			case "seasonNumber":
+				return ec.fieldContext_Anime_seasonNumber(ctx, field)
 			case "relatedAnime":
 				return ec.fieldContext_Anime_relatedAnime(ctx, field)
 			case "createdAt":
@@ -8941,6 +9017,8 @@ func (ec *executionContext) fieldContext_Query_mostPopularAnime(ctx context.Cont
 				return ec.fieldContext_Anime_seasons(ctx, field)
 			case "type":
 				return ec.fieldContext_Anime_type(ctx, field)
+			case "seasonNumber":
+				return ec.fieldContext_Anime_seasonNumber(ctx, field)
 			case "relatedAnime":
 				return ec.fieldContext_Anime_relatedAnime(ctx, field)
 			case "createdAt":
@@ -9222,6 +9300,8 @@ func (ec *executionContext) fieldContext_Query_currentlyAiring(ctx context.Conte
 				return ec.fieldContext_Anime_seasons(ctx, field)
 			case "type":
 				return ec.fieldContext_Anime_type(ctx, field)
+			case "seasonNumber":
+				return ec.fieldContext_Anime_seasonNumber(ctx, field)
 			case "relatedAnime":
 				return ec.fieldContext_Anime_relatedAnime(ctx, field)
 			case "createdAt":
@@ -9348,6 +9428,8 @@ func (ec *executionContext) fieldContext_Query_animeBySeasons(ctx context.Contex
 				return ec.fieldContext_Anime_seasons(ctx, field)
 			case "type":
 				return ec.fieldContext_Anime_type(ctx, field)
+			case "seasonNumber":
+				return ec.fieldContext_Anime_seasonNumber(ctx, field)
 			case "relatedAnime":
 				return ec.fieldContext_Anime_relatedAnime(ctx, field)
 			case "createdAt":
@@ -9474,6 +9556,8 @@ func (ec *executionContext) fieldContext_Query_animeBySeasonAndYear(ctx context.
 				return ec.fieldContext_Anime_seasons(ctx, field)
 			case "type":
 				return ec.fieldContext_Anime_type(ctx, field)
+			case "seasonNumber":
+				return ec.fieldContext_Anime_seasonNumber(ctx, field)
 			case "relatedAnime":
 				return ec.fieldContext_Anime_relatedAnime(ctx, field)
 			case "createdAt":
@@ -10330,6 +10414,8 @@ func (ec *executionContext) fieldContext_RelatedAnime_anime(ctx context.Context,
 				return ec.fieldContext_Anime_seasons(ctx, field)
 			case "type":
 				return ec.fieldContext_Anime_type(ctx, field)
+			case "seasonNumber":
+				return ec.fieldContext_Anime_seasonNumber(ctx, field)
 			case "relatedAnime":
 				return ec.fieldContext_Anime_relatedAnime(ctx, field)
 			case "createdAt":
@@ -10569,6 +10655,8 @@ func (ec *executionContext) fieldContext_StaffRole_anime(ctx context.Context, fi
 				return ec.fieldContext_Anime_seasons(ctx, field)
 			case "type":
 				return ec.fieldContext_Anime_type(ctx, field)
+			case "seasonNumber":
+				return ec.fieldContext_Anime_seasonNumber(ctx, field)
 			case "relatedAnime":
 				return ec.fieldContext_Anime_relatedAnime(ctx, field)
 			case "createdAt":
@@ -10857,6 +10945,8 @@ func (ec *executionContext) fieldContext_UserAnime_anime(ctx context.Context, fi
 				return ec.fieldContext_Anime_seasons(ctx, field)
 			case "type":
 				return ec.fieldContext_Anime_type(ctx, field)
+			case "seasonNumber":
+				return ec.fieldContext_Anime_seasonNumber(ctx, field)
 			case "relatedAnime":
 				return ec.fieldContext_Anime_relatedAnime(ctx, field)
 			case "createdAt":
@@ -11974,6 +12064,8 @@ func (ec *executionContext) fieldContext_Work_adaptations(ctx context.Context, f
 				return ec.fieldContext_Anime_seasons(ctx, field)
 			case "type":
 				return ec.fieldContext_Anime_type(ctx, field)
+			case "seasonNumber":
+				return ec.fieldContext_Anime_seasonNumber(ctx, field)
 			case "relatedAnime":
 				return ec.fieldContext_Anime_relatedAnime(ctx, field)
 			case "createdAt":
@@ -14679,6 +14771,8 @@ func (ec *executionContext) _Anime(ctx context.Context, sel ast.SelectionSet, ob
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "type":
 			out.Values[i] = ec._Anime_type(ctx, field, obj)
+		case "seasonNumber":
+			out.Values[i] = ec._Anime_seasonNumber(ctx, field, obj)
 		case "relatedAnime":
 			field := field
 

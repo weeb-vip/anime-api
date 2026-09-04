@@ -86,6 +86,18 @@ type Anime struct {
 	// so on. Exposed because it is what separates a main entry from a side story
 	// in relatedAnime, where a list of titles alone does not say which is which.
 	Type *string `json:"type,omitempty"`
+	// Which season of its series this is, when we know.
+	//
+	// MyAnimeList files each broadcast run as its own anime while TheTVDB keeps
+	// them as seasons of one series, so two entries can share a thetvdbid and
+	// differ only in which run they are. This is that number, derived from the
+	// air dates the two sources agree on.
+	//
+	// Null means unknown, and most of the catalogue is null: the derivation
+	// refuses rather than guessing, and two thirds of our anime carry no
+	// thetvdbid at all. 0 is not unknown -- it is TheTVDB\'s specials season,
+	// which a caller should render as "Special" rather than as season zero.
+	SeasonNumber *int `json:"seasonNumber,omitempty"`
 	// Anime connected to this one, oldest first, undated last.
 	//
 	// Each entry says how it is connected rather than leaving the caller to
