@@ -10,6 +10,7 @@ import (
 	"github.com/weeb-vip/anime-api/graph/model"
 	"github.com/weeb-vip/anime-api/internal/cache"
 	anime2 "github.com/weeb-vip/anime-api/internal/db/repositories/anime"
+	"github.com/weeb-vip/anime-api/internal/loaders"
 	"github.com/weeb-vip/anime-api/internal/services"
 	"github.com/weeb-vip/anime-api/internal/services/anime"
 	"github.com/weeb-vip/anime-api/metrics"
@@ -286,6 +287,38 @@ func AnimeBySlug(ctx context.Context, animeService anime.AnimeServiceImpl, slug 
 	}
 
 	return transformAnimeToGraphQL(*foundAnime)
+}
+
+// AnimeByIDBatched is AnimeByID for the entries of a list.
+//
+// Same result, but the fetch goes through the request's dataloader, so N
+// sibling resolutions become one query instead of N. Used by UserAnime.anime,
+// where the router hands this subgraph every entry of a watchlist at once.
+//
+// Falls back to AnimeByID when no loader is on the context -- a caller that
+// skipped the middleware should be slow, not broken.
+func AnimeByIDBatched(ctx context.Context, animeService anime.AnimeServiceImpl, id string) (*model.Anime, error) {
+	l := loaders.For(ctx)
+	if l == nil {
+		return AnimeByID(ctx, animeService, id)
+	}
+
+	// The same selection check AnimeByID makes: episodes are a much wider join
+	// and most callers do not ask for them.
+	loader := l.AnimeByID
+	if isEpisodesRequested(ExtractFieldSelection(ctx)) {
+		loader = l.AnimeWithEpisodesByID
+	}
+
+	found, err := loader.Load(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if found == nil {
+		return nil, nil
+	}
+
+	return transformAnimeToGraphQL(*found)
 }
 
 func AnimeByID(ctx context.Context, animeService anime.AnimeServiceImpl, id string) (*model.Anime, error) {

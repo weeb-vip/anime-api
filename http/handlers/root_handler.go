@@ -24,6 +24,7 @@ import (
 	"github.com/weeb-vip/anime-api/internal/db/repositories/episode_air_time"
 	workrepo "github.com/weeb-vip/anime-api/internal/db/repositories/work"
 	"github.com/weeb-vip/anime-api/internal/directives"
+	"github.com/weeb-vip/anime-api/internal/loaders"
 	"github.com/weeb-vip/anime-api/internal/logger"
 	"github.com/weeb-vip/anime-api/internal/services/anime"
 	anime_character2 "github.com/weeb-vip/anime-api/internal/services/anime_character"
@@ -116,7 +117,9 @@ func BuildRootHandler(conf config.Config) http.Handler {
 	// Add GraphQL tracing extension
 	srv.Use(&middleware.GraphQLTracingExtension{})
 
-	return srv
+	// Loaders are per-request, so they wrap the handler rather than living on
+	// the resolver: one set must not outlive the request that created it.
+	return loaders.Middleware(animeService, srv)
 }
 
 func BuildRootHandlerWithContext(ctx context.Context, conf config.Config) http.Handler {
@@ -193,5 +196,7 @@ func BuildRootHandlerWithContext(ctx context.Context, conf config.Config) http.H
 	// Add GraphQL tracing extension
 	srv.Use(&middleware.GraphQLTracingExtension{})
 
-	return srv
+	// Loaders are per-request, so they wrap the handler rather than living on
+	// the resolver: one set must not outlive the request that created it.
+	return loaders.Middleware(animeService, srv)
 }
