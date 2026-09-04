@@ -135,6 +135,7 @@ func transformAnimeToGraphQL(animeEntity anime2.Anime) (*model.Anime, error) {
 		TitleSynonyms: titleSynonyms,
 		Description:   animeEntity.Synopsis,
 		EpisodeCount:  animeEntity.Episodes,
+		SeasonNumber:  animeEntity.SeasonNumber,
 		Episodes:      episodes, // Add preloaded episodes
 		Duration:      animeEntity.Duration,
 		Studios:       studios,
@@ -243,6 +244,7 @@ func transformAnimeToGraphQLWithEpisode(animeEntity anime2.AnimeWithNextEpisode)
 		TitleSynonyms: titleSynonyms,
 		Description:   animeEntity.Synopsis,
 		EpisodeCount:  animeEntity.Episodes,
+		SeasonNumber:  animeEntity.SeasonNumber,
 		Duration:      animeEntity.Duration,
 		Studios:       studios,
 		Rating:        ratingStr,
