@@ -33,6 +33,11 @@ func (r *queryResolver) AnimeBySlug(ctx context.Context, slug string) (*model.An
 	return resolvers.AnimeBySlug(ctx, r.AnimeService, slug)
 }
 
+// AnimeBySeriesID is the resolver for the animeBySeriesId field.
+func (r *queryResolver) AnimeBySeriesID(ctx context.Context, id string, limit *int) ([]*model.Anime, error) {
+	return resolvers.AnimeBySeriesID(ctx, r.AnimeService, id, limit)
+}
+
 // NewestAnime is the resolver for the newestAnime field.
 func (r *queryResolver) NewestAnime(ctx context.Context, limit *int) ([]*model.Anime, error) {
 	return resolvers.NewestAnime(ctx, r.AnimeService, limit)

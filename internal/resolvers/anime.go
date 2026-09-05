@@ -768,6 +768,66 @@ func DBSearchAnime(ctx context.Context, animeService anime.AnimeServiceImpl, que
 // -- the largest series in the catalogue holds 78 anime, and a Pokemon page
 // returning all of them would be a wall of links and a much larger response
 // than the caller expected.
+// AnimeBySeriesID returns every anime sharing a TheTVDB series id, oldest
+// first with undated entries last.
+//
+// The series page's query. It differs from the SAME_SERIES leg of
+// RelatedAnimeFor in one way: that one leaves out the anime being viewed,
+// because the page it decorates is already about it. A series page has no such
+// subject, so nothing is left out -- which is why the exclusion is passed the
+// empty string. Ids are uuids, so no row ever equals it, and the repository's
+// `id <> ?` matches everything.
+//
+// A blank series id returns an empty list without touching the database. The
+// repository guards this too, and for good reason -- '' = '' is true, so a
+// blank id would otherwise match every unenriched anime in the catalogue --
+// but a series page asking for nothing should not reach the database at all.
+func AnimeBySeriesID(ctx context.Context, animeService anime.AnimeServiceImpl, seriesID string, limit *int) ([]*model.Anime, error) {
+	startTime := time.Now()
+
+	// A series is a handful of entries -- Re:ZERO, one of the longest, is 15.
+	// The cap is here so a malformed id cannot ask for the whole table, not
+	// because any real series approaches it.
+	resultLimit := 100
+	if limit != nil && *limit > 0 {
+		resultLimit = *limit
+	}
+
+	if seriesID == "" {
+		return []*model.Anime{}, nil
+	}
+
+	found, err := animeService.RelatedAnimeBySeriesID(ctx, seriesID, "", resultLimit)
+	if err != nil {
+		metrics.GetAppMetrics().ResolverMetric(
+			float64(time.Since(startTime).Milliseconds()),
+			"AnimeBySeriesID",
+			metrics.Error,
+		)
+		return nil, err
+	}
+
+	animes := make([]*model.Anime, 0, len(found))
+	for _, entity := range found {
+		if entity == nil {
+			continue
+		}
+		transformed, err := transformAnimeToGraphQL(*entity)
+		if err != nil {
+			return nil, err
+		}
+		animes = append(animes, transformed)
+	}
+
+	metrics.GetAppMetrics().ResolverMetric(
+		float64(time.Since(startTime).Milliseconds()),
+		"AnimeBySeriesID",
+		metrics.Success,
+	)
+
+	return animes, nil
+}
+
 func RelatedAnimeFor(ctx context.Context, animeService anime.AnimeServiceImpl, obj *model.Anime, limit *int) ([]*model.RelatedAnime, error) {
 	tracer := tracing.GetTracer(ctx)
 	ctx, span := tracer.Start(ctx, "RelatedAnimeFor",
