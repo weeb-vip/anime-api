@@ -207,6 +207,7 @@ type ComplexityRoot struct {
 		Anime                       func(childComplexity int, id string) int
 		AnimeBySeasonAndYear        func(childComplexity int, seasonName string, year int, limit *int) int
 		AnimeBySeasons              func(childComplexity int, season string, limit *int) int
+		AnimeBySeriesID             func(childComplexity int, id string, limit *int) int
 		AnimeBySlug                 func(childComplexity int, slug string) int
 		CharactersAndStaffByAnimeID func(childComplexity int, animeID string) int
 		CurrentlyAiring             func(childComplexity int, input *model.CurrentlyAiringInput, limit *int) int
@@ -327,6 +328,7 @@ type QueryResolver interface {
 	APIInfo(ctx context.Context) (*model.APIInfo, error)
 	Anime(ctx context.Context, id string) (*model.Anime, error)
 	AnimeBySlug(ctx context.Context, slug string) (*model.Anime, error)
+	AnimeBySeriesID(ctx context.Context, id string, limit *int) ([]*model.Anime, error)
 	NewestAnime(ctx context.Context, limit *int) ([]*model.Anime, error)
 	TopRatedAnime(ctx context.Context, limit *int) ([]*model.Anime, error)
 	MostPopularAnime(ctx context.Context, limit *int) ([]*model.Anime, error)
@@ -1217,6 +1219,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.AnimeBySeasons(childComplexity, args["season"].(string), args["limit"].(*int)), true
 
+	case "Query.animeBySeriesId":
+		if e.complexity.Query.AnimeBySeriesID == nil {
+			break
+		}
+
+		args, err := ec.field_Query_animeBySeriesId_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.AnimeBySeriesID(childComplexity, args["id"].(string), args["limit"].(*int)), true
+
 	case "Query.animeBySlug":
 		if e.complexity.Query.AnimeBySlug == nil {
 			break
@@ -1832,6 +1846,20 @@ type Query {
     anime(id: ID!): Anime!
     "Look an anime up by its public URL slug. Null when no anime claims it."
     animeBySlug(slug: String!): Anime
+    """
+    Every anime sharing a TheTVDB series id, oldest first with undated entries
+    last -- the whole of what a series page shows.
+
+    Distinct from an anime's relatedAnime(SAME_SERIES), which leaves out the
+    anime being viewed because it is already the subject of that page. A series
+    page has no such subject, so nothing is left out.
+
+    An unknown or blank id returns an empty list rather than null. MyAnimeList
+    files each broadcast run as its own anime while TheTVDB keeps them as
+    seasons of one series, so this is the only way to ask our catalogue for the
+    series rather than for one of its parts.
+    """
+    animeBySeriesId(id: String!, limit: Int): [Anime!]!
     "Get newest anime with a response limit"
     newestAnime(limit: Int): [Anime!]
     "Get top rated anime with a response limit"
@@ -2737,6 +2765,30 @@ func (ec *executionContext) field_Query_animeBySeasons_args(ctx context.Context,
 		}
 	}
 	args["season"] = arg0
+	var arg1 *int
+	if tmp, ok := rawArgs["limit"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+		arg1, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["limit"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_animeBySeriesId_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
 	var arg1 *int
 	if tmp, ok := rawArgs["limit"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
@@ -8655,6 +8707,137 @@ func (ec *executionContext) fieldContext_Query_animeBySlug(ctx context.Context, 
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_animeBySlug_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_animeBySeriesId(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_animeBySeriesId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().AnimeBySeriesID(rctx, fc.Args["id"].(string), fc.Args["limit"].(*int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Anime)
+	fc.Result = res
+	return ec.marshalNAnime2ᚕᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnimeᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_animeBySeriesId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Anime_id(ctx, field)
+			case "anidbid":
+				return ec.fieldContext_Anime_anidbid(ctx, field)
+			case "thetvdbid":
+				return ec.fieldContext_Anime_thetvdbid(ctx, field)
+			case "sourceWorkId":
+				return ec.fieldContext_Anime_sourceWorkId(ctx, field)
+			case "sourceWork":
+				return ec.fieldContext_Anime_sourceWork(ctx, field)
+			case "slug":
+				return ec.fieldContext_Anime_slug(ctx, field)
+			case "titleEn":
+				return ec.fieldContext_Anime_titleEn(ctx, field)
+			case "titleJp":
+				return ec.fieldContext_Anime_titleJp(ctx, field)
+			case "titleRomaji":
+				return ec.fieldContext_Anime_titleRomaji(ctx, field)
+			case "titleKanji":
+				return ec.fieldContext_Anime_titleKanji(ctx, field)
+			case "titleSynonyms":
+				return ec.fieldContext_Anime_titleSynonyms(ctx, field)
+			case "description":
+				return ec.fieldContext_Anime_description(ctx, field)
+			case "imageUrl":
+				return ec.fieldContext_Anime_imageUrl(ctx, field)
+			case "tags":
+				return ec.fieldContext_Anime_tags(ctx, field)
+			case "studios":
+				return ec.fieldContext_Anime_studios(ctx, field)
+			case "animeStatus":
+				return ec.fieldContext_Anime_animeStatus(ctx, field)
+			case "episodeCount":
+				return ec.fieldContext_Anime_episodeCount(ctx, field)
+			case "episodes":
+				return ec.fieldContext_Anime_episodes(ctx, field)
+			case "duration":
+				return ec.fieldContext_Anime_duration(ctx, field)
+			case "rating":
+				return ec.fieldContext_Anime_rating(ctx, field)
+			case "startDate":
+				return ec.fieldContext_Anime_startDate(ctx, field)
+			case "endDate":
+				return ec.fieldContext_Anime_endDate(ctx, field)
+			case "broadcast":
+				return ec.fieldContext_Anime_broadcast(ctx, field)
+			case "source":
+				return ec.fieldContext_Anime_source(ctx, field)
+			case "licensors":
+				return ec.fieldContext_Anime_licensors(ctx, field)
+			case "ranking":
+				return ec.fieldContext_Anime_ranking(ctx, field)
+			case "malId":
+				return ec.fieldContext_Anime_malId(ctx, field)
+			case "scheduleInfo":
+				return ec.fieldContext_Anime_scheduleInfo(ctx, field)
+			case "streamingPlatforms":
+				return ec.fieldContext_Anime_streamingPlatforms(ctx, field)
+			case "fanart":
+				return ec.fieldContext_Anime_fanart(ctx, field)
+			case "seasons":
+				return ec.fieldContext_Anime_seasons(ctx, field)
+			case "type":
+				return ec.fieldContext_Anime_type(ctx, field)
+			case "seasonNumber":
+				return ec.fieldContext_Anime_seasonNumber(ctx, field)
+			case "relatedAnime":
+				return ec.fieldContext_Anime_relatedAnime(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Anime_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Anime_updatedAt(ctx, field)
+			case "nextEpisode":
+				return ec.fieldContext_Anime_nextEpisode(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Anime", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_animeBySeriesId_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -15765,6 +15948,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "animeBySeriesId":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_animeBySeriesId(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "newestAnime":
 			field := field
 
@@ -16940,6 +17145,50 @@ func (ec *executionContext) marshalNAirType2githubᚗcomᚋweebᚑvipᚋanimeᚑ
 
 func (ec *executionContext) marshalNAnime2githubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnime(ctx context.Context, sel ast.SelectionSet, v model.Anime) graphql.Marshaler {
 	return ec._Anime(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNAnime2ᚕᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnimeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Anime) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNAnime2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnime(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalNAnime2ᚖgithubᚗcomᚋweebᚑvipᚋanimeᚑapiᚋgraphᚋmodelᚐAnime(ctx context.Context, sel ast.SelectionSet, v *model.Anime) graphql.Marshaler {

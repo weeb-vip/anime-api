@@ -13,6 +13,20 @@ type Query {
     anime(id: ID!): Anime!
     "Look an anime up by its public URL slug. Null when no anime claims it."
     animeBySlug(slug: String!): Anime
+    """
+    Every anime sharing a TheTVDB series id, oldest first with undated entries
+    last -- the whole of what a series page shows.
+
+    Distinct from an anime's relatedAnime(SAME_SERIES), which leaves out the
+    anime being viewed because it is already the subject of that page. A series
+    page has no such subject, so nothing is left out.
+
+    An unknown or blank id returns an empty list rather than null. MyAnimeList
+    files each broadcast run as its own anime while TheTVDB keeps them as
+    seasons of one series, so this is the only way to ask our catalogue for the
+    series rather than for one of its parts.
+    """
+    animeBySeriesId(id: String!, limit: Int): [Anime!]!
     "Get newest anime with a response limit"
     newestAnime(limit: Int): [Anime!]
     "Get top rated anime with a response limit"
