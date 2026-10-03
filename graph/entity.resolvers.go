@@ -6,16 +6,29 @@ package graph
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/weeb-vip/anime-api/graph/generated"
 	"github.com/weeb-vip/anime-api/graph/model"
 	"github.com/weeb-vip/anime-api/internal/resolvers"
+	"gorm.io/gorm"
 )
 
 // FindAnimeByID is the resolver for the findAnimeByID field.
+//
+// Another subgraph answered with an Anime it does not own -- the feed in
+// notifications-service returns Anime{id} -- and the router comes here to
+// fill in the rest. Batched: the router sends one _entities request per page
+// of activities, and the per-request dataloader turns those into one query.
+// An unknown id is a null, not an error, so one stale reference cannot take
+// down a whole page of someone else's data.
 func (r *entityResolver) FindAnimeByID(ctx context.Context, id string) (*model.Anime, error) {
-	panic(fmt.Errorf("not implemented: FindAnimeByID - findAnimeByID"))
+	found, err := resolvers.AnimeByIDBatched(ctx, r.AnimeService, id)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	return found, err
 }
 
 // FindEpisodeByAnimeID is the resolver for the findEpisodeByAnimeID field.
@@ -45,10 +58,8 @@ func (r *entityResolver) FindUserWorkByWorkID(ctx context.Context, workID string
 
 // FindWorkByID is the resolver for the findWorkByID field.
 //
-// Implemented, unlike the Anime and Episode reference resolvers above: those
-// panic because nothing resolves an Anime through this subgraph -- anime-api
-// owns it and serves it from its own queries. A Work reference does arrive
-// here, from any subgraph that hangs a field off a work it does not own.
+// Same contract as FindAnimeByID: a Work reference arrives here from any
+// subgraph that hangs a field off a work it does not own.
 func (r *entityResolver) FindWorkByID(ctx context.Context, id string) (*model.Work, error) {
 	return resolvers.WorkByID(ctx, r.WorkService, id)
 }
